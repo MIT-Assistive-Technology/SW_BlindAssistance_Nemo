@@ -23,15 +23,22 @@ Rules:
 - API keys live in environment secrets; only `.env.example` is committed.
 - The public Overpass server allows apps only about 100 queries a day, so cache everything and precompute the pilot area.
 
-## Planned layout
+## Layout
 
 ```
-app/        FastAPI app: routes, resolver (lookup ladder), scoring, path checks
-worker.py   Mapillary + door-model jobs (only when OSM is weak)
-tests/      pytest with saved Overpass/Mapillary responses
-pyproject.toml
+pyproject.toml     dependencies (FastAPI, Shapely, pyproj, httpx) and pytest/ruff config
+.env.example       settings; copy to .env
+app/
+  main.py          routes (returns the contract example until the ladder works)
+  models.py        Pydantic mirror of ../contract/resolve.example.json
+  resolver.py      the lookup ladder, one function per step
+  scoring.py       door scoring rules
+  geo.py           side of street, photo rays, wall intersection
+tests/             pytest; skipped tests are TODOs with expected values
+Instructions.md    step-by-step getting started
 ```
 
 ## Start here
 
+Follow [`Instructions.md`](Instructions.md). 
 See the Server tasks (BE-1 to BE-10) in [`../docs/car-to-curb-plan.md#20-work-breakdown`](../docs/car-to-curb-plan.md#20-work-breakdown). The lookup ladder and OSM tag rules are in sections 8–9.

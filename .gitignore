@@ -224,3 +224,6 @@ xcuserdata/
 DerivedData/
 *.xcuserstate
 .DS_Store
+
+# Server local data
+server/data/

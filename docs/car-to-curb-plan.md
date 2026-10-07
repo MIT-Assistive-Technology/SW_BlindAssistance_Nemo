@@ -4,6 +4,16 @@
 **Status:** Draft for team review. Every number and threshold here is a proposal until the team and the codesigners sign off.
 **Last updated:** 2026-10-04
 
+> **Known issues (architecture review, 2026-10-06). Fixes pending; don't build on these yet:**
+> - The street-photo bearing formula in sections 8 and 13 and `server/app/geo.py` is linear. Use the pinhole model `atan((x − cx) / f)` with the field of view from Mapillary's `camera_parameters`. With the correct formula, the worked example's hits are about 1.8 m apart, not 0.4 m.
+> - Noisy-OR in `server/app/scoring.py` treats sources as independent, but they often aren't. Use the best independent source plus one step up when they agree.
+> - The building-number check works at about 10–25 m, not 50 m. ARKit drifts about 2–3.5 m over 50 m, and the GPS starting point can be 7–14 m sideways at 40 m, so the app must keep re-anchoring.
+> - OSM entrance coverage is low: about 10% of MIT/Kendall buildings and 1.8% of Cambridge. Survey the test sites' entrances into OSM.
+> - Public Overpass allows about 100 queries and 10 MB a day per deployment. Precompute the pilot area from the Geofabrik extract. Geocode with structured queries; free-form "77 Massachusetts Ave" returns a bus stop.
+> - Render's free tier has no disk, so SQLite is wiped on redeploy.
+> - The app needs the `location` and `audio` background modes. The Swift has not been compiled yet; build it once on a Mac first.
+> - Proposed lower targets: detector precision ≥ 0.90 and recall ≥ 0.80; success ≥ 70% overall and ≥ 85% same-side.
+
 ---
 
 ## Contents
@@ -336,6 +346,46 @@ Then merge candidates within ~4 m, apply crowd confirmations, add path checks an
 - Compute when a place is saved, when the destination is set, and again ~3 minutes before arrival.
 - Keep OSM results 30 days and CV results 90 days. Crowd-confirmed results don't expire; they're revalidated if the building outline changes.
 - **Overpass limits:** see [section 14](#14-data-sources-and-limits). Keep Overpass responses 7 days and precompute the pilot area.
+
+### Finding a door from street photos (ladder step 4)
+
+When OSM has no door, the server locates it from public Mapillary photos, before the trip. Each photo records where the camera stood and which way it pointed. A door found in the photo becomes a direction, and a line from the camera in that direction hits the building wall at the door.
+
+1. **Get photos facing the building:** within 50 m, keeping only those pointing within about ±60° of the wall.
+2. **Find doors** in each photo with the door detector.
+3. **Turn the pixel into a direction:** `bearing = compass_angle + (x_px / width − 0.5) × field_of_view`.
+4. **Draw the line and intersect it with the building outline** (Shapely).
+5. **Combine photos:** cluster the hits (DBSCAN, 2–3 m). 2+ angles score 0.65; a single photo scores 0.45.
+6. **Convert back to lat/lon** (pyproj).
+
+**Worked example** (local meters, x = east, y = north, front wall along x = 20, field of view 60°, photos 1,000 px wide):
+
+| | Photo A | Photo B |
+|---|---|---|
+| Camera position | (0, 0) | (10, −30) |
+| Compass angle | 90° | 30° |
+| Door box center | 700 px | 350 px |
+| Offset `(px/1000 − 0.5) × 60°` | +12° | −9° |
+| Bearing to door | 102° | 21° |
+| Line hits wall at | (20, −4.3) | (20, −3.9) |
+
+The two hits are 0.4 m apart, so they form one candidate at **(20, −4.1)** with score **0.65**.
+
+**Why it can be off by a couple of meters:**
+- A compass error of 5° shifts the point about 1.7 m at 20 m.
+- Photo position error shifts the whole line, so prefer Mapillary's refined `computed_geometry`.
+- An unknown field of view gives the wrong angle for off-center doors.
+- In old photos the door may have moved, so photos older than 5 years are down-weighted.
+- Garage doors or windows can be mistaken for doors; requiring photos to agree, plus a door-type check, catches this.
+
+**Guiding the rider to it:**
+1. The point goes in the bundle as candidate #1, with source "street photos, 2 images, 2023". The rider hears *"Possible entrance found from street photos… I'll check with the camera when we're close."*
+2. Side of street, beacon, ARKit, landmarks and the building check work as usual.
+3. **Within ~10 m the camera decides.**
+   - A door within ±15° means map and camera agree. The phone then guides to the door it *sees*, which removes the 1–2 m photo error.
+   - A door elsewhere gets "possibly the entrance".
+   - No door switches to scan mode.
+4. "Was this the door?" After 2+ confirmations the door scores 0.85, and a team member can add it to OSM from a survey.
 
 ### Data model
 ```
@@ -772,8 +822,9 @@ Raise thresholds once they're met; never lower them quietly.
 ## 19. DevOps and team workflow
 
 ```
-/app/       iOS app (Xcode project), see app/README.md
-/server/    FastAPI entrance service + tests, see server/README.md
+/app/       iOS app (Xcode project, Docs/Instructions.md), see app/README.md
+/server/    FastAPI entrance service + tests (Instructions.md), see server/README.md
+/contract/  resolve.example.json, the shared API contract both sides build against
 /ml/        notebooks, scripts (no raw weights in git)
 /docs/      this file, adr/, codesigner-sessions/
 /.github/   workflows, CODEOWNERS, PR template

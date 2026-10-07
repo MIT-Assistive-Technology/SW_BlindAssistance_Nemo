@@ -14,16 +14,30 @@ Rules:
 - No camera frames leave the phone.
 - No server API keys in the app.
 
-## Planned layout
+## Layout
+
+Based on the `tagem-scaffold` branch, adapted to this plan.
 
 ```
-BlindAssist/
-  App/        SwiftUI entry, AppIntents (Siri, Back Tap), ControlWidgets
-  Features/   DestinationEntry, SavedPlaces, Settings, Session
-  Core/       FeedbackKit, LocationKit, ARGuide, DoorVision, EntranceAPI, Telemetry
-Tests/        XCTest + recorded GPS/heading traces
+nemo-software.xcodeproj
+nemo-software/
+  Core/             Frame, Detection, LocationSnapshot
+  FramePublishers/  FrameProvider protocol, CameraFrameProvider
+  Location/         LocationService (GPS + true heading)
+  LocationKit/      Geo math (distance, bearing, side of street)
+  Perception/       ObjectDetector protocol, VisionObjectDetector
+  EntranceAPI/      Server contract models, Stub/Live clients
+  Feedback/         FeedbackKit and channels
+  Session/          NavigationSession state machine
+  Services/         PerceptionPipeline, Speaker
+  ViewModels/ Views/
+  Resources/        resolve.example.json (copy of ../contract/)
+Docs/
+  ARCHITECTURE.md   how the code is organized
+  Instructions.md   step-by-step getting started
 ```
 
 ## Start here
 
+Follow [`Docs/Instructions.md`](Docs/Instructions.md). 
 See the App tasks (FE-1 to FE-14) in [`../docs/car-to-curb-plan.md#20-work-breakdown`](../docs/car-to-curb-plan.md#20-work-breakdown).
