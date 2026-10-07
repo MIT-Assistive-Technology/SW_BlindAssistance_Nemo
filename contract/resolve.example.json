@@ -5,19 +5,51 @@
     "osm_id": "way/0000001",
     "name": "Example Building",
     "housenumber": "77",
-    "footprint": [[-71.09330, 42.35940], [-71.09290, 42.35940], [-71.09290, 42.35910], [-71.09330, 42.35910], [-71.09330, 42.35940]]
+    "footprint": [
+      [
+        -71.0933,
+        42.3594
+      ],
+      [
+        -71.0929,
+        42.3594
+      ],
+      [
+        -71.0929,
+        42.3591
+      ],
+      [
+        -71.0933,
+        42.3591
+      ],
+      [
+        -71.0933,
+        42.3594
+      ]
+    ]
   },
   "candidates": [
     {
       "id": "c1",
       "lat": 42.35921,
       "lon": -71.09298,
-      "confidence": 0.92,
-      "band": "found",
+      "confidence": 0.95,
+      "band": "main",
       "label": "Main entrance",
-      "speak": { "door": "hinged", "automatic_door": "button", "step_count": 3 },
+      "speak": {
+        "door": "hinged",
+        "automatic_door": "button",
+        "step_count": 3
+      },
       "provenance": [
-        { "source": "osm_tag", "ref": "node/0000002", "tags": { "entrance": "main", "wheelchair": "yes" } }
+        {
+          "source": "osm_tag",
+          "ref": "node/0000002",
+          "tags": {
+            "entrance": "main",
+            "wheelchair": "yes"
+          }
+        }
       ]
     },
     {
@@ -25,40 +57,89 @@
       "lat": 42.35935,
       "lon": -71.09305,
       "confidence": 0.65,
-      "band": "likely",
+      "band": "door",
       "label": "Side door (street photos)",
       "speak": null,
       "provenance": [
-        { "source": "mapillary_cv", "ref": "images:2", "tags": null }
+        {
+          "source": "mapillary_cv",
+          "ref": "images:2",
+          "tags": null
+        }
       ]
     },
     {
       "id": "c3",
       "lat": 42.35925,
-      "lon": -71.09290,
-      "confidence": 0.30,
+      "lon": -71.0929,
+      "confidence": 0.3,
       "band": "facade",
       "label": "Street-facing side (approximate)",
       "speak": null,
       "provenance": [
-        { "source": "geometry_fallback", "ref": null, "tags": null }
+        {
+          "source": "geometry_fallback",
+          "ref": null,
+          "tags": null
+        }
       ]
     }
   ],
-  "path_checks": { "crosses_road": false, "nearest_crossing": null, "footway_to_entrance": true },
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
   "street_side": {
     "entrance_street": "Example Avenue",
     "road_way": "way/0000003",
-    "centerline": [[-71.09280, 42.35950], [-71.09280, 42.35900]],
-    "door_side_of_road": "west",
+    "centerline": [
+      [
+        -71.0928,
+        42.3595
+      ],
+      [
+        -71.0928,
+        42.359
+      ]
+    ],
+    "door_side_of_road": "right",
     "oneway": false
   },
-  "recognize": { "text": ["77", "Example Building"] },
+  "recognize": {
+    "text": [
+      "77",
+      "Example Building"
+    ]
+  },
   "landmarks": [
-    { "kind": "bench", "lat": 42.35918, "lon": -71.09286, "side": "left", "meters_to_door": 14, "at_door": false, "source": "osm", "speak": "bench on your left" },
-    { "kind": "handrail", "lat": 42.35921, "lon": -71.09297, "side": "right", "meters_to_door": 1, "at_door": true, "source": "osm", "speak": "railing on your right at the steps" }
+    {
+      "kind": "bench",
+      "lat": 42.35918,
+      "lon": -71.09286,
+      "side": "left",
+      "meters_to_door": 14,
+      "at_door": false,
+      "source": "osm",
+      "speak": "bench on your left"
+    },
+    {
+      "kind": "handrail",
+      "lat": 42.35921,
+      "lon": -71.09297,
+      "side": "right",
+      "meters_to_door": 1,
+      "at_door": true,
+      "source": "osm",
+      "speak": "railing on your right at the steps"
+    }
   ],
   "route": null,
-  "attribution": ["© OpenStreetMap contributors"],
-  "data_version": { "osm": "2026-10-01", "model": "none" }
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-01",
+    "model": "none"
+  }
 }

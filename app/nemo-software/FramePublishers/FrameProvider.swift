@@ -10,7 +10,8 @@ import Foundation
 
 public protocol FrameProviderDelegate: AnyObject {
   /// Called on the provider's private queue for every new frame.
-  /// - buffer: BGRA pixel buffer of the live camera frame.
+  /// - buffer: pixel buffer of the live camera frame. AVFoundation gives BGRA if you set it
+  ///   on the video output; ARKit's `capturedImage` is 420YpCbCr. Vision accepts both.
   func processFrame(_ provider: any FrameProvider, buffer: CVPixelBuffer)
 }
 

@@ -46,7 +46,9 @@ class Candidate(BaseModel):
     lat: float
     lon: float
     confidence: float = Field(ge=0, le=1)
-    band: Literal["found", "likely", "facade"]
+    # Spoken state: "main" = map shows the main entrance, "door" = map shows a door,
+    # "facade" = no door on the map (street-facing side). Never call a band "found".
+    band: Literal["main", "door", "facade"]
     label: str
     speak: Speak | None = None
     provenance: list[Provenance]
@@ -62,7 +64,8 @@ class StreetSide(BaseModel):
     entrance_street: str
     road_way: str
     centerline: list[LonLat]
-    door_side_of_road: str
+    # Side of the road the door is on, relative to the centerline's direction (first -> last point).
+    door_side_of_road: Literal["left", "right"]
     oneway: bool
 
 
@@ -88,7 +91,8 @@ class DataVersion(BaseModel):
 
 class ResolveResult(BaseModel):
     destination_id: str
-    status: Literal["complete", "pending"]
+    # "partial" = weak result now (e.g. facade only); fetch again later for better candidates.
+    status: Literal["complete", "partial"]
     building: Building
     candidates: list[Candidate] = Field(max_length=5)
     path_checks: PathChecks
@@ -100,26 +104,11 @@ class ResolveResult(BaseModel):
     data_version: DataVersion
 
 
-class Pending(BaseModel):
-    destination_id: str
-    status: Literal["pending"] = "pending"
-    retry_after_s: int = 10
-
-
-class Feedback(BaseModel):
-    candidate_id: str | None = None
-    verdict: Literal["confirmed", "wrong", "new_entrance"]
-    lat: float | None = None
-    lon: float | None = None
-    accuracy_m: float | None = None
-
-
-class Flags(BaseModel):
-    guidance_enabled: bool = True
-    disabled_sources: list[str] = []
-
-
 class ErrorBody(BaseModel):
-    code: Literal["GEOCODE_NOT_FOUND", "UPSTREAM_UNAVAILABLE", "RATE_LIMITED", "VALIDATION"]
+    """Every error response is {"error": ErrorBody}."""
+
+    code: Literal[
+        "GEOCODE_NOT_FOUND", "UPSTREAM_UNAVAILABLE", "RATE_LIMITED", "VALIDATION", "NOT_FOUND"
+    ]
     message: str
     request_id: str | None = None

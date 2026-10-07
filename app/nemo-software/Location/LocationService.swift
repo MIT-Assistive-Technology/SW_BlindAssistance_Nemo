@@ -36,9 +36,12 @@ public protocol LocationProvider: AnyObject {
     public func start() {
       // TODO: Request the correct authorization for your use case.
       //
-      // For continuous background updates you need `requestAlwaysAuthorization()`
-      // and the `location` UIBackgroundMode; for foreground-only assistance use
-      // `requestWhenInUseAuthorization()`.
+      // The MVP uses When-In-Use only. To keep tracking the car during the ride (side of
+      // street), start updates from an explicit "I'm in the car" action while the app is in
+      // the foreground, with `allowsBackgroundLocationUpdates = true` or a
+      // `CLBackgroundActivitySession` (iOS 17; add `CLServiceSession` on iOS 18). The
+      // `location` background mode is already in app/Info.plist. iOS shows the blue location
+      // indicator while this runs. Don't use geofences: they need Always permission.
       //
       locationManager.requestWhenInUseAuthorization()
 

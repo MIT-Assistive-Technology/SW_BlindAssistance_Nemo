@@ -19,7 +19,8 @@ public enum FeedbackEvent: Sendable {
   case warning(String)
   case lost
   case arrival
-  case say(String)
+  // No free-text case on purpose: every spoken phrase is written in SpeechChannel so the
+  // certainty-word test (SAFE-1) can check all of them.
 }
 
 /// One output: speech, spatial beacon, haptics, earcons, Apple Watch.
@@ -63,8 +64,10 @@ public final class SpeechChannel: FeedbackChannel {
     //   .distance(18)          -> "60 feet" (respect the rider's units)
     //   .landmark("bench …")   -> "Bench on your left"
     //   .doorDetected(+10, 3)  -> "Door, slightly right, 10 feet"
-    // Never use certainty words for unconfirmed doors (SAFE-1).
-    if case .say(let text) = event { speaker.speak(text) }
+    //   .buildingConfirmed     -> "That looks like your building"
+    //   .arrival               -> "The door should be right in front of you. Feel for the handle."
+    // Never use certainty words ("That's your building", "You've arrived") (SAFE-1).
+    _ = event
   }
 
   public func stop() { speaker.stop() }

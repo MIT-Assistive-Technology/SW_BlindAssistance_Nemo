@@ -41,8 +41,10 @@ public final class PerceptionPipeline: ObservableObject, FrameProviderDelegate {
   // MARK: - FrameProviderDelegate
 
   public func processFrame(_ provider: any FrameProvider, buffer: CVPixelBuffer) {
-    // TODO: Determine the correct orientation for the current device orientation.
-    let orientation = CGImagePropertyOrientation.up
+    // Back camera frames arrive in landscape. For an iPhone held in portrait use `.right`,
+    // or text recognition and detection quietly fail.
+    // TODO: derive this from the device orientation if the app ever supports landscape.
+    let orientation = CGImagePropertyOrientation.right
 
     // Run detection. Start by accepting everything above a confidence floor.
     let detections = detector.detect(
@@ -55,7 +57,12 @@ public final class PerceptionPipeline: ObservableObject, FrameProviderDelegate {
     )
 
     // Speak the most interesting detection(s) so the user gets audio feedback.
-    // TODO: Avoid repeating the same label on every frame (add a chatter guard).
+    // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
+    // announcements to FeedbackKit events.
+    // TODO (threading): the project's default actor isolation is MainActor, so this runs on
+    // the main thread. Before running a real model, run Vision on ONE serial background queue,
+    // skip frames while a request is busy (<= 10 per second), and never keep ARFrame/pixel
+    // buffers after the request finishes. Only the `presentation` update belongs on main.
     if let top = detections.first {
       speaker.speak(top.labels.first?.identifier ?? "something")
     }

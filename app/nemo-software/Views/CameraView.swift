@@ -8,11 +8,8 @@
 import SwiftUI
 
 struct CameraView: View {
-  @StateObject private var viewModel: CameraViewModel
-
-  init(viewModel: CameraViewModel) {
-    _viewModel = StateObject(wrappedValue: viewModel)
-  }
+  /// Created and owned by ContentView (@StateObject there), so this view only observes it.
+  @ObservedObject var viewModel: CameraViewModel
 
   var body: some View {
     ZStack {

@@ -43,8 +43,11 @@ public final class NavigationSession: ObservableObject {
   public var target: Candidate? { bundle.candidates.first }
 
   public func start() {
-    // TODO (FE-10): move to .arrival, compute side of street (FE-13), speak the brief:
-    //   "Your entrance is on this side of the street, about 110 feet ahead and to your right."
+    // TODO (FE-10): move to .arrival and say "Exit on the curb side." Then compute the side of
+    // street (FE-13, Geo.sameSide; nil -> ask "Did you get out onto the sidewalk?") and give
+    // the brief: "Your entrance should be on this side of the street, about 110 feet ahead."
+    // If the door is across the street: say so, point the beacon to the crossing or stay
+    // silent, and never point it at the door.
     state = .arrival
   }
 
@@ -55,5 +58,8 @@ public final class NavigationSession: ObservableObject {
   // TODO (FE-10): add update(position:heading:) called by LocationKit/ARGuide that
   // applies the transitions above, saves breadcrumbs, announces landmarks ~5 m ahead,
   // and moves to .lost / back to .orient at the last breadcrumb.
+  // First-steps check: after ~5 m, if the walking direction is more than ~30° off the
+  // expected sidewalk direction, say "I'm not sure" before giving more guidance.
+  // Persist state so a relaunch mid-trip resumes (side unknown -> ask).
   // Test it by replaying a recorded GPS trace (QA-4), not by walking.
 }

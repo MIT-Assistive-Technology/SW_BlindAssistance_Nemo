@@ -1,7 +1,8 @@
 //  EntranceModels.swift
 //  nemo-software
 //
-//  Codable mirror of the server's `POST /v1/resolve` response.
+//  Codable mirror of an entrance bundle. In the MVP these are precomputed for the pilot
+//  sites; the live `POST /v1/resolve` (stretch goal) returns the same shape.
 //  Source of truth: `contract/resolve.example.json` and
 //  docs/car-to-curb-plan.md section 10. Change the contract first, then this file,
 //  then `server/app/models.py`. The contract tests keep all three in sync.
@@ -13,6 +14,7 @@ import Foundation
 
 public struct ResolveResult: Codable, Sendable {
   public let destinationId: String
+  /// "complete", or "partial" when the result is weak (fetch again later).
   public let status: String
   public let building: Building
   /// Best first. The phone guides to `candidates[0]` and keeps the rest as backups.
@@ -41,7 +43,8 @@ public struct Candidate: Codable, Sendable, Identifiable {
   public let lon: Double
   /// 0...0.95 from the server. Only the phone's camera can confirm a door.
   public let confidence: Double
-  /// "found" (>= 0.75), "likely" (0.45-0.75) or "facade" (< 0.45).
+  /// What the rider hears: "main" ("Map shows the main entrance"), "door" ("Map shows a
+  /// door") or "facade" ("No door on the map. Guiding you to the street-facing side.").
   public let band: String
   public let label: String
   public let speak: Speak?
@@ -75,6 +78,7 @@ public struct StreetSide: Codable, Sendable {
   public let roadWay: String
   /// Road centerline as [lon, lat] pairs.
   public let centerline: [[Double]]
+  /// "left" or "right", relative to the centerline's direction (first → last point).
   public let doorSideOfRoad: String
   public let oneway: Bool
 }

@@ -7,6 +7,7 @@ A step-by-step path from an empty scaffold to the first working guidance. Each s
 - [ ] Open `app/nemo-software.xcodeproj` in Xcode on a Mac.
 - [ ] Under **Signing & Capabilities**, choose your own team. The repo leaves it blank on purpose.
 - [ ] Camera and location permission text is already set in the build settings (`INFOPLIST_KEY_NSCameraUsageDescription`, `INFOPLIST_KEY_NSLocationWhenInUseUsageDescription`). Only "while using" location; never ask for "Always" in the MVP.
+- [ ] The `audio` and `location` background modes are in `app/Info.plist` (outside the synced folder on purpose). The target is iPhone-only.
 - [ ] Build for an iPhone Simulator. It should launch without a camera; the camera code skips setup when no device exists.
 - [ ] New files go inside `nemo-software/`. The project syncs that folder automatically, so you don't need to add files to the target by hand.
 
@@ -36,15 +37,17 @@ File: `Location/LocationService.swift`
 - [ ] In `didUpdateLocations`, store the newest coordinate, `horizontalAccuracy` and timestamp in `currentSnapshot`.
 - [ ] In `didUpdateHeading`, use **`trueHeading`**, not `magneticHeading`, and skip readings with negative `headingAccuracy`.
 - [ ] In `stop()`, stop both updates.
+- [ ] Add an "I'm in the car" action that starts background updates while the app is open (`allowsBackgroundLocationUpdates` or `CLBackgroundActivitySession`). It records the car's course for side-of-street detection.
 - [ ] Handle `didFailWithError`, and announce a permission-denied state by voice, not just on screen.
 
 ## 3. Geometry math (FE-2)
 
 File: `LocationKit/Geo.swift`
 
-- [ ] Implement `distanceMeters`, `bearingDegrees`, `relativeAngle` and `side`.
+- [ ] Implement `distanceMeters`, `bearingDegrees`, `relativeAngle`, `side` and `sameSide`.
 - [ ] Add XCTest cases from the plan's worked examples:
-  - side of street: direction (1, 0), door at (30, −10) → `.right`; door at (30, 20) → `.left`
+  - side of street: road bearing 90°, door "right", course 92° → `true`; course 268° → `false`; one-way → `nil`
+  - left/right of walking direction: direction (1, 0), point at (30, −10) → `.right`
   - relative angle: heading 350°, target 10° → +20°
 
 ## 4. Server data with the stub (FE-11)
@@ -58,6 +61,7 @@ Files: `EntranceAPI/EntranceModels.swift`, `EntranceAPI/EntranceClient.swift`
 
 File: `Perception/VisionObjectDetector.swift`
 
+- [ ] **First benchmark iOS Magnifier's Door Detection at the test sites (CV-11).** The custom detector is an optional, parallel track.
 - [ ] Add a Core ML detector to the target. Check the license first (ADR 0007): Ultralytics YOLO is AGPL-3.0, so prototype with it if you like, but plan to ship an Apache-2.0 model such as RF-DETR.
 - [ ] Load it in `init()` as a `VNCoreMLModel`.
 - [ ] Implement `detect(_:filter:orientation:)` with `VNCoreMLRequest` (`.scaleFill`) and `VNImageRequestHandler`, converting results with `Detection(from:)` and applying `filter`.
@@ -95,5 +99,5 @@ File: `Session/NavigationSession.swift`
 
 ## Not now
 
-- ARKit tracking (FE-12) and text recognition for the building check (CV-9) come after the steps above.
+- ARKit tracking (FE-12) and text recognition for the building check (CV-9) come after the steps above. Text recognition reads 15–30 cm numbers at about 10–20 m on normal frames (20–35 m with high-res stills plus a crop), not 50 m. ARKit drifts 1–3 m over 50 m, and the GPS starting point can be 5–15 m off, so the app keeps re-anchoring.
 - Sending images anywhere. Frames never leave the phone.

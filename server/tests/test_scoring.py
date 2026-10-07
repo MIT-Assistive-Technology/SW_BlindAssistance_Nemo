@@ -2,7 +2,7 @@
 
 import pytest
 
-from app.scoring import band, combine, score_door
+from app.scoring import CAP, band, combine, score_door
 
 todo = pytest.mark.skip(reason="TODO BE-4: implement score_door and combine")
 
@@ -14,7 +14,7 @@ def test_main_entrance():
 
 @todo
 def test_excluded_values_are_never_used():
-    for value in ["exit", "emergency", "garage", "no"]:
+    for value in ["exit", "emergency", "garage", "no", "garage;exit"]:
         assert score_door({"entrance": value}, None, True, False) is None
 
 
@@ -24,9 +24,9 @@ def test_private_access_is_excluded():
 
 
 @todo
-def test_address_on_the_door_wins():
+def test_address_on_the_door_ranks_first_but_is_capped():
     tags = {"entrance": "yes", "addr:housenumber": "77"}
-    assert score_door(tags, "77", True, False) == 1.0
+    assert score_door(tags, "77", True, False) == CAP
 
 
 @todo
@@ -37,16 +37,17 @@ def test_combined_value_uses_best_part():
 @todo
 def test_adjustments_and_cap():
     tags = {"entrance": "main", "wheelchair": "yes"}
-    assert score_door(tags, None, on_outline=True, has_footway=True) == 0.95  # 1.00 capped
+    assert score_door(tags, None, on_outline=True, has_footway=True) == CAP  # 1.00 capped
 
 
 @todo
-def test_combine_agreeing_sources():
-    assert combine([0.90, 0.65]) == 0.95  # 0.965 capped
-    assert combine([0.45, 0.45]) == pytest.approx(0.6975)
+def test_combine_is_best_plus_one_step():
+    assert combine({"osm": 0.90, "photos": 0.65}) == CAP  # 0.90 + 0.05
+    assert combine({"osm": 0.75, "photos": 0.65}) == pytest.approx(0.80)
+    assert combine({"photos": 0.45}) == 0.45  # one class: no bump
 
 
 def test_bands():
-    assert band(0.92) == "found"
-    assert band(0.65) == "likely"
+    assert band(0.95) == "main"
+    assert band(0.65) == "door"
     assert band(0.30) == "facade"

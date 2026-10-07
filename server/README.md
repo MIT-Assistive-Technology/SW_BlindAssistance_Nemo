@@ -4,24 +4,23 @@ The server takes a destination address and returns the building's likely doors, 
 
 **Stack:** Python, FastAPI, Shapely, pyproj, SQLite. One container plus one worker process.
 
-## Serves the app through one contract
+## MVP: precomputed bundles first
 
-The API is described in [`../docs/car-to-curb-plan.md#10-api-contract`](../docs/car-to-curb-plan.md#10-api-contract):
+For the April MVP the app uses **precomputed entrance bundles** for the pilot sites: static JSON in the same shape as [`../contract/resolve.example.json`](../contract/resolve.example.json), built by a Python script from an OSM extract. The live service below is a stretch goal.
 
-| Endpoint | Purpose |
+| Endpoint (stretch) | Purpose |
 |---|---|
-| `POST /v1/resolve` | Resolve an address |
-| `GET /v1/destinations/{id}` | Fetch a result |
-| `POST /v1/destinations/{id}/feedback` | Door confirmation (v2) |
-| `GET /v1/flags` | Kill switch and per-source switches |
-| `GET /v1/health` | Liveness and versions |
+| `POST /v1/resolve` | Resolve an address from the cache (≤ 3 s, no live Overpass/Nominatim calls); `status: "partial"` when weak |
+| `GET /v1/health` | Liveness and data version |
 
-Freeze the response shape in week 2 and publish a stub JSON file so the app team can build against it.
+Errors always use `{"error": {"code", "message", "request_id"}}`.
 
 Rules:
-- Store destinations only, never rider locations.
+- Store buildings and an address hash only. Never store rider locations or an install key next to a destination.
 - API keys live in environment secrets; only `.env.example` is committed.
-- The public Overpass server allows apps only about 100 queries a day, so cache everything and precompute the pilot area.
+- Public Overpass allows about 100 queries and 10 MB a day per deployment, so preload the pilot area from the Geofabrik Massachusetts extract.
+- Geocode with structured Nominatim queries (`layer=address`). Free-form "77 Massachusetts Ave, Cambridge, MA" matches a bus stop.
+- If the live service runs: one Fly.io machine with a volume, SQLite in WAL mode. Render's free tier has no disk.
 
 ## Layout
 
@@ -41,4 +40,4 @@ Instructions.md    step-by-step getting started
 ## Start here
 
 Follow [`Instructions.md`](Instructions.md). 
-See the Server tasks (BE-1 to BE-10) in [`../docs/car-to-curb-plan.md#20-work-breakdown`](../docs/car-to-curb-plan.md#20-work-breakdown). The lookup ladder and OSM tag rules are in sections 8–9.
+See the Server tasks in [`../docs/car-to-curb-plan.md#20-work-breakdown`](../docs/car-to-curb-plan.md#20-work-breakdown). The lookup ladder and OSM tag rules are in sections 8–9.
