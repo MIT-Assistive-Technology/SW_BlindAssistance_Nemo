@@ -102,6 +102,7 @@ class ParsedAddress:
     city: str | None
     state: str | None
     housenumber: str | None
+    postcode: str | None = None  # 5-digit ZIP; only used to choose between results
 
 
 class RateLimiter:
@@ -152,9 +153,12 @@ def parse_address(address: str) -> ParsedAddress:
 
     # What's left is "City", "State ZIP", or both in one part ("Cambridge MA 02139").
     rest = parts[i + 1 :]
-    state = None
+    state = postcode = None
     if rest:
-        words = _POSTCODE.sub("", rest.pop()).split()
+        last = rest.pop()
+        if zip_code := _POSTCODE.search(last):
+            postcode = zip_code.group()[:5]
+        words = _POSTCODE.sub("", last).split()
         if words and words[-1].lower().rstrip(".") in _STATE_NAMES:
             state = _STATE_NAMES[words.pop().lower().rstrip(".")]
         if words:
@@ -164,14 +168,16 @@ def parse_address(address: str) -> ParsedAddress:
         city=rest[-1] if rest else None,
         state=state,
         housenumber=number.group(1) if number else None,
+        postcode=postcode,
     )
 
 
 def nominatim_params(parsed: ParsedAddress) -> dict[str, str]:
     """The structured /search query. Never free-form `q=`: it matches a bus stop for 77 Mass Ave.
 
-    ZIP codes are left out on purpose: a slightly wrong ZIP (02139 vs 02142 around Kendall) can
-    make a structured search return nothing.
+    The ZIP is left out on purpose: OSM's ZIPs are often a little off (it has the State House at
+    02108, not 02133), and a mismatched ZIP can make a structured search return nothing. It is
+    used afterwards instead, to choose between results (see point_from_results).
     """
     params = {
         "street": parsed.street,
@@ -236,10 +242,21 @@ def point_from_results(results: list[dict], parsed: ParsedAddress) -> GeocodedPo
     if parsed.housenumber:
         # Never hand back a different house: 79 Mass Ave is the wrong door for 77.
         houses = [r for r in houses if _housenumber_matches(r, parsed.housenumber)]
-    if not parsed.city and len(houses) > 1:
-        first = _lat_lon(houses[0])
-        if any(_meters_between(first, _lat_lon(r)) > AMBIGUOUS_M for r in houses[1:]):
-            raise GeocodeAmbiguous("More than one place has this address. Add the city.")
+    if parsed.postcode:
+        # Boston has the same street name in several neighborhoods (465 Huntington Ave is the
+        # MFA in 02115 and a house in Hyde Park, 02136). The ZIP picks the right one when OSM
+        # has it; otherwise keep Nominatim's order.
+        same_zip = [r for r in houses if _postcode_matches(r, parsed.postcode)]
+        houses = same_zip or houses
+    if len(houses) > 1:
+        top = houses[0]
+        far = [r for r in houses[1:] if _meters_between(_lat_lon(top), _lat_lon(r)) > AMBIGUOUS_M]
+        # Without a city any far match is a different place. With one, Nominatim's order only
+        # means something if it ranked the top result higher; a tie is a coin flip.
+        if far and (not parsed.city or any(_importance(r) >= _importance(top) for r in far)):
+            raise GeocodeAmbiguous(
+                "More than one place has this address. Add the city or ZIP code."
+            )
     if not houses and not streets:
         raise GeocodeNotFound("Couldn't find that address.")
 
@@ -306,6 +323,18 @@ def _rank(result: dict) -> int:
 def _is_transit(result: dict) -> bool:
     category = result.get("category") or result.get("class")
     return category == "public_transport" or (category, result.get("type")) in _TRANSIT
+
+
+def _importance(result: dict) -> float:
+    try:
+        return float(result.get("importance") or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _postcode_matches(result: dict, postcode: str) -> bool:
+    found = str((result.get("address") or {}).get("postcode") or "")
+    return postcode in {p.strip()[:5] for p in re.split(r"[;,]", found)}
 
 
 def _housenumber_matches(result: dict, housenumber: str) -> bool:

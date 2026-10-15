@@ -139,6 +139,16 @@ def test_recorded_unknown_address_is_not_found(address_id):
         _geocode_recorded(address_id)
 
 
+def test_465_huntington_ave_without_a_zip_is_ambiguous():
+    """Boston has two: the MFA (Fenway, 02115) and a house in Hyde Park (02136). Nominatim ranks
+    them equally and lists Hyde Park first. The query doesn't include the ZIP, so this replays
+    the same recording as the museum-of-fine-arts address."""
+    replay = Replay([_recording("museum-of-fine-arts")])
+    client = httpx.Client(transport=httpx.MockTransport(replay))
+    with pytest.raises(GeocodeAmbiguous):
+        geocode(ResolveRequest(address="465 Huntington Ave, Boston, MA"), client=client)
+
+
 # --- Hand-made responses -----------------------------------------------------------------------
 
 
@@ -152,9 +162,14 @@ def _result(
     kind="university",
     osm_type="way",
     osm_id=1,
+    postcode="02139",
+    importance=0.3,
     entrances=None,
 ) -> dict:
     """A made-up Nominatim jsonv2 result with only the fields geocode reads."""
+    address = {"postcode": postcode} if postcode else {}
+    if housenumber:
+        address["house_number"] = housenumber
     return {
         "osm_type": osm_type,
         "osm_id": osm_id,
@@ -163,7 +178,8 @@ def _result(
         "category": category,
         "type": kind,
         "place_rank": rank,
-        "address": {"house_number": housenumber} if housenumber else {},
+        "importance": importance,
+        "address": address,
         "entrances": entrances,
     }
 
@@ -220,6 +236,12 @@ def test_query_is_structured_never_free_form():
 def test_address_formats(address, street, city):
     parsed = parse_address(address)
     assert (parsed.street, parsed.city) == (street, city)
+
+
+def test_zip_is_parsed_but_not_sent():
+    parsed = parse_address("465 Huntington Ave, Boston, MA 02115-5523")
+    assert (parsed.city, parsed.postcode) == ("Boston", "02115")
+    assert "postalcode" not in nominatim_params(parsed)
 
 
 def test_no_city_searches_only_the_pilot_area():
@@ -302,6 +324,35 @@ def test_same_address_in_two_cities_without_a_city_is_ambiguous():
     client, _ = _serve([cambridge, boston])
     with pytest.raises(GeocodeAmbiguous):
         geocode(ResolveRequest(address="77 Mass Ave"), client=client)
+
+
+HUNTINGTON = "465 Huntington Ave, Boston, MA"
+HYDE_PARK = {"lat": 42.2624, "lon": -71.1144, "postcode": "02136", "osm_id": 1}
+FENWAY = {"lat": 42.3390, "lon": -71.0927, "postcode": "02115", "osm_id": 2}
+
+
+def test_zip_picks_between_same_named_streets():
+    hyde_park = _result(housenumber="465", importance=1e-5, **HYDE_PARK)
+    fenway = _result(housenumber="465", importance=1e-5, **FENWAY)
+    client, _ = _serve([hyde_park, fenway])
+    point = geocode(ResolveRequest(address=f"{HUNTINGTON} 02115"), client=client)
+    assert point.osm_ref == "way/2"
+
+
+def test_equally_ranked_far_matches_are_ambiguous():
+    hyde_park = _result(housenumber="465", importance=1e-5, **HYDE_PARK)
+    fenway = _result(housenumber="465", importance=1e-5, **FENWAY)
+    client, _ = _serve([hyde_park, fenway])
+    with pytest.raises(GeocodeAmbiguous):
+        geocode(ResolveRequest(address=HUNTINGTON), client=client)
+
+
+def test_far_match_ranked_lower_is_ignored():
+    """A real building outranks a stray address point far away (seen for 84 Mass Ave)."""
+    building = _result(housenumber="465", importance=0.4, **FENWAY)
+    stray = _result(housenumber="465", importance=1e-5, **HYDE_PARK)
+    client, _ = _serve([building, stray])
+    assert geocode(ResolveRequest(address=HUNTINGTON), client=client).osm_ref == "way/2"
 
 
 def test_entrances_drop_exits_and_private_doors():
