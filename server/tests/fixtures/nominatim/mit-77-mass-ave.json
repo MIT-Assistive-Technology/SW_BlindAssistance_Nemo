@@ -1,0 +1,206 @@
+{
+  "id": "mit-77-mass-ave",
+  "address": "77 Massachusetts Ave, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:58:49+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "77 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 362494816,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 11623747407,
+      "lat": "42.3592593",
+      "lon": "-71.0933625",
+      "category": "office",
+      "type": "educational_institution",
+      "place_rank": 30,
+      "importance": 0.3479646975901272,
+      "addresstype": "office",
+      "name": "School of Architecture and Planning",
+      "display_name": "School of Architecture and Planning, 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "office": "School of Architecture and Planning",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3592093",
+        "42.3593093",
+        "-71.0934125",
+        "-71.0933125"
+      ]
+    },
+    {
+      "place_id": 358566952,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 32517230,
+      "lat": "42.3592936",
+      "lon": "-71.0930790",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "7 Rogers Building",
+      "display_name": "7 Rogers Building, 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "7 Rogers Building",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 981493472,
+          "type": "main",
+          "lat": "42.3591286",
+          "lon": "-71.0933469"
+        },
+        {
+          "osm_id": 9279372526,
+          "type": "yes",
+          "lat": "42.3592337",
+          "lon": "-71.0934043"
+        }
+      ],
+      "boundingbox": [
+        "42.3590072",
+        "42.3596277",
+        "-71.0935585",
+        "-71.0927221"
+      ]
+    },
+    {
+      "place_id": 358880087,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 1982225129,
+      "lat": "42.3592470",
+      "lon": "-71.0933124",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Rotch Library",
+      "display_name": "Rotch Library, 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "Rotch Library",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3591970",
+        "42.3592970",
+        "-71.0933624",
+        "-71.0932624"
+      ]
+    },
+    {
+      "place_id": 361958651,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 3532120635,
+      "lat": "42.3593482",
+      "lon": "-71.0932625",
+      "category": "tourism",
+      "type": "artwork",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "tourism",
+      "name": "Loohooloo (Stella Room)",
+      "display_name": "Loohooloo (Stella Room), 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "tourism": "Loohooloo (Stella Room)",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3592982",
+        "42.3593982",
+        "-71.0933125",
+        "-71.0932125"
+      ]
+    },
+    {
+      "place_id": 359235038,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12095329324,
+      "lat": "42.3592250",
+      "lon": "-71.0929287",
+      "category": "amenity",
+      "type": "toilets",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3591750",
+        "42.3592750",
+        "-71.0929787",
+        "-71.0928787"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "id": "mit-museum",
+  "address": "314 Main St, Cambridge, MA 02142",
+  "recorded_at": "2026-10-15T05:58:55+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "314 Main St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 362594215,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 367781117,
+      "lat": "42.3619754",
+      "lon": "-71.0864154",
+      "category": "tourism",
+      "type": "museum",
+      "place_rank": 30,
+      "importance": 0.34188389141160974,
+      "addresstype": "tourism",
+      "name": "MIT Museum",
+      "display_name": "MIT Museum, 314, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "tourism": "MIT Museum",
+        "house_number": "314",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3619254",
+        "42.3620254",
+        "-71.0864654",
+        "-71.0863654"
+      ]
+    },
+    {
+      "place_id": 360803336,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1254628669,
+      "lat": "42.3621180",
+      "lon": "-71.0866657",
+      "category": "building",
+      "type": "office",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "E28",
+      "display_name": "E28, 314, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "E28",
+        "house_number": "314",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3618715",
+        "42.3623616",
+        "-71.0870543",
+        "-71.0862780"
+      ]
+    },
+    {
+      "place_id": 363312320,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 11626021903,
+      "lat": "42.3622321",
+      "lon": "-71.0865335",
+      "category": "shop",
+      "type": "books",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "shop",
+      "name": "MIT Press Bookstore",
+      "display_name": "MIT Press Bookstore, 314, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "shop": "MIT Press Bookstore",
+        "house_number": "314",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3621821",
+        "42.3622821",
+        "-71.0865835",
+        "-71.0864835"
+      ]
+    },
+    {
+      "place_id": 364082588,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 11173231405,
+      "lat": "42.3622285",
+      "lon": "-71.0863681",
+      "category": "amenity",
+      "type": "cafe",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Ripple Cafe",
+      "display_name": "Ripple Cafe, 314, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "amenity": "Ripple Cafe",
+        "house_number": "314",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3621785",
+        "42.3622785",
+        "-71.0864181",
+        "-71.0863181"
+      ]
+    }
+  ]
+}

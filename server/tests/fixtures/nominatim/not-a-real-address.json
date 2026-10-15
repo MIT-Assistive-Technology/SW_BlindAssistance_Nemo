@@ -1,0 +1,18 @@
+{
+  "id": "not-a-real-address",
+  "address": "999 Imaginary Rd, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:59:09+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "999 Imaginary Rd",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": []
+}

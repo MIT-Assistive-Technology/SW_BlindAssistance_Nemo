@@ -1,0 +1,204 @@
+{
+  "id": "mit-77-mass-ave-nickname",
+  "address": "77 Mass Ave, Cambridge, MA",
+  "recorded_at": "2026-10-15T05:58:50+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "77 Massachusetts Avenue",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 361896674,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 11623747407,
+      "lat": "42.3592593",
+      "lon": "-71.0933625",
+      "category": "office",
+      "type": "educational_institution",
+      "place_rank": 30,
+      "importance": 0.3479646975901272,
+      "addresstype": "office",
+      "name": "School of Architecture and Planning",
+      "display_name": "School of Architecture and Planning, 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "office": "School of Architecture and Planning",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3592093",
+        "42.3593093",
+        "-71.0934125",
+        "-71.0933125"
+      ]
+    },
+    {
+      "place_id": 361695826,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 32517230,
+      "lat": "42.3592936",
+      "lon": "-71.0930790",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "7 Rogers Building",
+      "display_name": "7 Rogers Building, 77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "7 Rogers Building",
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 981493472,
+          "type": "main",
+          "lat": "42.3591286",
+          "lon": "-71.0933469"
+        },
+        {
+          "osm_id": 9279372526,
+          "type": "yes",
+          "lat": "42.3592337",
+          "lon": "-71.0934043"
+        }
+      ],
+      "boundingbox": [
+        "42.3590072",
+        "42.3596277",
+        "-71.0935585",
+        "-71.0927221"
+      ]
+    },
+    {
+      "place_id": 361954566,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12095331242,
+      "lat": "42.3593355",
+      "lon": "-71.0930420",
+      "category": "amenity",
+      "type": "drinking_water",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3592855",
+        "42.3593855",
+        "-71.0930920",
+        "-71.0929920"
+      ]
+    },
+    {
+      "place_id": 361956077,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12095329324,
+      "lat": "42.3592250",
+      "lon": "-71.0929287",
+      "category": "amenity",
+      "type": "toilets",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3591750",
+        "42.3592750",
+        "-71.0929787",
+        "-71.0928787"
+      ]
+    },
+    {
+      "place_id": 404440016,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 8615816,
+      "lat": "42.3596075",
+      "lon": "-71.0949798",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "77, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "77",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3595575",
+        "42.3596575",
+        "-71.0950298",
+        "-71.0949298"
+      ]
+    }
+  ]
+}

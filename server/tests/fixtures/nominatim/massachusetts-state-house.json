@@ -1,0 +1,354 @@
+{
+  "id": "massachusetts-state-house",
+  "address": "24 Beacon St, Boston, MA 02133, United States",
+  "recorded_at": "2026-10-15T05:59:07+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "24 Beacon St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Boston"
+  },
+  "response": [
+    {
+      "place_id": 363262879,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29718019,
+      "lat": "42.3586020",
+      "lon": "-71.0638751",
+      "category": "office",
+      "type": "government",
+      "place_rank": 30,
+      "importance": 0.47027647083087754,
+      "addresstype": "office",
+      "name": "Massachusetts State House",
+      "display_name": "Massachusetts State House, 24, Beacon Street, Beacon Hill, Boston, Suffolk County, Massachusetts, 02108, United States",
+      "address": {
+        "office": "Massachusetts State House",
+        "house_number": "24",
+        "road": "Beacon Street",
+        "suburb": "Beacon Hill",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02108",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 1153869735,
+          "type": "main",
+          "lat": "42.3589544",
+          "lon": "-71.0635884",
+          "extratags": {
+            "door": "hinged",
+            "level": "1",
+            "access": "no"
+          }
+        },
+        {
+          "osm_id": 1325838529,
+          "type": "yes",
+          "lat": "42.3581568",
+          "lon": "-71.0641765"
+        },
+        {
+          "osm_id": 4207362204,
+          "type": "main",
+          "lat": "42.3582900",
+          "lon": "-71.0632236",
+          "extratags": {
+            "door": "hinged",
+            "name": "General Hooker Entrance",
+            "access": "permit",
+            "operator": "Commonwealth of Massachusetts",
+            "wheelchair": "no"
+          }
+        },
+        {
+          "osm_id": 7607256688,
+          "type": "yes",
+          "lat": "42.3584571",
+          "lon": "-71.0640745",
+          "extratags": {
+            "door": "opening",
+            "level": "0",
+            "access": "permit"
+          }
+        },
+        {
+          "osm_id": 7607256689,
+          "type": "yes",
+          "lat": "42.3585431",
+          "lon": "-71.0634739",
+          "extratags": {
+            "door": "opening",
+            "level": "0",
+            "access": "permit"
+          }
+        },
+        {
+          "osm_id": 7617222376,
+          "type": "yes",
+          "lat": "42.3584799",
+          "lon": "-71.0634573",
+          "extratags": {
+            "door": "no",
+            "level": "0",
+            "access": "private",
+            "wheelchair": "yes"
+          }
+        },
+        {
+          "osm_id": 7617248324,
+          "type": "yes",
+          "lat": "42.3585187",
+          "lon": "-71.0641699",
+          "extratags": {
+            "door": "no",
+            "level": "0",
+            "access": "private",
+            "wheelchair": "yes"
+          }
+        },
+        {
+          "osm_id": 7617248330,
+          "type": "yes",
+          "lat": "42.3583964",
+          "lon": "-71.0640570",
+          "extratags": {
+            "door": "no",
+            "level": "0",
+            "access": "private",
+            "wheelchair": "yes"
+          }
+        },
+        {
+          "osm_id": 7617248331,
+          "type": "yes",
+          "lat": "42.3583124",
+          "lon": "-71.0642146"
+        },
+        {
+          "osm_id": 7617248359,
+          "type": "main",
+          "lat": "42.3588647",
+          "lon": "-71.0641824",
+          "extratags": {
+            "door": "hinged",
+            "access": "private"
+          }
+        },
+        {
+          "osm_id": 7617248361,
+          "type": "yes",
+          "lat": "42.3593337",
+          "lon": "-71.0640002"
+        },
+        {
+          "osm_id": 7617248453,
+          "type": "staircase",
+          "lat": "42.3584427",
+          "lon": "-71.0632672",
+          "extratags": {
+            "door": "hinged"
+          }
+        },
+        {
+          "osm_id": 7617248465,
+          "type": "yes",
+          "lat": "42.3586037",
+          "lon": "-71.0634908",
+          "extratags": {
+            "door": "no",
+            "level": "0",
+            "access": "private",
+            "wheelchair": "yes"
+          }
+        },
+        {
+          "osm_id": 7623395857,
+          "type": "main",
+          "lat": "42.3580892",
+          "lon": "-71.0629064",
+          "extratags": {
+            "door": "hinged",
+            "level": "-1",
+            "access": "permit",
+            "wheelchair": "no"
+          }
+        },
+        {
+          "osm_id": 7623395860,
+          "type": "yes",
+          "lat": "42.3584226",
+          "lon": "-71.0628948",
+          "extratags": {
+            "door": "hinged",
+            "access": "no"
+          }
+        },
+        {
+          "osm_id": 7686490598,
+          "type": "yes",
+          "lat": "42.3583055",
+          "lon": "-71.0642639"
+        }
+      ],
+      "boundingbox": [
+        "42.3578507",
+        "42.3593561",
+        "-71.0645905",
+        "-71.0628013"
+      ]
+    },
+    {
+      "place_id": 363439610,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 358278198,
+      "lat": "42.3590086",
+      "lon": "-71.0641393",
+      "category": "amenity",
+      "type": "post_office",
+      "place_rank": 30,
+      "importance": 8.102616922250732e-05,
+      "addresstype": "amenity",
+      "name": "Massachusetts State House Post Office",
+      "display_name": "Massachusetts State House Post Office, 24, Beacon Street, Beacon Hill, Boston, Suffolk County, Massachusetts, 02108, United States",
+      "address": {
+        "amenity": "Massachusetts State House Post Office",
+        "house_number": "24",
+        "road": "Beacon Street",
+        "suburb": "Beacon Hill",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02108",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3589586",
+        "42.3590586",
+        "-71.0641893",
+        "-71.0640893"
+      ]
+    },
+    {
+      "place_id": 404913453,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 8637716,
+      "lat": "42.3326746",
+      "lon": "-71.1593768",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "24, Beacon Street, Cleveland Circle, Brighton, Boston, Suffolk County, Massachusetts, 02467, United States",
+      "address": {
+        "house_number": "24",
+        "road": "Beacon Street",
+        "neighbourhood": "Cleveland Circle",
+        "suburb": "Brighton",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02467",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3326246",
+        "42.3327246",
+        "-71.1594268",
+        "-71.1593268"
+      ]
+    },
+    {
+      "place_id": 412777698,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 8637716,
+      "lat": "42.3326746",
+      "lon": "-71.1593768",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "24, Beacon Street, Cleveland Circle, Brighton, Boston, Suffolk County, Massachusetts, 02467, United States",
+      "address": {
+        "house_number": "24",
+        "road": "Beacon Street",
+        "neighbourhood": "Cleveland Circle",
+        "suburb": "Brighton",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02467",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3326246",
+        "42.3327246",
+        "-71.1594268",
+        "-71.1593268"
+      ]
+    },
+    {
+      "place_id": 412783572,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 335936676,
+      "lat": "42.2532007",
+      "lon": "-71.1170205",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "24, Beacon Street, Fairmount, Hyde Park, Boston, Suffolk County, Massachusetts, 02136, United States",
+      "address": {
+        "house_number": "24",
+        "road": "Beacon Street",
+        "neighbourhood": "Fairmount",
+        "suburb": "Hyde Park",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02136",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.2531507",
+        "42.2532507",
+        "-71.1170705",
+        "-71.1169705"
+      ]
+    }
+  ]
+}

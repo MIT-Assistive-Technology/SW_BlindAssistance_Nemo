@@ -1,0 +1,183 @@
+{
+  "id": "mit-stata",
+  "address": "32 Vassar St, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:58:53+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "32 Vassar St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 358511917,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 27078002,
+      "lat": "42.3615416",
+      "lon": "-71.0906713",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "32 Stata Center",
+      "display_name": "32 Stata Center, 32, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "32 Stata Center",
+        "house_number": "32",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 4329041563,
+          "type": "yes",
+          "lat": "42.3612245",
+          "lon": "-71.0905540"
+        },
+        {
+          "osm_id": 4329041565,
+          "type": "main",
+          "lat": "42.3620834",
+          "lon": "-71.0899293"
+        },
+        {
+          "osm_id": 4329091771,
+          "type": "exit",
+          "lat": "42.3609723",
+          "lon": "-71.0907854"
+        },
+        {
+          "osm_id": 9333001717,
+          "type": "yes",
+          "lat": "42.3616888",
+          "lon": "-71.0898882"
+        }
+      ],
+      "boundingbox": [
+        "42.3609528",
+        "42.3621278",
+        "-71.0914836",
+        "-71.0898394"
+      ]
+    },
+    {
+      "place_id": 360947077,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 3376088223,
+      "lat": "42.3616050",
+      "lon": "-71.0913383",
+      "category": "amenity",
+      "type": "bicycle_repair_station",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Dero",
+      "display_name": "Dero, 32, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "Dero",
+        "house_number": "32",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3615550",
+        "42.3616550",
+        "-71.0913883",
+        "-71.0912883"
+      ]
+    },
+    {
+      "place_id": 361791642,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 1710149780,
+      "lat": "42.3617744",
+      "lon": "-71.0902948",
+      "category": "amenity",
+      "type": "atm",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "32, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "32",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3617244",
+        "42.3618244",
+        "-71.0903448",
+        "-71.0902448"
+      ]
+    },
+    {
+      "place_id": 362031790,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12377157996,
+      "lat": "42.3616394",
+      "lon": "-71.0911163",
+      "category": "office",
+      "type": "research",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "office",
+      "name": "MIT Computer Science and Artificial Intelligence Laboratory",
+      "display_name": "MIT Computer Science and Artificial Intelligence Laboratory, 32, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "office": "MIT Computer Science and Artificial Intelligence Laboratory",
+        "house_number": "32",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3615894",
+        "42.3616894",
+        "-71.0911663",
+        "-71.0910663"
+      ]
+    }
+  ]
+}

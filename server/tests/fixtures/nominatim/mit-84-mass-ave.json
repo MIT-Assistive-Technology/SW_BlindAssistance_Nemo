@@ -1,0 +1,217 @@
+{
+  "id": "mit-84-mass-ave",
+  "address": "84 Massachusetts Ave, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:58:51+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "84 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 362637437,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 24494019,
+      "lat": "42.3590480",
+      "lon": "-71.0947711",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "W20 Stratton Student Center",
+      "display_name": "W20 Stratton Student Center, 84, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "W20 Stratton Student Center",
+        "house_number": "84",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 1830061705,
+          "type": "main",
+          "lat": "42.3589278",
+          "lon": "-71.0944671"
+        },
+        {
+          "osm_id": 1830066668,
+          "type": "yes",
+          "lat": "42.3588037",
+          "lon": "-71.0948371"
+        },
+        {
+          "osm_id": 4330221299,
+          "type": "exit",
+          "lat": "42.3588587",
+          "lon": "-71.0945683"
+        },
+        {
+          "osm_id": 4330221301,
+          "type": "exit",
+          "lat": "42.3588091",
+          "lon": "-71.0947192"
+        }
+      ],
+      "boundingbox": [
+        "42.3587143",
+        "42.3593812",
+        "-71.0953300",
+        "-71.0942122"
+      ]
+    },
+    {
+      "place_id": 363182687,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 5921721885,
+      "lat": "42.3589055",
+      "lon": "-71.0946330",
+      "category": "amenity",
+      "type": "cafe",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "TeaDo",
+      "display_name": "TeaDo, 84, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "TeaDo",
+        "house_number": "84",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3588555",
+        "42.3589555",
+        "-71.0946830",
+        "-71.0945830"
+      ]
+    },
+    {
+      "place_id": 361871928,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 5254669783,
+      "lat": "42.3592136",
+      "lon": "-71.0946272",
+      "category": "office",
+      "type": "it",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "office",
+      "name": "Student Information Processing Board",
+      "display_name": "Student Information Processing Board, 84, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "office": "Student Information Processing Board",
+        "house_number": "84",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3591636",
+        "42.3592636",
+        "-71.0946772",
+        "-71.0945772"
+      ]
+    },
+    {
+      "place_id": 404957563,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 507868287,
+      "lat": "42.3789584",
+      "lon": "-71.1190401",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "84, Massachusetts Avenue, Baldwin, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "house_number": "84",
+        "road": "Massachusetts Avenue",
+        "suburb": "Baldwin",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3789084",
+        "42.3790084",
+        "-71.1190901",
+        "-71.1189901"
+      ]
+    },
+    {
+      "place_id": 404917017,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1092687153,
+      "lat": "42.3584453",
+      "lon": "-71.0935948",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "84, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "84",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3583953",
+        "42.3584953",
+        "-71.0936448",
+        "-71.0935448"
+      ]
+    }
+  ]
+}

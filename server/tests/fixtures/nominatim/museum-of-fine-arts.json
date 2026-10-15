@@ -1,0 +1,121 @@
+{
+  "id": "museum-of-fine-arts",
+  "address": "465 Huntington Ave, Boston, MA 02115",
+  "recorded_at": "2026-10-15T05:59:06+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "465 Huntington Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Boston"
+  },
+  "response": [
+    {
+      "place_id": 412772459,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 8650469,
+      "lat": "42.2624226",
+      "lon": "-71.1143943",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "465, Huntington Avenue, Hyde Park, Boston, Suffolk County, Massachusetts, 02136, United States",
+      "address": {
+        "house_number": "465",
+        "road": "Huntington Avenue",
+        "suburb": "Hyde Park",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02136",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.2623726",
+        "42.2624726",
+        "-71.1144443",
+        "-71.1143443"
+      ]
+    },
+    {
+      "place_id": 412774239,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 798289594,
+      "lat": "42.3390490",
+      "lon": "-71.0926600",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "465, Huntington Avenue, Fenway-Kenmore, Boston, Suffolk County, Massachusetts, 02115, United States",
+      "address": {
+        "house_number": "465",
+        "road": "Huntington Avenue",
+        "suburb": "Fenway-Kenmore",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02115",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3389990",
+        "42.3390990",
+        "-71.0927100",
+        "-71.0926100"
+      ]
+    },
+    {
+      "place_id": 412792582,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 426493699,
+      "lat": "42.3383880",
+      "lon": "-71.0934347",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "465, Huntington Avenue, Fenway-Kenmore, Boston, Suffolk County, Massachusetts, 02115, United States",
+      "address": {
+        "house_number": "465",
+        "road": "Huntington Avenue",
+        "suburb": "Fenway-Kenmore",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02115",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3383380",
+        "42.3384380",
+        "-71.0934847",
+        "-71.0933847"
+      ]
+    }
+  ]
+}
