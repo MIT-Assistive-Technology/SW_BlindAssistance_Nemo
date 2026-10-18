@@ -66,8 +66,15 @@ File: `app/resolver.py` → `find_building`
 
 ## 6. Pilot bundles (the MVP deliverable)
 
-- [ ] Write `scripts/build_bundles.py`: for each pilot site, run the ladder on preloaded OSM data and write one JSON bundle in the contract's shape to `bundles/<site>.json`.
-- [ ] Validate every bundle with `ResolveResult.model_validate` in a test.
+- [x] `scripts/build_bundles.py` (logic in `app/bundle.py`, tests in `tests/test_bundle.py`): for each site in `pilot_sites.json` it runs geocode → find_building → read_entrances → facade_fallback → path checks, validates the result with `ResolveResult`, and writes `bundles/<id>.json`. Commit the bundles; they ship with the app.
+
+  ```bash
+  python scripts/build_bundles.py --offline              # replay saved Nominatim responses, no network
+  python scripts/build_bundles.py --only mit-stata       # one site (repeatable); live Nominatim needs USER_AGENT in .env
+  ```
+
+  A step that is still a TODO shows as `blocked on BE-3 (find_building)` and the other sites keep going. The exit code is 1 until every site builds. To add a site, record its address first (`scripts/record_nominatim_fixtures.py`).
+- [ ] Unblock it: BE-3, BE-4, BE-5 and the BE-7 path checks (`path_checks_todo` in `app/bundle.py`).
 - [ ] OSM entrance coverage is low (about 10% of MIT/Kendall buildings, 1.8% of Cambridge). Before building bundles, survey the pilot entrances on site and add them to OSM by hand, with changeset comments like "Add main entrance to … based on survey".
 
 ## Rules

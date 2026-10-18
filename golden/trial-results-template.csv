@@ -1,0 +1,1 @@
+trial_id,date,site_id,phase,participant_code,spotter_code,condition,drop_off_point_id,car_final_course_deg,matched_road,stop_type,exit_side,reached_door,sighted_help,wrong_door_confident,final_error_m,error_basis,time_s,corrections,safety_stops,sus,nasa_tlx,notes

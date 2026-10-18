@@ -1,0 +1,15 @@
+{
+  "about": "Pilot sites for scripts/build_bundles.py. Each becomes bundles/<id>.json. Addresses are reused verbatim from tests/fixtures/nominatim/addresses.json so --offline can replay the saved Nominatim responses. 'scenario' is one of same_side, driveway, opposite, campus (plan section 2, test scenarios); tags are provisional until the on-site survey confirms the drop-off spot.",
+  "sites": [
+    {"id": "mit-77-mass-ave", "address": "77 Massachusetts Ave, Cambridge, MA 02139", "name": "MIT Building 7", "scenario": "campus"},
+    {"id": "mit-84-mass-ave", "address": "84 Massachusetts Ave, Cambridge, MA 02139", "name": "Stratton Student Center", "scenario": "campus"},
+    {"id": "mit-48-mass-ave", "address": "48 Massachusetts Ave, Cambridge, MA 02139", "name": "Kresge Auditorium", "scenario": "campus"},
+    {"id": "mit-stata", "address": "32 Vassar St, Cambridge, MA 02139", "name": "Stata Center", "scenario": "campus"},
+    {"id": "mit-media-lab", "address": "75 Amherst St, Cambridge, MA 02139", "name": "MIT Media Lab", "scenario": "campus"},
+    {"id": "mit-museum", "address": "314 Main St, Cambridge, MA 02142", "name": "MIT Museum", "scenario": "same_side"},
+    {"id": "kendall-1-broadway", "address": "1 Broadway, Cambridge, MA 02142", "scenario": "same_side"},
+    {"id": "cambridgeside", "address": "100 Cambridgeside Pl, Cambridge, MA 02141", "name": "CambridgeSide", "scenario": "driveway"},
+    {"id": "cambridge-city-hall", "address": "795 Massachusetts Ave, Cambridge, MA 02139", "name": "Cambridge City Hall", "scenario": "opposite"},
+    {"id": "cambridge-public-library", "address": "449 Broadway, Cambridge, MA 02138", "name": "Cambridge Public Library", "scenario": "same_side"}
+  ]
+}
