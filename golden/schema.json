@@ -42,6 +42,10 @@
       "type": "boolean"
     },
     "why_chosen": {"type": "string", "minLength": 1},
+    "building_osm_id": {
+      "description": "OSM id of the destination building (e.g. 'way/123'), confirmed on site. Lets the evaluation check that the bundle picked the right building.",
+      "type": ["string", "null"]
+    },
     "entrance_truth": {
       "type": "object",
       "required": ["lat", "lon", "method", "reference_point", "measured_on", "measurements", "spread_m"],
