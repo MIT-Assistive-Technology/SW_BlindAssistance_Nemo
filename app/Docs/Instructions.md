@@ -44,8 +44,8 @@ File: `Location/LocationService.swift`
 
 File: `LocationKit/Geo.swift`
 
-- [ ] Implement `distanceMeters`, `bearingDegrees`, `relativeAngle`, `side` and `sameSide`.
-- [ ] Add XCTest cases from the plan's worked examples:
+- [x] Implement `distanceMeters`, `bearingDegrees`, `relativeAngle`, `side`, `sameSide` and `photoRayBearing`.
+- [x] Add XCTest cases from the plan's worked examples (`nemo-softwareTests/GeoTests.swift`, run with ⌘U):
   - side of street: road bearing 90°, door "right", course 92° → `true`; course 268° → `false`; one-way → `nil`
   - left/right of walking direction: direction (1, 0), point at (30, −10) → `.right`
   - relative angle: heading 350°, target 10° → +20°
