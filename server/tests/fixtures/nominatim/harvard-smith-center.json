@@ -1,0 +1,159 @@
+{
+  "id": "harvard-smith-center",
+  "address": "1350 Massachusetts Ave, Cambridge, MA 02138",
+  "recorded_at": "2026-10-15T05:59:00+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "1350 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 361960712,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29639218,
+      "lat": "42.3726335",
+      "lon": "-71.1186637",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "Smith Campus Center",
+      "display_name": "Smith Campus Center, 1350, Massachusetts Avenue, Riverside, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "building": "Smith Campus Center",
+        "house_number": "1350",
+        "road": "Massachusetts Avenue",
+        "suburb": "Riverside",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3721162",
+        "42.3731102",
+        "-71.1191697",
+        "-71.1180484"
+      ]
+    },
+    {
+      "place_id": 359090034,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 6124473602,
+      "lat": "42.3724155",
+      "lon": "-71.1190977",
+      "category": "amenity",
+      "type": "restaurant",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Oggi",
+      "display_name": "Oggi, 1350, Massachusetts Avenue, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Oggi",
+        "house_number": "1350",
+        "road": "Massachusetts Avenue",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3723655",
+        "42.3724655",
+        "-71.1191477",
+        "-71.1190477"
+      ]
+    },
+    {
+      "place_id": 361674191,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7100193739,
+      "lat": "42.3729747",
+      "lon": "-71.1187857",
+      "category": "amenity",
+      "type": "cafe",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Pavement Coffeehouse",
+      "display_name": "Pavement Coffeehouse, 1350, Massachusetts Avenue, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Pavement Coffeehouse",
+        "house_number": "1350",
+        "road": "Massachusetts Avenue",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3729247",
+        "42.3730247",
+        "-71.1188357",
+        "-71.1187357"
+      ]
+    },
+    {
+      "place_id": 361785881,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7110645317,
+      "lat": "42.3727178",
+      "lon": "-71.1185130",
+      "category": "amenity",
+      "type": "restaurant",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Bon Me",
+      "display_name": "Bon Me, 1350, Massachusetts Avenue, Riverside, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Bon Me",
+        "house_number": "1350",
+        "road": "Massachusetts Avenue",
+        "suburb": "Riverside",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3726678",
+        "42.3727678",
+        "-71.1185630",
+        "-71.1184630"
+      ]
+    }
+  ]
+}

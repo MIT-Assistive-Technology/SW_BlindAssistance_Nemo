@@ -1,0 +1,26 @@
+{
+  "about": "Addresses for tests/test_geocode.py (BE-2). scripts/record_nominatim_fixtures.py saves Nominatim's real response for each one as <id>.json next to this file. 'near' is a rough [lat, lon] for the building (the test allows 300 m); 'same_as' must geocode to the same place as that id; 'expect': 'not_found' must raise GeocodeNotFound.",
+  "addresses": [
+    {"id": "mit-77-mass-ave", "address": "77 Massachusetts Ave, Cambridge, MA 02139", "near": [42.3592, -71.0934], "note": "Free-form search returns a bus stop named after this address."},
+    {"id": "mit-77-mass-ave-nickname", "address": "77 Mass Ave, Cambridge, MA", "same_as": "mit-77-mass-ave"},
+    {"id": "mit-84-mass-ave", "address": "84 Massachusetts Ave, Cambridge, MA 02139", "near": [42.3591, -71.0947], "note": "Stratton Student Center"},
+    {"id": "mit-48-mass-ave", "address": "48 Massachusetts Ave, Cambridge, MA 02139", "near": [42.3581, -71.0950], "note": "Kresge Auditorium"},
+    {"id": "mit-stata", "address": "32 Vassar St, Cambridge, MA 02139", "near": [42.3616, -71.0906]},
+    {"id": "mit-media-lab", "address": "75 Amherst St, Cambridge, MA 02139", "near": [42.3604, -71.0872]},
+    {"id": "mit-museum", "address": "314 Main St, Cambridge, MA 02142", "near": [42.3623, -71.0866]},
+    {"id": "kendall-1-broadway", "address": "1 Broadway, Cambridge, MA 02142", "near": [42.3628, -71.0831]},
+    {"id": "kendall-1-broadway-floor", "address": "1 Broadway Fl 14, Cambridge, MA 02142", "same_as": "kendall-1-broadway"},
+    {"id": "cambridge-city-hall", "address": "795 Massachusetts Ave, Cambridge, MA 02139", "near": [42.3671, -71.1058]},
+    {"id": "cambridge-public-library", "address": "449 Broadway, Cambridge, MA 02138", "near": [42.3733, -71.1112]},
+    {"id": "harvard-smith-center", "address": "1350 Massachusetts Ave, Cambridge, MA 02138", "near": [42.3726, -71.1182]},
+    {"id": "harvard-science-center", "address": "1 Oxford St, Cambridge, MA 02138", "near": [42.3764, -71.1163]},
+    {"id": "brattle-theatre", "address": "40 Brattle St, Cambridge MA 02138", "near": [42.3735, -71.1207], "note": "No comma between city and state."},
+    {"id": "cambridgeside", "address": "100 Cambridgeside Pl, Cambridge, MA 02141", "near": [42.3677, -71.0766]},
+    {"id": "boston-public-library", "address": "700 Boylston St, Boston, MA 02116", "near": [42.3493, -71.0781]},
+    {"id": "fenway-park", "address": "4 Jersey St, Boston, MA 02215", "near": [42.3467, -71.0972]},
+    {"id": "museum-of-fine-arts", "address": "465 Huntington Ave, Boston, MA 02115", "near": [42.3394, -71.0940]},
+    {"id": "massachusetts-state-house", "address": "24 Beacon St, Boston, MA 02133, United States", "near": [42.3587, -71.0637], "note": "Trailing country."},
+    {"id": "berklee-150-mass-ave", "address": "150 Massachusetts Ave, Boston, MA 02115", "near": [42.3468, -71.0869]},
+    {"id": "not-a-real-address", "address": "999 Imaginary Rd, Cambridge, MA 02139", "expect": "not_found"}
+  ]
+}

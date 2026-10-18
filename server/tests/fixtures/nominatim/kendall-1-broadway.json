@@ -1,0 +1,192 @@
+{
+  "id": "kendall-1-broadway",
+  "address": "1 Broadway, Cambridge, MA 02142",
+  "recorded_at": "2026-10-15T05:58:56+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "1 Broadway",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 360555642,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 141434940,
+      "lat": "42.3628031",
+      "lon": "-71.0834809",
+      "category": "building",
+      "type": "commercial",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "One Broadway",
+      "display_name": "One Broadway, 1, Broadway, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "building": "One Broadway",
+        "house_number": "1",
+        "road": "Broadway",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3623921",
+        "42.3631319",
+        "-71.0840794",
+        "-71.0829683"
+      ]
+    },
+    {
+      "place_id": 361826384,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7956401652,
+      "lat": "42.3629469",
+      "lon": "-71.0838536",
+      "category": "amenity",
+      "type": "bicycle_parking",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "1, Broadway, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "1",
+        "road": "Broadway",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3628969",
+        "42.3629969",
+        "-71.0839036",
+        "-71.0838036"
+      ]
+    },
+    {
+      "place_id": 361897521,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 3354771177,
+      "lat": "42.3625653",
+      "lon": "-71.0832886",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "1, Broadway, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "1",
+        "road": "Broadway",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3625153",
+        "42.3626153",
+        "-71.0833386",
+        "-71.0832386"
+      ]
+    },
+    {
+      "place_id": 361907137,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 2767379658,
+      "lat": "42.3626336",
+      "lon": "-71.0836576",
+      "category": "office",
+      "type": "it",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "office",
+      "name": "Meta",
+      "display_name": "Meta, 1, Broadway, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "office": "Meta",
+        "house_number": "1",
+        "road": "Broadway",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3625836",
+        "42.3626836",
+        "-71.0837076",
+        "-71.0836076"
+      ]
+    },
+    {
+      "place_id": 362761599,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 3356972293,
+      "lat": "42.3626902",
+      "lon": "-71.0839130",
+      "category": "office",
+      "type": "startup_incubator",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "office",
+      "name": "Cambridge Innovation Center",
+      "display_name": "Cambridge Innovation Center, 1, Broadway, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "office": "Cambridge Innovation Center",
+        "house_number": "1",
+        "road": "Broadway",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3626402",
+        "42.3627402",
+        "-71.0839630",
+        "-71.0838630"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "id": "mit-media-lab",
+  "address": "75 Amherst St, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:58:54+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "75 Amherst St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 362194883,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 177921761,
+      "lat": "42.3604253",
+      "lon": "-71.0873044",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "E14 Media Lab",
+      "display_name": "E14 Media Lab, 75, Amherst Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "E14 Media Lab",
+        "house_number": "75",
+        "road": "Amherst Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 5562638424,
+          "type": "yes",
+          "lat": "42.3604572",
+          "lon": "-71.0869239"
+        }
+      ],
+      "boundingbox": [
+        "42.3601734",
+        "42.3607409",
+        "-71.0877613",
+        "-71.0868853"
+      ]
+    },
+    {
+      "place_id": 396155255,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 254299041,
+      "lat": "42.3580345",
+      "lon": "-71.0939377",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "75, Amherst Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "75",
+        "road": "Amherst Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3579845",
+        "42.3580845",
+        "-71.0939877",
+        "-71.0938877"
+      ]
+    }
+  ]
+}

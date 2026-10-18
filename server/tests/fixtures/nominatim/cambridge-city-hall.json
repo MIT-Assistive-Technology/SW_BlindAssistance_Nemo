@@ -1,0 +1,70 @@
+{
+  "id": "cambridge-city-hall",
+  "address": "795 Massachusetts Ave, Cambridge, MA 02139",
+  "recorded_at": "2026-10-15T05:58:58+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "795 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 362522931,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29889531,
+      "lat": "42.3671148",
+      "lon": "-71.1056283",
+      "category": "amenity",
+      "type": "townhall",
+      "place_rank": 30,
+      "importance": 0.1507975276546128,
+      "addresstype": "amenity",
+      "name": "Cambridge City Hall",
+      "display_name": "Cambridge City Hall, 795, Massachusetts Avenue, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "Cambridge City Hall",
+        "house_number": "795",
+        "road": "Massachusetts Avenue",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 8288483308,
+          "type": "yes",
+          "lat": "42.3671623",
+          "lon": "-71.1056362",
+          "extratags": {
+            "wheelchair": "yes"
+          }
+        },
+        {
+          "osm_id": 8288483309,
+          "type": "main",
+          "lat": "42.3670326",
+          "lon": "-71.1057767"
+        }
+      ],
+      "boundingbox": [
+        "42.3668890",
+        "42.3673735",
+        "-71.1060006",
+        "-71.1053096"
+      ]
+    }
+  ]
+}
