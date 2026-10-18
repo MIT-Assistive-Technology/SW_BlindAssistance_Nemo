@@ -37,6 +37,11 @@ def score_door(
 ) -> float | None:
     """Score one OSM entrance node. Returns None when the door must never be used.
 
+
+    # given some kind of input dictionary telling you what signs are on/near(?) the door
+    # get rid of the ones that indicate you probably shouldn't go there (exclude)
+    # get
+
     TODO (BE-4):
       1. Split tags["entrance"] on ";" and drop values in EXCLUDE; None if nothing is left.
       2. None if access or foot is in EXCLUDE_ACCESS.
@@ -48,7 +53,43 @@ def score_door(
       6. Return min(score, CAP).
     tests/test_scoring.py has the expected values; remove its skip marker when done.
     """
-    raise NotImplementedError("BE-4")
+
+    tags_list = tags["entrance"].split(";") # split tags by ;, tags["entrance"] is presumably a list
+
+    # loop through list of tags
+    i = 0
+    never_use = False
+    door_score = UNKNOWN_VALUE
+
+    while i < len(tags_list):
+        if tags_list[i] in EXCLUDE:
+            tags_list.pop(i) # get rid of tags in EXCLUDE
+
+        elif tags_list[i] in EXCLUDE_ACCESS:
+            return None
+
+        else:
+            i += 1
+
+    if tags["addr:housenumber"] == dest_housenumber:
+        return CAP
+
+    door_score = UNKNOWN_VALUE
+    for my_tag in tags_list:
+        if my_tag in BASE.keys() and BASE[my_tag] > door_score:
+            door_score = BASE[my_tag]
+
+    if has_footway:
+        door_score += 0.05
+
+    if on_outline == False:
+        door_score -= 0.10
+
+    return min(door_score, CAP)
+
+    # where are wheelchair and door parameters??
+
+
 
 
 def combine(best_by_class: dict[str, float]) -> float:
