@@ -5,9 +5,9 @@ from pathlib import Path
 
 ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
-    "https://lz4.overpass-api.de/api/interpreter",
-    "https://z.overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
+    # "https://lz4.overpass-api.de/api/interpreter",
+    # "https://z.overpass-api.de/api/interpreter",
+    # "https://overpass.kumi.systems/api/interpreter",
 ]
 HEADERS = {
     "User-Agent": "CambridgePilotTest/1.2",
@@ -15,8 +15,8 @@ HEADERS = {
 }
 RETRY_CODES = {429, 500, 502, 503, 504}
 
-def build_query(lat, lon, timeout=90):
-    around = f"around:10,{lat},{lon}"
+def build_query(lat, lon, timeout=500):
+    around = f"around:40,{lat},{lon}"
     return f"""
     [out:json][timeout:{timeout}];
     (
