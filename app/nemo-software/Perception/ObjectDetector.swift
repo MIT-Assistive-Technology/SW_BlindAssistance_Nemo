@@ -10,7 +10,7 @@ import CoreVideo
 import Foundation
 import ImageIO
 
-public protocol ObjectDetector: AnyObject {
+nonisolated public protocol ObjectDetector: AnyObject {
   /// Run detection on a single frame.
   /// - Parameters:
   ///   - pixelBuffer: the raw image data

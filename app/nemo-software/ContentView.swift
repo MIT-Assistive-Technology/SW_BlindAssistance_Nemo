@@ -17,7 +17,12 @@ struct ContentView: View {
 // MARK: - Composition root
 
 private func makeCameraViewModel() -> CameraViewModel {
-  let frameProvider: any FrameProvider = CameraFrameProvider()
+  // The Simulator has no camera, so it gets blank frames to exercise the pipeline.
+  #if targetEnvironment(simulator)
+    let frameProvider: any FrameProvider = SyntheticFrameProvider()
+  #else
+    let frameProvider: any FrameProvider = CameraFrameProvider()
+  #endif
   let detector: ObjectDetector = VisionObjectDetector()
   let pipeline = PerceptionPipeline(
     detector: detector,

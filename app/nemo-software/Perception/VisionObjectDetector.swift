@@ -15,7 +15,7 @@ import Vision
   import UIKit
 #endif
 
-final class VisionObjectDetector: ObjectDetector {
+nonisolated final class VisionObjectDetector: ObjectDetector {
   // TODO: Replace with the VNCoreMLModel created from your bundled .mlmodel.
   // Example:
   //   private let mlModel: VNCoreMLModel = try! VNCoreMLModel(for: yolo11n().model)
@@ -57,7 +57,7 @@ final class VisionObjectDetector: ObjectDetector {
 
 // MARK: - Convenience helpers used by the converter
 
-extension Detection {
+nonisolated extension Detection {
   /// Creates a Detection from a Vision observation.
   init(from observation: VNRecognizedObjectObservation) {
     self.init(
