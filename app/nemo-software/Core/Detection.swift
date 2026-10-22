@@ -9,7 +9,7 @@ import CoreGraphics
 import Foundation
 
 /// One label/confidence pair from an object detector.
-public struct DetectionLabel: Sendable {
+nonisolated public struct DetectionLabel: Sendable {
   public let identifier: String
   public let confidence: Float
 
@@ -20,7 +20,7 @@ public struct DetectionLabel: Sendable {
 }
 
 /// A single object detected in a frame.
-public struct Detection: Identifiable {
+nonisolated public struct Detection: Identifiable, Sendable {
   /// Normalized bounding box in image coordinates (origin bottom-left).
   public let boundingBox: CGRect
 

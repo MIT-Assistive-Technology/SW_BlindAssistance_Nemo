@@ -8,7 +8,7 @@ import CoreLocation
 import Foundation
 
 /// A snapshot of where the device was and which way it was pointing.
-public struct LocationSnapshot {
+nonisolated public struct LocationSnapshot {
   /// Absolute latitude/longitude if GPS is available.
   public let coordinate: CLLocationCoordinate2D?
 

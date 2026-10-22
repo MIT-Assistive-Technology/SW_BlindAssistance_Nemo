@@ -11,7 +11,7 @@ import Foundation
 import ImageIO
 
 /// A single frame of video plus everything we know about the world at that instant.
-public struct Frame {
+nonisolated public struct Frame {
   /// The captured pixel buffer.
   public let pixelBuffer: CVPixelBuffer
 
