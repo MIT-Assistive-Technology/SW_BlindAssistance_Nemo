@@ -5,6 +5,7 @@
 //
 
 import CoreLocation
+import Foundation
 import SwiftUI
 
 struct StatusOverlayView: View {

@@ -1,0 +1,8 @@
+{
+  "Version": 1.0,
+  "Metadata": { "Project": "nemo-software", "Description": "Bearing lock: two firm taps." },
+  "Pattern": [
+    { "Event": { "Time": 0.0, "EventType": "HapticTransient", "EventParameters": [ { "ParameterID": "HapticIntensity", "ParameterValue": 0.8 }, { "ParameterID": "HapticSharpness", "ParameterValue": 0.6 } ] } },
+    { "Event": { "Time": 0.09, "EventType": "HapticTransient", "EventParameters": [ { "ParameterID": "HapticIntensity", "ParameterValue": 1.0 }, { "ParameterID": "HapticSharpness", "ParameterValue": 0.6 } ] } }
+  ]
+}

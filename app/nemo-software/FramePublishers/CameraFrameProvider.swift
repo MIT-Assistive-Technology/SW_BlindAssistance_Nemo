@@ -1,13 +1,16 @@
 //  CameraFrameProvider.swift
 //  nemo-software
 //
-//  Live camera capture using AVFoundation. The TODOs focus on the minimum needed
-//  to stream frames to the perception pipeline.
+//  Live camera capture using AVFoundation, used by the debug camera screen.
+//  During guidance ARKit owns the camera (the two can't run together) and
+//  `ARFrameProvider` forwards `ARFrame.capturedImage` through this same protocol.
 //
 
 import AVFoundation
+import CoreMedia
 import CoreVideo
 import Foundation
+import os
 
 #if canImport(UIKit)
   import UIKit
@@ -28,75 +31,99 @@ import Foundation
     return discoverySession.devices.first
   }
 
-  /// Plain AVFoundation camera, good for the first detection milestone.
-  /// NOTE: once ARKit guidance lands (FE-12), ARKit owns the camera and the two
-  /// can't run at the same time. Add an `ARFrameProvider` that forwards
-  /// `ARFrame.capturedImage` through this same `FrameProvider` protocol.
   final class CameraFrameProvider: NSObject, FrameProvider {
     var isRunning: Bool { captureSession.isRunning }
     weak var delegate: FrameProviderDelegate?
 
     private let captureDevice: AVCaptureDevice?
-    private let captureSession: AVCaptureSession
+    /// Used on `cameraQueue` (start/stop) and on main (configuration); AVCaptureSession is
+    /// safe to use from both.
+    private nonisolated(unsafe) let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
+    private var isConfigured = false
 
     /// Queue used for all camera session work so the main thread stays responsive.
     private let cameraQueue = DispatchQueue(label: "nemo.camera", qos: .userInitiated)
+    /// True while the delegate is still handling the previous frame; newer frames are dropped.
+    private let busy = OSAllocatedUnfairLock(initialState: false)
 
     override init() {
       self.captureDevice = bestCaptureDevice()
-      self.captureSession = AVCaptureSession()
       super.init()
     }
 
     // MARK: - FrameProvider
 
     func setupSession() {
-      // TODO: Request camera permission and configure the capture session.
-      // If `captureDevice` is nil (Simulator/CI), log it and return without crashing.
-      //
-      // Steps:
-      //   1. Call AVCaptureDevice.requestAccess(for: .video) and only proceed if granted.
-      //   2. captureSession.beginConfiguration().
-      //   3. Add AVCaptureDeviceInput(device: captureDevice) as input.
-      //   4. Add videoOutput. Set its alwaysDiscardsLateVideoFrames = true.
-      //   5. Commit configuration.
-      //   6. Set self as the videoOutput delegate on cameraQueue.
-      //
-      print("[CameraFrameProvider] setupSession() called – implement me")
+      guard !isConfigured else { return }
+      guard let device = captureDevice else {
+        print("[CameraFrameProvider] No camera (Simulator or CI); skipping setup.")
+        return
+      }
+      isConfigured = true
+      Task { @MainActor [weak self] in
+        guard await AVCaptureDevice.requestAccess(for: .video) else {
+          print("[CameraFrameProvider] Camera permission denied.")
+          return
+        }
+        self?.configure(device)
+      }
     }
 
     func start() {
-      guard !captureSession.isRunning else { return }
-      cameraQueue.async { [weak self] in
-        self?.captureSession.startRunning()
+      let session = captureSession
+      cameraQueue.async {
+        if !session.isRunning { session.startRunning() }
       }
     }
 
     func stop() {
-      guard captureSession.isRunning else { return }
-      cameraQueue.async { [weak self] in
-        self?.captureSession.stopRunning()
+      let session = captureSession
+      cameraQueue.async {
+        if session.isRunning { session.stopRunning() }
       }
+    }
+
+    private func configure(_ device: AVCaptureDevice) {
+      captureSession.beginConfiguration()
+      defer { captureSession.commitConfiguration() }
+      guard let input = try? AVCaptureDeviceInput(device: device),
+        captureSession.canAddInput(input), captureSession.canAddOutput(videoOutput)
+      else {
+        print("[CameraFrameProvider] Could not configure the capture session.")
+        return
+      }
+      captureSession.addInput(input)
+      videoOutput.alwaysDiscardsLateVideoFrames = true
+      videoOutput.videoSettings = [
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+      ]
+      captureSession.addOutput(videoOutput)
+      videoOutput.setSampleBufferDelegate(self, queue: cameraQueue)
     }
   }
 
-  // MARK: - Video frame delegate
+  // MARK: - Video frame delegate (camera queue)
 
   extension CameraFrameProvider: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(
+    nonisolated func captureOutput(
       _ output: AVCaptureOutput,
       didOutput sampleBuffer: CMSampleBuffer,
       from connection: AVCaptureConnection
     ) {
-      // TODO: Extract the CVPixelBuffer from sampleBuffer.imageBuffer and pass
-      // it to the delegate. Run on the main actor so SwiftUI updates stay safe.
-      //
-      // Pseudocode:
-      //   guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
-      //   DispatchQueue.main.async { [weak self] in
-      //     self?.delegate?.processFrame(self, buffer: pixelBuffer)
-      //   }
+      guard let pixelBuffer = sampleBuffer.imageBuffer else { return }
+      let accept = busy.withLock { isBusy -> Bool in
+        if isBusy { return false }
+        isBusy = true
+        return true
+      }
+      guard accept else { return }
+      // The current delegate (PerceptionPipeline) is main-actor isolated.
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        self.delegate?.processFrame(self, buffer: pixelBuffer)
+        self.busy.withLock { $0 = false }
+      }
     }
   }
 

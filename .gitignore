@@ -230,3 +230,6 @@ server/data/
 
 # Local notes and scratch work (never committed)
 local/
+
+# SwiftPM build output (app/Package.swift)
+app/.build/

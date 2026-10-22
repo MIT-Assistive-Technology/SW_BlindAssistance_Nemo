@@ -264,6 +264,7 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used on your iPhone to look for doors and entrances. Video never leaves your phone.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used on your iPhone to tell when you've stepped out of the car and started walking.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to find where you were dropped off and guide you to the building entrance. Your location is not stored on our servers.";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
@@ -305,6 +306,7 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Used on your iPhone to look for doors and entrances. Video never leaves your phone.";
+				INFOPLIST_KEY_NSMotionUsageDescription = "Used on your iPhone to tell when you've stepped out of the car and started walking.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Used to find where you were dropped off and guide you to the building entrance. Your location is not stored on our servers.";
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;

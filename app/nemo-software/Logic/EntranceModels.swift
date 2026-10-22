@@ -1,6 +1,8 @@
 //  EntranceModels.swift
 //  nemo-software
 //
+//  Moved from EntranceAPI/ into Logic/ (pure Swift, built by app/Package.swift too).
+//
 //  Codable mirror of an entrance bundle. In the MVP these are precomputed for the pilot
 //  sites; the live `POST /v1/resolve` (stretch goal) returns the same shape.
 //  Source of truth: `contract/resolve.example.json` and
