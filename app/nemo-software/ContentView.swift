@@ -17,6 +17,22 @@ struct ContentView: View {
   }
 }
 
+// Kept identical to main's version so the camera-stream branch merges cleanly. The live
+// camera debug screen is built by AppModel.cameraDebug.
+
+// MARK: - Composition root
+
+private func makeCameraViewModel() -> CameraViewModel {
+  let frameProvider: any FrameProvider = CameraFrameProvider()
+  let detector: ObjectDetector = VisionObjectDetector()
+  let pipeline = PerceptionPipeline(
+    detector: detector,
+    locationProvider: LocationService.shared,
+    speaker: Speaker()
+  )
+  return CameraViewModel(frameProvider: frameProvider, pipeline: pipeline)
+}
+
 #Preview {
   ContentView()
 }

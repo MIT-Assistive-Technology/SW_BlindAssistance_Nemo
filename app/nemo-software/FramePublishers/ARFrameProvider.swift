@@ -16,7 +16,9 @@ import CoreVideo
 import Foundation
 import os
 
-final class ARFrameProvider: NSObject, FrameProvider {
+// `nonisolated` like CameraFrameProvider: frames arrive on ARGuide's background queue, and
+// FrameProvider is a nonisolated protocol on the camera-stream branch.
+nonisolated final class ARFrameProvider: NSObject, FrameProvider, @unchecked Sendable {
   nonisolated static let maxFramesPerSecond: Double = 10
 
   weak var delegate: FrameProviderDelegate?
@@ -33,6 +35,8 @@ final class ARFrameProvider: NSObject, FrameProvider {
   // MARK: - FrameProvider
 
   /// Nothing to set up: ARGuide owns the ARSession and its camera permission prompt.
+  /// A plain, non-throwing method also satisfies the `async throws(FrameProviderError)`
+  /// requirement the protocol has on the camera-stream branch.
   func setupSession() {}
 
   func start() {
