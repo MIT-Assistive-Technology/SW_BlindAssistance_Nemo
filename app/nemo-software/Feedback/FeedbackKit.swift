@@ -63,38 +63,14 @@ public final class SpeechChannel: FeedbackChannel {
     }
     
     public func play(_ event: FeedbackEvent) {
+        let phrase = phrase(for: event)
         // Critical events bypass the chatter guard (warning is never suppressed
         switch event{
-        case .warning(let message):
-            speaker.speak(message)
-            return
-        case .lost:
-            speaker.speak("I've lost the door. Stop and scan slowly.")
-            return
-        case .arrival:
-            speaker.speak("The door should be right in front of you. Feel for the handle.")
+        case .warning, .lost, .arrival:
+            speaker.speak(phrase)
             return
         default:
             break
-        }
-        
-        // Picking the phrase
-        let phrase: String
-        switch event{
-        case .direction(let offset):
-            phrase = directionName(offset)
-        case .distance(let meters):
-            phrase = "About \(feet(fromMeters: meters)) feet"
-        case .bearingLock:
-            phrase = "Locked on"
-        case .landmark(let landmarkPhrase):
-            phrase = landmarkPhrase
-        case .buildingConfirmed(let text):
-            phrase = "That looks like your building. I see \(text)"
-        case .doorDetected(let offset, let meters):
-            phrase = "Door \(directionName(offset).lowercased()), \(feet(fromMeters: meters)) feet"
-        case .warning, .lost, .arrival:
-            return
         }
         
         // Chatter guard + speak(ONLY IF it's a new phrase OR 4s+ since the last one)
@@ -104,6 +80,32 @@ public final class SpeechChannel: FeedbackChannel {
         lastSpokenAt = now
         speaker.speak(phrase)
     }
+    
+    // Maps event to fixed, reviewed phrase
+    func phrase(for event: FeedbackEvent) -> String{
+        // Picking the phrase
+        switch event {
+        case .warning(let message):
+            return message
+        case .lost:
+            return "I've lost the door. Stop and scan slowly."
+        case .arrival:
+            return "The door should be right in front of you. Feel for the handle."
+        case .direction(let offset):
+            return directionName(offset)
+        case .distance(let meters):
+            return "About \(feet(fromMeters: meters)) feet"
+        case .bearingLock:
+            return "Locked on"
+        case .landmark(let landmarkPhrase):
+            return landmarkPhrase
+        case .buildingConfirmed(let text):
+            return "That looks like your building. I see \(text)"
+        case .doorDetected(let offset, let meters):
+            return "Door \(directionName(offset).lowercased()), \(feet(fromMeters: meters)) feet"
+        }
+    }
+        
     
     // Produces directionName based on angle degree
     private func directionName(_ offset: Double) -> String{
