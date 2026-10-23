@@ -9,7 +9,10 @@ the resolver functions; tests and the offline mode swap them out. A stage that s
 NotImplementedError("BE-3") is reported as "blocked on BE-3", and the other sites still build.
 """
 
+import itertools
 import json
+import logging
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,6 +22,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from . import resolver, scoring
+from .merge import merge_candidates
 from .models import (
     Building,
     Candidate,
@@ -37,6 +41,10 @@ MAPILLARY_ATTRIBUTION = "Street-level imagery © Mapillary contributors, CC BY-S
 MODEL_VERSION = "none"  # no CV model in the MVP bundles
 
 T = TypeVar("T")
+log = logging.getLogger(__name__)
+COMBINE_FALLBACK_NOTE = (
+    "scoring.combine blocked on BE-4: merged doors use the best score, no agreement step"
+)
 
 
 class PilotSite(BaseModel):
@@ -88,6 +96,7 @@ class SiteReport:
     site_id: str
     bundle: ResolveResult | None = None
     error: StageError | None = None
+    notes: tuple[str, ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -96,7 +105,8 @@ class SiteReport:
     def describe(self) -> str:
         if self.bundle is not None:
             top = self.bundle.candidates[0]
-            return f"ok ({self.bundle.status}, top door: {top.band} {top.confidence:.2f})"
+            ok = f"ok ({self.bundle.status}, top door: {top.band} {top.confidence:.2f})"
+            return "; ".join([ok, *self.notes])
         assert self.error is not None
         if self.error.blocked_on:
             return f"blocked on {self.error.blocked_on} ({self.error.stage})"
@@ -174,8 +184,83 @@ def assemble(
     return ResolveResult.model_validate(result.model_dump(mode="json"))
 
 
-def build_bundle(site: PilotSite, stages: Stages, data_version: DataVersion) -> ResolveResult:
-    """Run the ladder for one site. Raises StageError naming the stage that failed."""
+CORNER_M = 1.5  # two candidates this close to a shared corner count as the same face
+
+
+def same_face_on(footprint: list[list[float]]) -> Callable[[Candidate, Candidate], bool] | None:
+    """A building-face predicate for merge_candidates, from a [lon, lat] footprint.
+
+    Each candidate snaps to its nearest footprint edge. Same face = same edge, or adjacent
+    edges with both candidates within CORNER_M of their shared corner (a door right at a
+    corner). Works in local meters around the footprint's first point; buildings are small
+    enough for an equirectangular projection. None when the footprint has no usable edge.
+    """
+    lon0, lat0 = footprint[0] if footprint else (0.0, 0.0)
+    kx = math.radians(1) * 6_371_008.8 * math.cos(math.radians(lat0))
+    ky = math.radians(1) * 6_371_008.8
+
+    def local(lon: float, lat: float) -> tuple[float, float]:
+        return ((lon - lon0) * kx, (lat - lat0) * ky)
+
+    pts = [local(lon, lat) for lon, lat in footprint]
+    edges = [(a, b) for a, b in itertools.pairwise(pts) if a != b]
+    if not edges:
+        return None
+
+    def snap(c: Candidate) -> tuple[int, tuple[float, float]]:
+        px, py = local(c.lon, c.lat)
+        best = None
+        for i, ((ax, ay), (bx, by)) in enumerate(edges):
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+            q = (ax + t * dx, ay + t * dy)
+            d = math.dist((px, py), q)
+            if best is None or d < best[0]:
+                best = (d, i, q)
+        return best[1], best[2]
+
+    def same_face(a: Candidate, b: Candidate) -> bool:
+        (ea, qa), (eb, qb) = snap(a), snap(b)
+        if ea == eb:
+            return True
+        shared = set(edges[ea]) & set(edges[eb])
+        return any(math.dist(qa, v) <= CORNER_M and math.dist(qb, v) <= CORNER_M for v in shared)
+
+    return same_face
+
+
+def merge(
+    candidates: list[Candidate],
+    notes: list[str] | None = None,
+    same_face: Callable[[Candidate, Candidate], bool] | None = None,
+) -> list[Candidate]:
+    """Merge duplicate doors within ~4 m (app/merge.py) using scoring.combine.
+
+    Until BE-4 implements scoring.combine, fall back to the best score (no agreement step) and
+    add COMBINE_FALLBACK_NOTE to `notes` instead of failing the site.
+    """
+
+    seen = notes if notes is not None else []
+
+    def combine(best_by_class: dict[str, float]) -> float:
+        try:
+            return scoring.combine(best_by_class)
+        except NotImplementedError:
+            if COMBINE_FALLBACK_NOTE not in seen:
+                log.warning(COMBINE_FALLBACK_NOTE)
+                seen.append(COMBINE_FALLBACK_NOTE)
+            return max(best_by_class.values())
+
+    return merge_candidates(candidates, combine=combine, same_face=same_face)
+
+
+def build_bundle(
+    site: PilotSite, stages: Stages, data_version: DataVersion, notes: list[str] | None = None
+) -> ResolveResult:
+    """Run the ladder for one site. Raises StageError naming the stage that failed.
+
+    Non-fatal remarks (e.g. a teammate's step still stubbed) are appended to `notes`.
+    """
     request = ResolveRequest(address=site.address, name=site.name)
     point = _stage("geocode", lambda: stages.geocode(request))
     building = _stage("find_building", lambda: Building.model_validate(stages.find_building(point)))
@@ -190,7 +275,11 @@ def build_bundle(site: PilotSite, stages: Stages, data_version: DataVersion) -> 
     facade = _stage(
         "facade_fallback", lambda: Facade.model_validate(stages.facade_fallback(building, point))
     )
-    candidates = rank(doors + facade.candidates)
+    merged = _stage(
+        "merge",
+        lambda: merge(doors + facade.candidates, notes, same_face_on(building.footprint)),
+    )
+    candidates = rank(merged)
     if not candidates:
         raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
     checks = _stage(
@@ -209,8 +298,10 @@ def build_bundle(site: PilotSite, stages: Stages, data_version: DataVersion) -> 
 
 def run_site(site: PilotSite, stages: Stages, data_version: DataVersion) -> SiteReport:
     """Like build_bundle, but a failure becomes a report instead of stopping the run."""
+    notes: list[str] = []
     try:
-        return SiteReport(site.id, bundle=build_bundle(site, stages, data_version))
+        result = build_bundle(site, stages, data_version, notes)
+        return SiteReport(site.id, bundle=result, notes=tuple(notes))
     except StageError as exc:
         return SiteReport(site.id, error=exc)
 
