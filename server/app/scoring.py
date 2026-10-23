@@ -53,41 +53,30 @@ def score_door(
       6. Return min(score, CAP).
     tests/test_scoring.py has the expected values; remove its skip marker when done.
     """
+    tags_list = [tag for tag in tags.get("entrance").split(";") if tag not in EXCLUDE] # split tags by ;
 
-    tags_list = tags["entrance"].split(";") # split tags by ;, tags["entrance"] is presumably a list
+    if len(tags_list) == 0:
+        return None
 
-    # loop through list of tags
-    i = 0
-    never_use = False
-    door_score = UNKNOWN_VALUE
+    if tags.get("access") in EXCLUDE_ACCESS or tags.get("foot") in EXCLUDE_ACCESS:
+        return None
 
-    while i < len(tags_list):
-        if tags_list[i] in EXCLUDE:
-            tags_list.pop(i) # get rid of tags in EXCLUDE
-
-        elif tags_list[i] in EXCLUDE_ACCESS:
-            return None
-
-        else:
-            i += 1
-
-    if tags["addr:housenumber"] == dest_housenumber:
+    if dest_housenumber is not None and (tags.get("addr:housenumber") == dest_housenumber):
+        print("h")
         return CAP
 
-    door_score = UNKNOWN_VALUE
-    for my_tag in tags_list:
-        if my_tag in BASE.keys() and BASE[my_tag] > door_score:
-            door_score = BASE[my_tag]
+    tag_scores = [BASE.get(tag) for tag in tags_list if tag in BASE.keys()]
+    max_tag = max(tag_scores)
+    door_score = max(UNKNOWN_VALUE, max_tag)
 
-    if has_footway:
-        door_score += 0.05
+    if has_footway == True:
+       door_score += 0.05
 
     if on_outline == False:
         door_score -= 0.10
 
     return min(door_score, CAP)
 
-    # where are wheelchair and door parameters??
 
 
 
@@ -104,7 +93,14 @@ def combine(best_by_class: dict[str, float]) -> float:
     Example: combine({"osm": 0.90, "photos": 0.65}) -> 0.95; combine({"osm": 0.75}) -> 0.75.
     TODO (BE-4)
     """
-    raise NotImplementedError("BE-4")
+    max_score = max(list(best_by_class.values()))
+
+    if len(best_by_class) >= 2:
+        max_score += AGREEMENT_STEP
+
+    return min(CAP, max_score)
+
+
 
 
 def band(confidence: float) -> str:
@@ -114,3 +110,6 @@ def band(confidence: float) -> str:
     if confidence >= 0.45:
         return "door"
     return "facade"
+
+if __name__ == "__main__":
+    print(score_door({'entrance': 'main;garage'}, None, True, False))
