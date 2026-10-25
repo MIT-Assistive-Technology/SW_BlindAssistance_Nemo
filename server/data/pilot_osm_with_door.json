@@ -1,0 +1,1136 @@
+{
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.11 87bfad18",
+    "osm3s": {
+        "timestamp_osm_base": "2026-10-25T22:05:06Z",
+        "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+        {
+            "type": "way",
+            "id": 29530618,
+            "bounds": {
+                "minlat": 42.3742425,
+                "minlon": -71.1172425,
+                "maxlat": 42.3746657,
+                "maxlon": -71.1169208
+            },
+            "nodes": [
+                325494882,
+                12324866406,
+                325494886,
+                12300101703,
+                12300101705,
+                12300101704,
+                12300065897,
+                12300065900,
+                12300065896,
+                325494889,
+                325494893,
+                12885059844,
+                12300101712,
+                12300101716,
+                12300101715,
+                12300101725,
+                12300101708,
+                12300101717,
+                12300101711,
+                325494882
+            ],
+            "geometry": [
+                {
+                    "lat": 42.3742425,
+                    "lon": -71.1170441
+                },
+                {
+                    "lat": 42.3742552,
+                    "lon": -71.117118
+                },
+                {
+                    "lat": 42.3742766,
+                    "lon": -71.1172425
+                },
+                {
+                    "lat": 42.3743598,
+                    "lon": -71.1172178
+                },
+                {
+                    "lat": 42.3743814,
+                    "lon": -71.1172116
+                },
+                {
+                    "lat": 42.3744056,
+                    "lon": -71.1172029
+                },
+                {
+                    "lat": 42.3745406,
+                    "lon": -71.1171617
+                },
+                {
+                    "lat": 42.3745648,
+                    "lon": -71.1171521
+                },
+                {
+                    "lat": 42.3745906,
+                    "lon": -71.1171453
+                },
+                {
+                    "lat": 42.3746657,
+                    "lon": -71.1171203
+                },
+                {
+                    "lat": 42.3746315,
+                    "lon": -71.1169208
+                },
+                {
+                    "lat": 42.3745578,
+                    "lon": -71.116943
+                },
+                {
+                    "lat": 42.3745526,
+                    "lon": -71.1169446
+                },
+                {
+                    "lat": 42.3745304,
+                    "lon": -71.1169509
+                },
+                {
+                    "lat": 42.3745081,
+                    "lon": -71.1169575
+                },
+                {
+                    "lat": 42.3744968,
+                    "lon": -71.1169613
+                },
+                {
+                    "lat": 42.3743709,
+                    "lon": -71.1170035
+                },
+                {
+                    "lat": 42.3743485,
+                    "lon": -71.1170092
+                },
+                {
+                    "lat": 42.3743261,
+                    "lon": -71.1170166
+                },
+                {
+                    "lat": 42.3742425,
+                    "lon": -71.1170441
+                }
+            ],
+            "tags": {
+                "addr:city": "Cambridge",
+                "addr:housenumber": "1",
+                "addr:place": "Harvard Yard",
+                "addr:postcode": "02138",
+                "addr:state": "MA",
+                "architect": "Charles Bulfinch",
+                "architect:wikidata": "Q1063849",
+                "architect:wikipedia": "en:Charles Bulfinch",
+                "building": "university",
+                "building:architecture": "colonial_revival",
+                "building:levels": "3",
+                "building:levels:underground": "1",
+                "building:material": "granite",
+                "ele": "9",
+                "gnis:feature_id": "1971831",
+                "heritage": "2",
+                "heritage:operator": "nrhp",
+                "heritage:website": "https://npgallery.nps.gov/AssetDetail/NRIS/70000736",
+                "historic": "heritage",
+                "name": "University Hall",
+                "nrhp:criteria": "C",
+                "nrhp:inscription_date": "1970-12-30",
+                "nrhp:nhl": "yes",
+                "ref:nrhp": "70000736",
+                "roof:shape": "hipped",
+                "source": "USGS Geonames",
+                "start_date": "1815",
+                "university": "administrative",
+                "wikidata": "Q7894712"
+            }
+        },
+        {
+            "type": "way",
+            "id": 29788731,
+            "bounds": {
+                "minlat": 42.3747283,
+                "minlon": -71.1169421,
+                "maxlat": 42.3753392,
+                "maxlon": -71.1165657
+            },
+            "nodes": [
+                328088539,
+                12302117002,
+                328207495,
+                12302092599,
+                328196721,
+                328186049,
+                328176727,
+                328162808,
+                12303490291,
+                328153867,
+                328145286,
+                12303490290,
+                12303490289,
+                328123244,
+                12300065891,
+                328115343,
+                11417622527,
+                11417622529,
+                11417622530,
+                11417622531,
+                12300065877,
+                11417622532,
+                11417622533,
+                11417622535,
+                11417622536,
+                328088539
+            ],
+            "geometry": [
+                {
+                    "lat": 42.3747283,
+                    "lon": -71.1167475
+                },
+                {
+                    "lat": 42.3747441,
+                    "lon": -71.1168405
+                },
+                {
+                    "lat": 42.3747615,
+                    "lon": -71.1169421
+                },
+                {
+                    "lat": 42.3748521,
+                    "lon": -71.1169138
+                },
+                {
+                    "lat": 42.3748926,
+                    "lon": -71.1169012
+                },
+                {
+                    "lat": 42.3748899,
+                    "lon": -71.1168856
+                },
+                {
+                    "lat": 42.3749585,
+                    "lon": -71.1168642
+                },
+                {
+                    "lat": 42.3749605,
+                    "lon": -71.1168764
+                },
+                {
+                    "lat": 42.3750377,
+                    "lon": -71.1168523
+                },
+                {
+                    "lat": 42.3751381,
+                    "lon": -71.1168209
+                },
+                {
+                    "lat": 42.3751352,
+                    "lon": -71.1168041
+                },
+                {
+                    "lat": 42.3752068,
+                    "lon": -71.1167817
+                },
+                {
+                    "lat": 42.3752099,
+                    "lon": -71.1167996
+                },
+                {
+                    "lat": 42.3753392,
+                    "lon": -71.1167591
+                },
+                {
+                    "lat": 42.3753209,
+                    "lon": -71.1166519
+                },
+                {
+                    "lat": 42.3753062,
+                    "lon": -71.1165657
+                },
+                {
+                    "lat": 42.3751782,
+                    "lon": -71.1166057
+                },
+                {
+                    "lat": 42.3751815,
+                    "lon": -71.1166251
+                },
+                {
+                    "lat": 42.3751099,
+                    "lon": -71.1166475
+                },
+                {
+                    "lat": 42.3751078,
+                    "lon": -71.1166349
+                },
+                {
+                    "lat": 42.375021,
+                    "lon": -71.116662
+                },
+                {
+                    "lat": 42.3749291,
+                    "lon": -71.1166907
+                },
+                {
+                    "lat": 42.3749308,
+                    "lon": -71.116701
+                },
+                {
+                    "lat": 42.3748605,
+                    "lon": -71.116723
+                },
+                {
+                    "lat": 42.3748578,
+                    "lon": -71.1167071
+                },
+                {
+                    "lat": 42.3747283,
+                    "lon": -71.1167475
+                }
+            ],
+            "tags": {
+                "access": "private",
+                "addr:city": "Cambridge",
+                "addr:housenumber": "21",
+                "addr:place": "Harvard Yard",
+                "addr:postcode": "02138",
+                "addr:state": "MA",
+                "building": "university",
+                "building:levels": "5",
+                "ele": "8",
+                "gnis:feature_id": "1971806",
+                "name": "Thayer Hall",
+                "private": "students",
+                "roof:levels": "0",
+                "roof:shape": "hipped",
+                "source": "USGS Geonames;survey",
+                "university": "residential"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300065877,
+            "lat": 42.375021,
+            "lon": -71.116662,
+            "tags": {
+                "access": "private",
+                "automatic_door": "button",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "0",
+                "level:ref": "1",
+                "ref": "Thayer Hall East",
+                "wheelchair": "yes"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300065891,
+            "lat": 42.3753209,
+            "lon": -71.1166519,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "double",
+                "entrance": "secondary",
+                "level": "0",
+                "ref": "Thayer Hall North",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300065900,
+            "lat": 42.3745648,
+            "lon": -71.1171521,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300101705,
+            "lat": 42.3743814,
+            "lon": -71.1172116,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300101716,
+            "lat": 42.3745304,
+            "lon": -71.1169509,
+            "tags": {
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "main",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300101717,
+            "lat": 42.3743485,
+            "lon": -71.1170092,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "main",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12300101725,
+            "lat": 42.3744968,
+            "lon": -71.1169613,
+            "tags": {
+                "access": "private",
+                "automatic_door": "button",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "-1",
+                "wheelchair": "yes"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12302092599,
+            "lat": 42.3748521,
+            "lon": -71.1169138,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "-1",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12302117002,
+            "lat": 42.3747441,
+            "lon": -71.1168405,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "double",
+                "entrance": "main",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12303490291,
+            "lat": 42.3750377,
+            "lon": -71.1168523,
+            "tags": {
+                "access": "private",
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "0",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "node",
+            "id": 12324866406,
+            "lat": 42.3742552,
+            "lon": -71.117118,
+            "tags": {
+                "automatic_door": "no",
+                "door": "hinged",
+                "entrance": "secondary",
+                "level": "-1",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1329456556,
+            "bounds": {
+                "minlat": 42.3753209,
+                "minlon": -71.1166519,
+                "maxlat": 42.3753414,
+                "maxlon": -71.1166458
+            },
+            "geometry": [
+                {
+                    "lat": 42.3753414,
+                    "lon": -71.1166458
+                },
+                {
+                    "lat": 42.3753209,
+                    "lon": -71.1166519
+                }
+            ],
+            "tags": {
+                "access": "private",
+                "handrail": "yes",
+                "handrail:left": "yes",
+                "handrail:right": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "step_count": "5",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1329806502,
+            "bounds": {
+                "minlat": 42.374731,
+                "minlon": -71.116845,
+                "maxlat": 42.3747441,
+                "maxlon": -71.1168405
+            },
+            "geometry": [
+                {
+                    "lat": 42.374731,
+                    "lon": -71.116845
+                },
+                {
+                    "lat": 42.3747441,
+                    "lon": -71.1168405
+                }
+            ],
+            "tags": {
+                "access": "private",
+                "handrail": "yes",
+                "handrail:left": "yes",
+                "handrail:right": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "step_count": "5",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1329806506,
+            "bounds": {
+                "minlat": 42.3750377,
+                "minlon": -71.1168778,
+                "maxlat": 42.3750413,
+                "maxlon": -71.1168523
+            },
+            "geometry": [
+                {
+                    "lat": 42.3750413,
+                    "lon": -71.1168778
+                },
+                {
+                    "lat": 42.3750377,
+                    "lon": -71.1168523
+                }
+            ],
+            "tags": {
+                "access": "private",
+                "handrail": "yes",
+                "handrail:left": "yes",
+                "handrail:right": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "step:contrast": "no",
+                "step_count": "5",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1330010567,
+            "bounds": {
+                "minlat": 42.3743422,
+                "minlon": -71.1170092,
+                "maxlat": 42.3743485,
+                "maxlon": -71.1169616
+            },
+            "geometry": [
+                {
+                    "lat": 42.3743422,
+                    "lon": -71.1169616
+                },
+                {
+                    "lat": 42.3743485,
+                    "lon": -71.1170092
+                }
+            ],
+            "tags": {
+                "handrail": "yes",
+                "highway": "steps",
+                "incline": "down",
+                "ramp": "no",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1330010568,
+            "bounds": {
+                "minlat": 42.3745244,
+                "minlon": -71.1169509,
+                "maxlat": 42.3745304,
+                "maxlon": -71.1169039
+            },
+            "geometry": [
+                {
+                    "lat": 42.3745244,
+                    "lon": -71.1169039
+                },
+                {
+                    "lat": 42.3745304,
+                    "lon": -71.1169509
+                }
+            ],
+            "tags": {
+                "handrail": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "ramp": "no",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1330010569,
+            "bounds": {
+                "minlat": 42.3743814,
+                "minlon": -71.1172441,
+                "maxlat": 42.3743847,
+                "maxlon": -71.1172116
+            },
+            "geometry": [
+                {
+                    "lat": 42.3743847,
+                    "lon": -71.1172441
+                },
+                {
+                    "lat": 42.3743814,
+                    "lon": -71.1172116
+                }
+            ],
+            "tags": {
+                "handrail": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "ramp": "no",
+                "step_count": "9",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1330010570,
+            "bounds": {
+                "minlat": 42.3745648,
+                "minlon": -71.117186,
+                "maxlat": 42.3745719,
+                "maxlon": -71.1171521
+            },
+            "geometry": [
+                {
+                    "lat": 42.3745719,
+                    "lon": -71.117186
+                },
+                {
+                    "lat": 42.3745648,
+                    "lon": -71.1171521
+                }
+            ],
+            "tags": {
+                "handrail": "yes",
+                "highway": "steps",
+                "incline": "up",
+                "ramp": "no",
+                "step_count": "9",
+                "surface": "concrete",
+                "tactile_paving": "no",
+                "wheelchair": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1330780773,
+            "bounds": {
+                "minlat": 42.3750172,
+                "minlon": -71.116662,
+                "maxlat": 42.375021,
+                "maxlon": -71.1166409
+            },
+            "geometry": [
+                {
+                    "lat": 42.3750172,
+                    "lon": -71.1166409
+                },
+                {
+                    "lat": 42.375021,
+                    "lon": -71.116662
+                }
+            ],
+            "tags": {
+                "bicycle": "dismount",
+                "bicycle:signed": "yes",
+                "highway": "footway",
+                "smoothness": "intermediate",
+                "surface": "asphalt",
+                "wheelchair": "yes"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1331902078,
+            "bounds": {
+                "minlat": 42.3744955,
+                "minlon": -71.1169613,
+                "maxlat": 42.3744968,
+                "maxlon": -71.1169524
+            },
+            "geometry": [
+                {
+                    "lat": 42.3744955,
+                    "lon": -71.1169524
+                },
+                {
+                    "lat": 42.3744968,
+                    "lon": -71.1169613
+                }
+            ],
+            "tags": {
+                "highway": "footway",
+                "surface": "asphalt",
+                "wheelchair": "yes"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1332101984,
+            "bounds": {
+                "minlat": 42.3742252,
+                "minlon": -71.1171284,
+                "maxlat": 42.3742552,
+                "maxlon": -71.117118
+            },
+            "geometry": [
+                {
+                    "lat": 42.3742252,
+                    "lon": -71.1171284
+                },
+                {
+                    "lat": 42.374244,
+                    "lon": -71.1171218
+                },
+                {
+                    "lat": 42.3742552,
+                    "lon": -71.117118
+                }
+            ],
+            "tags": {
+                "handrail": "yes",
+                "handrail:left": "yes",
+                "handrail:right": "yes",
+                "highway": "steps",
+                "incline": "down",
+                "material": "concrete",
+                "ramp": "no",
+                "surface": "asphalt",
+                "tactile_paving": "no"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1332568206,
+            "bounds": {
+                "minlat": 42.3748521,
+                "minlon": -71.116924,
+                "maxlat": 42.3748536,
+                "maxlon": -71.1169138
+            },
+            "geometry": [
+                {
+                    "lat": 42.3748536,
+                    "lon": -71.116924
+                },
+                {
+                    "lat": 42.3748521,
+                    "lon": -71.1169138
+                }
+            ],
+            "tags": {
+                "access": "private",
+                "highway": "footway",
+                "surface": "asphalt",
+                "wheelchair": "yes"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8615682,
+            "bounds": {
+                "minlat": 42.3751949,
+                "minlon": -71.1162172,
+                "maxlat": 42.3756438,
+                "maxlon": -71.1150388
+            },
+            "geometry": [
+                {
+                    "lat": 42.3756438,
+                    "lon": -71.1162172
+                },
+                {
+                    "lat": 42.3755379,
+                    "lon": -71.1157143
+                },
+                {
+                    "lat": 42.3755081,
+                    "lon": -71.1155978
+                },
+                {
+                    "lat": 42.3754983,
+                    "lon": -71.1155666
+                },
+                {
+                    "lat": 42.375487,
+                    "lon": -71.115535
+                },
+                {
+                    "lat": 42.375475,
+                    "lon": -71.1155031
+                },
+                {
+                    "lat": 42.3754626,
+                    "lon": -71.1154749
+                },
+                {
+                    "lat": 42.375448,
+                    "lon": -71.1154462
+                },
+                {
+                    "lat": 42.3754295,
+                    "lon": -71.1154127
+                },
+                {
+                    "lat": 42.3753263,
+                    "lon": -71.1152432
+                },
+                {
+                    "lat": 42.3752892,
+                    "lon": -71.1151844
+                },
+                {
+                    "lat": 42.3751949,
+                    "lon": -71.1150388
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "cycleway:right:separation": "no",
+                "highway": "secondary",
+                "lanes": "1",
+                "massgis:way_id": "206060",
+                "maxspeed": "25 mph",
+                "name": "Broadway",
+                "name:mk": "Бродвеј",
+                "oneway": "yes",
+                "parking:both": "no",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "turn:lanes": "through|right",
+                "width": "24.4"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8616194,
+            "bounds": {
+                "minlat": 42.3756438,
+                "minlon": -71.1175739,
+                "maxlat": 42.3759206,
+                "maxlon": -71.1162172
+            },
+            "geometry": [
+                {
+                    "lat": 42.3759206,
+                    "lon": -71.1175739
+                },
+                {
+                    "lat": 42.3756438,
+                    "lon": -71.1162172
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "cycleway:right:buffer": "yes",
+                "cycleway:right:separation": "no",
+                "foot": "no",
+                "highway": "secondary",
+                "lane_markings": "no",
+                "lanes": "2",
+                "layer": "-1",
+                "lit": "yes",
+                "massgis:way_id": "179248",
+                "maxheight": "14'0\"",
+                "maxspeed": "25 mph",
+                "name": "Cambridge Street",
+                "name:en": "Cambridge Street",
+                "name:mk": "Кембриџ Стрит",
+                "oneway": "yes",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "tunnel": "yes",
+                "turn:lanes": "slight_left|slight_right",
+                "width": "21.3"
+            }
+        },
+        {
+            "type": "way",
+            "id": 25482148,
+            "bounds": {
+                "minlat": 42.3757439,
+                "minlon": -71.1175439,
+                "maxlat": 42.3760104,
+                "maxlon": -71.1161815
+            },
+            "geometry": [
+                {
+                    "lat": 42.3757439,
+                    "lon": -71.1161815
+                },
+                {
+                    "lat": 42.3760104,
+                    "lon": -71.1175439
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "foot": "no",
+                "highway": "secondary",
+                "lane_markings": "no",
+                "layer": "-1",
+                "lit": "yes",
+                "massgis:way_id": "179248",
+                "maxheight": "14'0\"",
+                "maxspeed": "25 mph",
+                "name": "Cambridge Street",
+                "name:mk": "Кембриџ Стрит",
+                "oneway": "yes",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "tunnel": "yes",
+                "width": "21.3"
+            }
+        },
+        {
+            "type": "way",
+            "id": 25482156,
+            "bounds": {
+                "minlat": 42.3755019,
+                "minlon": -71.1162172,
+                "maxlat": 42.3756438,
+                "maxlon": -71.1148552
+            },
+            "geometry": [
+                {
+                    "lat": 42.3756438,
+                    "lon": -71.1162172
+                },
+                {
+                    "lat": 42.3756266,
+                    "lon": -71.1161072
+                },
+                {
+                    "lat": 42.3756126,
+                    "lon": -71.1160098
+                },
+                {
+                    "lat": 42.3756013,
+                    "lon": -71.115923
+                },
+                {
+                    "lat": 42.3755884,
+                    "lon": -71.1157631
+                },
+                {
+                    "lat": 42.3755735,
+                    "lon": -71.1156281
+                },
+                {
+                    "lat": 42.3755602,
+                    "lon": -71.1154941
+                },
+                {
+                    "lat": 42.3755502,
+                    "lon": -71.1153659
+                },
+                {
+                    "lat": 42.3755406,
+                    "lon": -71.1152653
+                },
+                {
+                    "lat": 42.3755338,
+                    "lon": -71.1151629
+                },
+                {
+                    "lat": 42.3755231,
+                    "lon": -71.1150326
+                },
+                {
+                    "lat": 42.3755158,
+                    "lon": -71.1149753
+                },
+                {
+                    "lat": 42.3755057,
+                    "lon": -71.1148971
+                },
+                {
+                    "lat": 42.3755019,
+                    "lon": -71.1148552
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "highway": "secondary",
+                "lanes": "2",
+                "massgis:way_id": "179248",
+                "maxspeed": "20 mph",
+                "name": "Cambridge Street",
+                "name:mk": "Кембриџ Стрит",
+                "oneway": "yes",
+                "parking:both": "no",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "21.3"
+            }
+        },
+        {
+            "type": "way",
+            "id": 50446845,
+            "bounds": {
+                "minlat": 42.3755725,
+                "minlon": -71.1161815,
+                "maxlat": 42.3757439,
+                "maxlon": -71.1147667
+            },
+            "geometry": [
+                {
+                    "lat": 42.3755725,
+                    "lon": -71.1147667
+                },
+                {
+                    "lat": 42.375619,
+                    "lon": -71.1151743
+                },
+                {
+                    "lat": 42.3756265,
+                    "lon": -71.1152442
+                },
+                {
+                    "lat": 42.3756341,
+                    "lon": -71.1153212
+                },
+                {
+                    "lat": 42.3756748,
+                    "lon": -71.1157595
+                },
+                {
+                    "lat": 42.3756809,
+                    "lon": -71.1158145
+                },
+                {
+                    "lat": 42.3756871,
+                    "lon": -71.1158645
+                },
+                {
+                    "lat": 42.3756938,
+                    "lon": -71.1159136
+                },
+                {
+                    "lat": 42.3757008,
+                    "lon": -71.1159578
+                },
+                {
+                    "lat": 42.3757091,
+                    "lon": -71.1160064
+                },
+                {
+                    "lat": 42.3757185,
+                    "lon": -71.1160567
+                },
+                {
+                    "lat": 42.3757439,
+                    "lon": -71.1161815
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "cycleway:right:lane": "exclusive",
+                "foot": "no",
+                "highway": "secondary",
+                "lanes": "2",
+                "massgis:way_id": "179248",
+                "maxspeed": "25 mph",
+                "name": "Cambridge Street",
+                "name:mk": "Кембриџ Стрит",
+                "oneway": "yes",
+                "parking:both": "no",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "21.3"
+            }
+        }
+    ]
+}
