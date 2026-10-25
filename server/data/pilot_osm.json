@@ -2,7 +2,7 @@
     "version": 0.6,
     "generator": "Overpass API 0.7.62.11 87bfad18",
     "osm3s": {
-        "timestamp_osm_base": "2026-10-21T21:45:05Z",
+        "timestamp_osm_base": "2026-10-25T20:43:41Z",
         "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
     },
     "elements": [
@@ -641,6 +641,1038 @@
             ],
             "tags": {
                 "building": "yes"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8614780,
+            "bounds": {
+                "minlat": 42.3847838,
+                "minlon": -71.1193365,
+                "maxlat": 42.3848278,
+                "maxlon": -71.1183273
+            },
+            "geometry": [
+                {
+                    "lat": 42.3848278,
+                    "lon": -71.1193365
+                },
+                {
+                    "lat": 42.3848191,
+                    "lon": -71.1192451
+                },
+                {
+                    "lat": 42.3848167,
+                    "lon": -71.1192032
+                },
+                {
+                    "lat": 42.3847838,
+                    "lon": -71.1183273
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "191053",
+                "maxspeed": "25 mph",
+                "name": "Exeter Park",
+                "parking:both": "lane",
+                "parking:both:orientation": "parallel",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "11.0"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8614851,
+            "bounds": {
+                "minlat": 42.3833849,
+                "minlon": -71.121204,
+                "maxlat": 42.3844978,
+                "maxlon": -71.1202729
+            },
+            "geometry": [
+                {
+                    "lat": 42.3833849,
+                    "lon": -71.1202729
+                },
+                {
+                    "lat": 42.383423,
+                    "lon": -71.1203088
+                },
+                {
+                    "lat": 42.383974,
+                    "lon": -71.120771
+                },
+                {
+                    "lat": 42.3844544,
+                    "lon": -71.1211749
+                },
+                {
+                    "lat": 42.3844978,
+                    "lon": -71.121204
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "2",
+                "massgis:way_id": "110676",
+                "maxspeed": "20 mph",
+                "name": "Hurlbut Street",
+                "parking:both": "lane",
+                "parking:both:orientation": "parallel",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "11.6"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8615346,
+            "bounds": {
+                "minlat": 42.3842552,
+                "minlon": -71.1203732,
+                "maxlat": 42.3846595,
+                "maxlon": -71.1203003
+            },
+            "geometry": [
+                {
+                    "lat": 42.3842552,
+                    "lon": -71.1203602
+                },
+                {
+                    "lat": 42.3843371,
+                    "lon": -71.1203003
+                },
+                {
+                    "lat": 42.3846137,
+                    "lon": -71.1203639
+                },
+                {
+                    "lat": 42.3846595,
+                    "lon": -71.1203732
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "2",
+                "massgis:way_id": "150118",
+                "maxspeed": "25 mph",
+                "name": "Potter Park",
+                "parking:both": "no",
+                "sidewalk": "both",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "7.6"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8615386,
+            "bounds": {
+                "minlat": 42.384611,
+                "minlon": -71.121094,
+                "maxlat": 42.385678,
+                "maxlon": -71.120616
+            },
+            "geometry": [
+                {
+                    "lat": 42.384611,
+                    "lon": -71.120616
+                },
+                {
+                    "lat": 42.3846867,
+                    "lon": -71.1206471
+                },
+                {
+                    "lat": 42.384942,
+                    "lon": -71.120751
+                },
+                {
+                    "lat": 42.385321,
+                    "lon": -71.120939
+                },
+                {
+                    "lat": 42.3856294,
+                    "lon": -71.1210775
+                },
+                {
+                    "lat": 42.385678,
+                    "lon": -71.121094
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "massgis:way_id": "211091",
+                "maxspeed": "20 mph",
+                "name": "Humboldt Street",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "lane",
+                "parking:right:orientation": "parallel",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "9.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8615747,
+            "bounds": {
+                "minlat": 42.3851837,
+                "minlon": -71.119285,
+                "maxlat": 42.3853811,
+                "maxlon": -71.1161327
+            },
+            "geometry": [
+                {
+                    "lat": 42.3853811,
+                    "lon": -71.119285
+                },
+                {
+                    "lat": 42.385375,
+                    "lon": -71.1191697
+                },
+                {
+                    "lat": 42.3853128,
+                    "lon": -71.1181387
+                },
+                {
+                    "lat": 42.3852803,
+                    "lon": -71.1176206
+                },
+                {
+                    "lat": 42.3852766,
+                    "lon": -71.117555
+                },
+                {
+                    "lat": 42.3852732,
+                    "lon": -71.1174945
+                },
+                {
+                    "lat": 42.3851914,
+                    "lon": -71.116248
+                },
+                {
+                    "lat": 42.3851837,
+                    "lon": -71.1161327
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "1",
+                "lit": "yes",
+                "massgis:way_id": "111492",
+                "maxspeed": "20 mph",
+                "name": "Forest Street",
+                "oneway": "yes",
+                "parking:both": "separate",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "12.2"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8615878,
+            "bounds": {
+                "minlat": 42.3843591,
+                "minlon": -71.1193757,
+                "maxlat": 42.3844608,
+                "maxlon": -71.1176462
+            },
+            "geometry": [
+                {
+                    "lat": 42.3843591,
+                    "lon": -71.1176462
+                },
+                {
+                    "lat": 42.3843647,
+                    "lon": -71.1177338
+                },
+                {
+                    "lat": 42.3844548,
+                    "lon": -71.1192543
+                },
+                {
+                    "lat": 42.3844564,
+                    "lon": -71.119282
+                },
+                {
+                    "lat": 42.3844608,
+                    "lon": -71.1193757
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "1",
+                "lit": "yes",
+                "massgis:way_id": "121635",
+                "maxspeed": "20 mph",
+                "name": "Prentiss Street",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "lane",
+                "parking:right:orientation": "parallel",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "12.2"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8616052,
+            "bounds": {
+                "minlat": 42.3855566,
+                "minlon": -71.121094,
+                "maxlat": 42.385678,
+                "maxlon": -71.119381
+            },
+            "geometry": [
+                {
+                    "lat": 42.3855566,
+                    "lon": -71.119381
+                },
+                {
+                    "lat": 42.3855747,
+                    "lon": -71.1194863
+                },
+                {
+                    "lat": 42.3856172,
+                    "lon": -71.1201954
+                },
+                {
+                    "lat": 42.3856269,
+                    "lon": -71.1203382
+                },
+                {
+                    "lat": 42.385678,
+                    "lon": -71.121094
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "1",
+                "lit": "yes",
+                "massgis:way_id": "169521",
+                "maxspeed": "20 mph",
+                "name": "Lancaster Street",
+                "oneway": "yes",
+                "parking:left": "separate",
+                "parking:right": "no",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "10.1"
+            }
+        },
+        {
+            "type": "way",
+            "id": 8616071,
+            "bounds": {
+                "minlat": 42.3857586,
+                "minlon": -71.1192232,
+                "maxlat": 42.3858386,
+                "maxlon": -71.1181148
+            },
+            "geometry": [
+                {
+                    "lat": 42.3858386,
+                    "lon": -71.1192232
+                },
+                {
+                    "lat": 42.3858338,
+                    "lon": -71.1191357
+                },
+                {
+                    "lat": 42.3857827,
+                    "lon": -71.118187
+                },
+                {
+                    "lat": 42.3857812,
+                    "lon": -71.1181524
+                },
+                {
+                    "lat": 42.3857775,
+                    "lon": -71.1181401
+                },
+                {
+                    "lat": 42.3857704,
+                    "lon": -71.1181274
+                },
+                {
+                    "lat": 42.3857644,
+                    "lon": -71.1181191
+                },
+                {
+                    "lat": 42.3857586,
+                    "lon": -71.1181148
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "highway": "residential",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "115431",
+                "maxspeed": "25 mph",
+                "name": "Newport Road",
+                "parking:left": "separate",
+                "parking:right": "no",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "12.2"
+            }
+        },
+        {
+            "type": "way",
+            "id": 298631772,
+            "bounds": {
+                "minlat": 42.3853811,
+                "minlon": -71.119285,
+                "maxlat": 42.3858386,
+                "maxlon": -71.1192232
+            },
+            "geometry": [
+                {
+                    "lat": 42.3853811,
+                    "lon": -71.119285
+                },
+                {
+                    "lat": 42.3858386,
+                    "lon": -71.1192232
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 298631775,
+            "bounds": {
+                "minlat": 42.383786,
+                "minlon": -71.119569,
+                "maxlat": 42.3848284,
+                "maxlon": -71.1194567
+            },
+            "geometry": [
+                {
+                    "lat": 42.3848284,
+                    "lon": -71.1194567
+                },
+                {
+                    "lat": 42.3847548,
+                    "lon": -71.1194657
+                },
+                {
+                    "lat": 42.3846611,
+                    "lon": -71.1194775
+                },
+                {
+                    "lat": 42.3844411,
+                    "lon": -71.1195022
+                },
+                {
+                    "lat": 42.3841419,
+                    "lon": -71.1195315
+                },
+                {
+                    "lat": 42.3838611,
+                    "lon": -71.1195611
+                },
+                {
+                    "lat": 42.383786,
+                    "lon": -71.119569
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533433330,
+            "bounds": {
+                "minlat": 42.3858386,
+                "minlon": -71.1192232,
+                "maxlat": 42.3868257,
+                "maxlon": -71.1191157
+            },
+            "geometry": [
+                {
+                    "lat": 42.3858386,
+                    "lon": -71.1192232
+                },
+                {
+                    "lat": 42.3867199,
+                    "lon": -71.1191272
+                },
+                {
+                    "lat": 42.3867498,
+                    "lon": -71.1191239
+                },
+                {
+                    "lat": 42.3868257,
+                    "lon": -71.1191157
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533433331,
+            "bounds": {
+                "minlat": 42.3853882,
+                "minlon": -71.1193958,
+                "maxlat": 42.3865471,
+                "maxlon": -71.1192754
+            },
+            "geometry": [
+                {
+                    "lat": 42.3865471,
+                    "lon": -71.1192754
+                },
+                {
+                    "lat": 42.3863267,
+                    "lon": -71.1192986
+                },
+                {
+                    "lat": 42.3862065,
+                    "lon": -71.1193138
+                },
+                {
+                    "lat": 42.3858101,
+                    "lon": -71.1193519
+                },
+                {
+                    "lat": 42.3855566,
+                    "lon": -71.119381
+                },
+                {
+                    "lat": 42.3853882,
+                    "lon": -71.1193958
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533434439,
+            "bounds": {
+                "minlat": 42.3848278,
+                "minlon": -71.1193365,
+                "maxlat": 42.3853811,
+                "maxlon": -71.119285
+            },
+            "geometry": [
+                {
+                    "lat": 42.3848278,
+                    "lon": -71.1193365
+                },
+                {
+                    "lat": 42.3849072,
+                    "lon": -71.1193274
+                },
+                {
+                    "lat": 42.3853811,
+                    "lon": -71.119285
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "lane",
+                "parking:right:orientation": "parallel",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533434440,
+            "bounds": {
+                "minlat": 42.3853811,
+                "minlon": -71.1193958,
+                "maxlat": 42.3853882,
+                "maxlon": -71.119285
+            },
+            "geometry": [
+                {
+                    "lat": 42.3853882,
+                    "lon": -71.1193958
+                },
+                {
+                    "lat": 42.3853811,
+                    "lon": -71.119285
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "foot": "no",
+                "highway": "residential",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "111492",
+                "maxspeed": "25 mph",
+                "name": "Forest Street",
+                "oneway": "yes",
+                "parking:both": "no",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "12.2"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533434441,
+            "bounds": {
+                "minlat": 42.3848284,
+                "minlon": -71.1194567,
+                "maxlat": 42.3853882,
+                "maxlon": -71.1193958
+            },
+            "geometry": [
+                {
+                    "lat": 42.3853882,
+                    "lon": -71.1193958
+                },
+                {
+                    "lat": 42.3850552,
+                    "lon": -71.1194279
+                },
+                {
+                    "lat": 42.3849822,
+                    "lon": -71.1194374
+                },
+                {
+                    "lat": 42.3849091,
+                    "lon": -71.1194468
+                },
+                {
+                    "lat": 42.3848284,
+                    "lon": -71.1194567
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533434748,
+            "bounds": {
+                "minlat": 42.3848278,
+                "minlon": -71.1194567,
+                "maxlat": 42.3848284,
+                "maxlon": -71.1193365
+            },
+            "geometry": [
+                {
+                    "lat": 42.3848284,
+                    "lon": -71.1194567
+                },
+                {
+                    "lat": 42.3848278,
+                    "lon": -71.1193365
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "no",
+                "foot": "yes",
+                "highway": "residential",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "190042",
+                "maxspeed": "25 mph",
+                "name": "Linnaean Street",
+                "parking:both": "no",
+                "sidewalk": "no",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "14.0"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533435050,
+            "bounds": {
+                "minlat": 42.3844608,
+                "minlon": -71.1193757,
+                "maxlat": 42.3848278,
+                "maxlon": -71.1193365
+            },
+            "geometry": [
+                {
+                    "lat": 42.3844608,
+                    "lon": -71.1193757
+                },
+                {
+                    "lat": 42.3846526,
+                    "lon": -71.119356
+                },
+                {
+                    "lat": 42.3847283,
+                    "lon": -71.1193468
+                },
+                {
+                    "lat": 42.3847621,
+                    "lon": -71.1193425
+                },
+                {
+                    "lat": 42.3848278,
+                    "lon": -71.1193365
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "lane",
+                "parking:right:orientation": "parallel",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 533445865,
+            "bounds": {
+                "minlat": 42.3837819,
+                "minlon": -71.1194444,
+                "maxlat": 42.3844608,
+                "maxlon": -71.1193757
+            },
+            "geometry": [
+                {
+                    "lat": 42.3837819,
+                    "lon": -71.1194444
+                },
+                {
+                    "lat": 42.3838526,
+                    "lon": -71.1194379
+                },
+                {
+                    "lat": 42.3839552,
+                    "lon": -71.1194285
+                },
+                {
+                    "lat": 42.3841167,
+                    "lon": -71.1194089
+                },
+                {
+                    "lat": 42.3841379,
+                    "lon": -71.1194066
+                },
+                {
+                    "lat": 42.3844608,
+                    "lon": -71.1193757
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:left": "no",
+                "cycleway:right": "lane",
+                "highway": "primary",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "193208",
+                "maxspeed": "25 mph",
+                "name": "Massachusetts Avenue",
+                "oneway": "yes",
+                "parking:left": "no",
+                "parking:right": "separate",
+                "ref": "MA 2A",
+                "sidewalk:left": "no",
+                "sidewalk:right": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "26.8"
+            }
+        },
+        {
+            "type": "way",
+            "id": 719911876,
+            "bounds": {
+                "minlat": 42.3852171,
+                "minlon": -71.1202474,
+                "maxlat": 42.3856172,
+                "maxlon": -71.1201954
+            },
+            "geometry": [
+                {
+                    "lat": 42.3856172,
+                    "lon": -71.1201954
+                },
+                {
+                    "lat": 42.3855834,
+                    "lon": -71.120198
+                },
+                {
+                    "lat": 42.3852171,
+                    "lon": -71.1202474
+                }
+            ],
+            "tags": {
+                "highway": "service",
+                "service": "driveway",
+                "surface": "asphalt"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1051584849,
+            "bounds": {
+                "minlat": 42.38532,
+                "minlon": -71.1203689,
+                "maxlat": 42.3856269,
+                "maxlon": -71.1203382
+            },
+            "geometry": [
+                {
+                    "lat": 42.38532,
+                    "lon": -71.1203689
+                },
+                {
+                    "lat": 42.3855922,
+                    "lon": -71.1203441
+                },
+                {
+                    "lat": 42.3856269,
+                    "lon": -71.1203382
+                }
+            ],
+            "tags": {
+                "highway": "service",
+                "service": "driveway",
+                "surface": "paving_stones"
+            }
+        },
+        {
+            "type": "way",
+            "id": 1341048212,
+            "bounds": {
+                "minlat": 42.3844599,
+                "minlon": -71.12138,
+                "maxlat": 42.3848284,
+                "maxlon": -71.1194567
+            },
+            "geometry": [
+                {
+                    "lat": 42.3844599,
+                    "lon": -71.12138
+                },
+                {
+                    "lat": 42.3844775,
+                    "lon": -71.121293
+                },
+                {
+                    "lat": 42.3844978,
+                    "lon": -71.121204
+                },
+                {
+                    "lat": 42.384611,
+                    "lon": -71.120616
+                },
+                {
+                    "lat": 42.384654,
+                    "lon": -71.1204
+                },
+                {
+                    "lat": 42.3846595,
+                    "lon": -71.1203732
+                },
+                {
+                    "lat": 42.3848166,
+                    "lon": -71.1196266
+                },
+                {
+                    "lat": 42.3848235,
+                    "lon": -71.1195695
+                },
+                {
+                    "lat": 42.3848284,
+                    "lon": -71.1194567
+                }
+            ],
+            "tags": {
+                "attribution": "Office of Geographic and Environmental Information (MassGIS)",
+                "condition": "fair",
+                "cycleway:both": "shared_lane",
+                "cycleway:both:lane": "pictogram",
+                "highway": "residential",
+                "lanes": "2",
+                "lit": "yes",
+                "massgis:way_id": "190042",
+                "maxspeed": "20 mph",
+                "name": "Linnaean Street",
+                "name:etymology:wikidata": "Q1043",
+                "oneway": "no",
+                "parking:left": "separate",
+                "parking:right": "no",
+                "sidewalk:both": "separate",
+                "source": "massgis_import_v0.1_20071008165629",
+                "surface": "asphalt",
+                "width": "14.0",
+                "wikidata": "Q87742155"
             }
         }
     ]
