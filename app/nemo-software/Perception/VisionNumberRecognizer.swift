@@ -1,9 +1,10 @@
 //  VisionNumberRecognizer.swift
 //  nemo-software
 //
-//  Apple Vision text recognition for the building-number check (CV-9).
-//  Called on the perception queue with the camera's own buffer. It must finish
-//  before returning so the camera can reuse that buffer. Frames stay on the phone.
+//  Apple Vision text recognition for the building check (CV-9).
+//  One request reads house numbers and green street-name signs. Called on the
+//  perception queue with the camera's own buffer. It must finish before returning
+//  so the camera can reuse that buffer. Frames stay on the phone.
 //
 //  Tuned for a number plaque at roughly 10–20 m on a 1080p frame: accurate
 //  recognition, language correction off (it rewrites digits), and a lower
@@ -22,10 +23,11 @@ nonisolated final class VisionNumberRecognizer: NumberRecognizer, @unchecked Sen
   /// Fraction of the image height. Default is 1/32; lower finds smaller, farther digits.
   private let minimumTextHeight: Float = 0.012
 
-  func recognize(
+  func read(
     _ pixelBuffer: CVPixelBuffer,
-    orientation: CGImagePropertyOrientation
-  ) -> [RecognizedNumber] {
+    orientation: CGImagePropertyOrientation,
+    expectedBundleTexts: [String]
+  ) -> CameraTextRead {
     let request = VNRecognizeTextRequest()
     request.recognitionLevel = .accurate
     request.usesLanguageCorrection = false
@@ -42,33 +44,61 @@ nonisolated final class VisionNumberRecognizer: NumberRecognizer, @unchecked Sen
       try handler.perform([request])
     } catch {
       print("[VisionNumberRecognizer] \(error.localizedDescription)")
-      return []
+      return CameraTextRead()
     }
 
-    guard let observations = request.results else { return [] }
+    guard let observations = request.results else { return CameraTextRead() }
 
-    var bestByValue: [String: RecognizedNumber] = [:]
+    var bestNumbers: [String: RecognizedNumber] = [:]
+    var bestSigns: [String: RecognizedStreetSign] = [:]
     for observation in observations {
       guard
         let candidate = observation.topCandidates(3).first(where: {
           $0.confidence >= minimumConfidence
-        }),
-        let value = HouseNumberParser.houseNumber(in: candidate.string)
+        })
       else { continue }
 
-      let number = RecognizedNumber(
-        text: candidate.string,
-        value: value,
+      if let value = HouseNumberParser.houseNumber(in: candidate.string) {
+        let number = RecognizedNumber(
+          text: candidate.string,
+          value: value,
+          confidence: candidate.confidence,
+          boundingBox: observation.boundingBox,
+          id: observation.uuid
+        )
+        if let existing = bestNumbers[value], existing.confidence >= number.confidence {
+          continue
+        }
+        bestNumbers[value] = number
+        continue
+      }
+
+      guard
+        let street = StreetSignParser.streetName(in: candidate.string),
+        SignColor.isGreenSign(
+          in: pixelBuffer, normalizedBox: observation.boundingBox, orientation: orientation)
+      else { continue }
+
+      let matched = BundleTextMatcher.match(read: street, expected: expectedBundleTexts)
+      if !expectedBundleTexts.isEmpty && matched == nil { continue }
+      let sign = RecognizedStreetSign(
+        text: matched ?? street,
+        readText: street,
+        matchedBundleText: matched,
         confidence: candidate.confidence,
         boundingBox: observation.boundingBox,
         id: observation.uuid
       )
-      if let existing = bestByValue[value], existing.confidence >= number.confidence {
+      let key = matched ?? street
+      if let existing = bestSigns[key], existing.confidence >= sign.confidence {
         continue
       }
-      bestByValue[value] = number
+      bestSigns[key] = sign
     }
 
-    return bestByValue.values.sorted { $0.confidence > $1.confidence }
+    return CameraTextRead(
+      numbers: bestNumbers.values.sorted { $0.confidence > $1.confidence },
+      streetSigns: bestSigns.values.sorted { $0.confidence > $1.confidence }
+    )
   }
 }
