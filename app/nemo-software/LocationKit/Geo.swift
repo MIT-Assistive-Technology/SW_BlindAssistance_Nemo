@@ -116,7 +116,62 @@ nonisolated public enum Geo {
     return sinAngle < 0 ? .right : .left
   }
 
+  /// Bearing of a polyline from its FIRST to its LAST point, 0..<360. Points are
+  /// `[lon, lat]` pairs, matching the bundle's `street_side.centerline` (FE-13).
+  /// Returns nil when there are fewer than two usable points.
+  public static func polylineBearingDegrees(lonLat points: [[Double]]) -> Double? {
+    let usable = points.filter { $0.count >= 2 }
+    guard let first = usable.first, let last = usable.last, usable.count >= 2 else { return nil }
+    guard first[0] != last[0] || first[1] != last[1] else { return nil }
+    return bearingDegrees(lat1: first[1], lon1: first[0], lat2: last[1], lon2: last[0])
+  }
+
+  /// Shortest distance in meters from a point to a polyline of `[lon, lat]` pairs.
+  /// Used to check the car actually stopped on the road the bundle matched (FE-13):
+  /// a stop in a parking lot or driveway is far from the centerline, so the side of
+  /// street is unknown. Flat-earth projection around the query point, which is exact
+  /// enough over the few hundred meters that matter here.
+  public static func distanceToPolylineMeters(
+    lat: Double, lon: Double, polylineLonLat points: [[Double]]
+  ) -> Double? {
+    let local = points.filter { $0.count >= 2 }.map { pair in
+      localOffsetMeters(lat: pair[1], lon: pair[0], originLat: lat, originLon: lon)
+    }
+    guard let first = local.first else { return nil }
+    guard local.count >= 2 else { return hypot(first.east, first.north) }
+    return (0..<(local.count - 1)).reduce(Double.greatestFiniteMagnitude) { best, i in
+      min(best, distanceFromOriginToSegment(local[i], local[i + 1]))
+    }
+  }
+
+  /// Local east/north offset in meters of a point from an origin.
+  public static func localOffsetMeters(
+    lat: Double, lon: Double, originLat: Double, originLon: Double
+  ) -> (east: Double, north: Double) {
+    let metersPerDegree = earthRadiusMeters * .pi / 180
+    var dLon = (lon - originLon).truncatingRemainder(dividingBy: 360)
+    if dLon > 180 { dLon -= 360 }
+    if dLon < -180 { dLon += 360 }
+    return (
+      east: dLon * metersPerDegree * cos(radians(originLat)),
+      north: (lat - originLat) * metersPerDegree
+    )
+  }
+
   // MARK: - Helpers
+
+  /// Distance from (0, 0) to the segment a–b, both already in local meters.
+  static func distanceFromOriginToSegment(
+    _ a: (east: Double, north: Double), _ b: (east: Double, north: Double)
+  ) -> Double {
+    let dx = b.east - a.east
+    let dy = b.north - a.north
+    let lengthSquared = dx * dx + dy * dy
+    guard lengthSquared > 0 else { return hypot(a.east, a.north) }
+    // Projection of the origin onto the segment, clamped to its ends.
+    let t = min(max(-(a.east * dx + a.north * dy) / lengthSquared, 0), 1)
+    return hypot(a.east + t * dx, a.north + t * dy)
+  }
 
   /// Wraps any angle into 0..<360.
   public static func normalize(_ degrees: Double) -> Double {

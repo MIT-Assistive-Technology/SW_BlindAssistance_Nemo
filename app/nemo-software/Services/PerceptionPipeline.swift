@@ -67,6 +67,13 @@ public final class PerceptionPipeline: ObservableObject, FrameProviderDelegate {
       speaker.speak(top.labels.first?.identifier ?? "something")
     }
 
+    // TODO (CV-9): when Vision text recognition lands, match each result against the
+    // bundle's `recognize.text`, turn the box's centre column into a bearing with
+    // `BuildingSighting(text:headingDegrees:xPixels:widthPixels:fovDegrees:confidence:)`
+    // and pass it to `NavigationSession.observe(_:)`. The session checks the direction
+    // against the building outline before it believes it, and corrects the heading bias.
+    // In low light, call `cameraCheckUnavailable(.lowLight)` instead of failing quietly.
+
     // Update the UI on the main actor.
     let location = locationProvider.currentSnapshot
     presentation = FramePresentation(
