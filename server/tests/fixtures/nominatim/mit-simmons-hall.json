@@ -1,0 +1,88 @@
+{
+  "id": "mit-simmons-hall",
+  "address": "229 Vassar St, Cambridge, MA 02139",
+  "recorded_at": "2026-10-25T21:14:44+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "229 Vassar St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 361875691,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29585286,
+      "lat": "42.3571235",
+      "lon": "-71.1015013",
+      "category": "building",
+      "type": "dormitory",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "W79 Simmons Hall",
+      "display_name": "W79 Simmons Hall, 229, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "building": "W79 Simmons Hall",
+        "house_number": "229",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3567616",
+        "42.3574681",
+        "-71.1021680",
+        "-71.1008693"
+      ]
+    },
+    {
+      "place_id": 404412258,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1334904913,
+      "lat": "42.3574582",
+      "lon": "-71.1004599",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "229, Vassar Street, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "229",
+        "road": "Vassar Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3574082",
+        "42.3575082",
+        "-71.1005099",
+        "-71.1004099"
+      ]
+    }
+  ]
+}

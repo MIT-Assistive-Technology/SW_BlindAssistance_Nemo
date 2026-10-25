@@ -37,7 +37,10 @@ app/
   main.py          routes and the error envelope
   bundle_store.py  loads bundles/*.json, indexes them, matches a geocoded point to a bundle
   models.py        Pydantic mirror of ../contract/resolve.example.json
-  resolver.py      the lookup ladder, one function per step
+  resolver.py      step 1, the geocoder (Nominatim)
+  doors.py         steps 2, 3 and 5: building, doors, facade fallback, street side, path checks
+  overpass.py      Overpass queries and their on-disk cache
+  bundle.py        runs the ladder for a pilot site and assembles the bundle
   scoring.py       door scoring rules
   geo.py           side of street, photo rays, wall intersection
 tests/             pytest; skipped tests are TODOs with expected values

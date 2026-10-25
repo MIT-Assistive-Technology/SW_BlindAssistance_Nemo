@@ -192,5 +192,8 @@ def get_bundle(
     if found is None:
         raise ApiError(404, "NOT_FOUND", "No pilot bundle has that id.")
     if _etag_matches(if_none_match, found.sha256):
-        return Response(status_code=304, headers={"ETag": f'"{found.sha256}"'})
+        # Same validators as the 200, so caches keep revalidating (E2E I-13).
+        return Response(
+            status_code=304, headers={"ETag": f'"{found.sha256}"', "Cache-Control": "no-cache"}
+        )
     return _bundle_response(found)

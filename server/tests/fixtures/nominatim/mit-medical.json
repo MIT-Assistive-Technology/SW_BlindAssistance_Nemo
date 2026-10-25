@@ -1,0 +1,171 @@
+{
+  "id": "mit-medical",
+  "address": "25 Carleton St, Cambridge, MA 02142",
+  "recorded_at": "2026-10-25T21:14:41+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "25 Carleton St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 363221977,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 177921760,
+      "lat": "42.3610030",
+      "lon": "-71.0866322",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "E23",
+      "display_name": "E23, 25, Carleton Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "building": "E23",
+        "house_number": "25",
+        "road": "Carleton Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 5562633713,
+          "type": "yes",
+          "lat": "42.3608018",
+          "lon": "-71.0867831"
+        },
+        {
+          "osm_id": 7631026704,
+          "type": "main",
+          "lat": "42.3612024",
+          "lon": "-71.0867821"
+        }
+      ],
+      "boundingbox": [
+        "42.3605741",
+        "42.3614834",
+        "-71.0868046",
+        "-71.0864268"
+      ]
+    },
+    {
+      "place_id": 363305494,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 1884053775,
+      "lat": "42.3611885",
+      "lon": "-71.0866427",
+      "category": "amenity",
+      "type": "doctors",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "MIT Health",
+      "display_name": "MIT Health, 25, Carleton Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "amenity": "MIT Health",
+        "house_number": "25",
+        "road": "Carleton Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3611385",
+        "42.3612385",
+        "-71.0866927",
+        "-71.0865927"
+      ]
+    },
+    {
+      "place_id": 363316063,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7237446585,
+      "lat": "42.3611903",
+      "lon": "-71.0865311",
+      "category": "amenity",
+      "type": "atm",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "25, Carleton Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "25",
+        "road": "Carleton Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3611403",
+        "42.3612403",
+        "-71.0865811",
+        "-71.0864811"
+      ]
+    },
+    {
+      "place_id": 364626282,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12031550429,
+      "lat": "42.3614233",
+      "lon": "-71.0864860",
+      "category": "amenity",
+      "type": "post_box",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "FedEx",
+      "display_name": "FedEx, 25, Carleton Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "amenity": "FedEx",
+        "house_number": "25",
+        "road": "Carleton Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3613733",
+        "42.3614733",
+        "-71.0865360",
+        "-71.0864360"
+      ]
+    }
+  ]
+}

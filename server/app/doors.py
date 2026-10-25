@@ -6,11 +6,21 @@ so app/bundle.py can run them as stages, and tests can feed saved Overpass respo
 """
 
 import functools
+import itertools
 import math
 import re
 
 from . import overpass
-from .geo import Frame, XY, closest_on_line, door_side_of_road, inside, line_crosses
+from .geo import (
+    XY,
+    Frame,
+    area,
+    closest_on_line,
+    closest_on_segment,
+    door_side_of_road,
+    inside,
+    line_crosses,
+)
 from .models import Building, Candidate, PathChecks, Provenance, Speak, StreetSide
 from .resolver import GeocodedPoint
 from .scoring import ADDRESS_POINT, FACADE_FALLBACK, score_door
@@ -20,8 +30,35 @@ CENTERLINE_KEEP_M = 60  # street_side centerline: this far either side of the do
 CURB_OFFSET_M = 6  # expected drop-off: this far from the centerline toward the door
 CROSSING_MAX_M = 150  # farther than this, "nearest marked crossing" is no help
 NOT_A_ROAD = {"driveway", "parking_aisle", "drive-through"}  # service=*: separate warning class
-UNMARKED = {"unmarked", "no", "informal"}
+# crossing=* values that mean paint on the road. A bare highway=crossing is not assumed marked.
+MARKED = {"marked", "zebra", "uncontrolled", "traffic_signals"}
 FOOTWAYS = {"footway", "path", "pedestrian", "steps", "corridor", "cycleway"}
+
+STRAIGHT_COS = math.cos(math.radians(15))  # consecutive edges this straight form one wall
+FACING_COS = 0.5  # a wall (or door) faces a road within 60 degrees of its outward normal
+FRONT_TOLERANCE_M = 3  # walls up to this much farther from the street than the nearest compete
+# Street-type abbreviations, so "77 Massachusetts Ave." matches OSM's "Massachusetts Avenue".
+STREET_WORDS = {
+    "ave": "avenue",
+    "av": "avenue",
+    "st": "street",
+    "rd": "road",
+    "blvd": "boulevard",
+    "pl": "place",
+    "sq": "square",
+    "dr": "drive",
+    "ct": "court",
+    "ln": "lane",
+    "pkwy": "parkway",
+    "hwy": "highway",
+    "ter": "terrace",
+    "terr": "terrace",
+    "cir": "circle",
+    "n": "north",
+    "s": "south",
+    "e": "east",
+    "w": "west",
+}
 
 # Tests replace this with overpass.Client(cache_dir=fixtures, offline=True).
 CLIENT: overpass.Client | None = None
@@ -42,27 +79,24 @@ def client() -> overpass.Client:
 def find_building(point: GeocodedPoint) -> Building:
     """The outline containing the point (a whole building before a building:part, then the
     smallest), else Nominatim's own building, else one with the house number within 30 m,
-    else the nearest."""
+    else the nearest (whole buildings before parts)."""
     raw = client().run(overpass.buildings_query(point.lat, point.lon, point.osm_ref))
     outlines = overpass.parse_buildings(raw)
     if not outlines:
         raise LookupError("no building outline at or within 40 m of the address")
     f = Frame(point.lat, point.lon)
     here = (0.0, 0.0)
-
-    def rings_xy(o: overpass.Outline) -> list[list[XY]]:
-        return [[f.xy(*p) for p in ring[:-1]] for ring in o.rings]
+    rings = {o.ref: [[f.xy(*p) for p in ring] for ring in o.rings] for o in outlines}
 
     def wall_distance(o: overpass.Outline) -> float:
-        return min(closest_on_line(here, ring + ring[:1])[0] for ring in rings_xy(o))
+        return min(closest_on_line(here, ring)[0] for ring in rings[o.ref])
 
-    def size(o: overpass.Outline) -> float:
-        from .geo import area
-
-        return area(rings_xy(o)[0])
-
-    containing = [o for o in outlines if any(inside(here, r) for r in rings_xy(o))]
-    chosen = min(containing, key=lambda o: (o.is_part, size(o))) if containing else None
+    containing = [o for o in outlines if any(inside(here, r[:-1]) for r in rings[o.ref])]
+    chosen = (
+        min(containing, key=lambda o: (o.is_part, area(rings[o.ref][0][:-1])))
+        if containing
+        else None
+    )
     if chosen is None and point.osm_ref:
         chosen = next((o for o in outlines if o.ref == point.osm_ref), None)
     if chosen is None:
@@ -71,7 +105,7 @@ def find_building(point: GeocodedPoint) -> Building:
             o
             for o in near
             if point.housenumber
-            and o.tags.get("addr:housenumber") == point.housenumber
+            and point.housenumber in _numbers(o.tags)
             and wall_distance(o) <= SAME_NUMBER_M
         ]
         chosen = (same_number or near)[0]
@@ -81,6 +115,11 @@ def find_building(point: GeocodedPoint) -> Building:
         housenumber=chosen.tags.get("addr:housenumber"),
         footprint=[[lon, lat] for lon, lat in chosen.footprint],
     )
+
+
+def _numbers(tags: dict[str, str]) -> set[str]:
+    """addr:housenumber may list several numbers: "77;79"."""
+    return {n.strip() for n in tags.get("addr:housenumber", "").split(";") if n.strip()}
 
 
 @functools.lru_cache(maxsize=64)
@@ -98,17 +137,16 @@ def area_for(building: Building) -> overpass.BuildingArea:
 # ---------------------------------------------------------------------------------------------
 
 
-def _label(tags: dict[str, str]) -> str:
+def _label(tags: dict[str, str], main: bool = False) -> str:
     values = [v.strip() for v in tags.get("entrance", "").split(";")]
-    kind = (
-        "Main entrance"
-        if "main" in values or "routing:entrance" in tags
-        else "Side entrance"
-        if "secondary" in values
-        else "Service door"
-        if "service" in values
-        else "Door"
-    )
+    if main or "main" in values or "routing:entrance" in tags:
+        kind = "Main entrance"
+    elif "secondary" in values:
+        kind = "Side entrance"
+    elif "service" in values:
+        kind = "Service door"
+    else:
+        kind = "Door"
     name = tags.get("name") or tags.get("ref")
     return f"{kind} ({name})" if name else kind
 
@@ -126,29 +164,28 @@ def _speak(tags: dict[str, str]) -> Speak | None:
 def read_entrances(building: Building, dest_housenumber: str | None) -> list[Candidate]:
     """Door nodes on the outline, or within 5 m of it (-0.10), scored with score_door.
 
-    A node within 5 m that belongs to ANOTHER building's outline is that building's door
-    (row houses share walls), so it is skipped.
+    A node off our outline that is on ANOTHER building's outline is that building's door
+    (row houses share walls), so it is skipped. building:part ways don't count as another
+    building: they are usually parts of this one.
     """
     a = area_for(building)
-    other_buildings = {
-        n for w in a.ways_at_doors if "building" in w.tags or "building:part" in w.tags
-        for n in w.nodes
-    }
+    other_buildings = {n for w in a.ways_at_doors if "building" in w.tags for n in w.nodes}
     footway_nodes = {
         n for w in a.ways_at_doors if w.tags.get("highway") in FOOTWAYS for n in w.nodes
     }
     out = []
     for node_id, e in sorted(a.entrances.items()):
         on_outline = node_id in a.outline_nodes
-        if not on_outline and (node_id in other_buildings):
+        if not on_outline and node_id in other_buildings:
             continue
         tags = e["tags"]
+        site = node_id in a.site_entrances
         score = score_door(
             tags,
             dest_housenumber,
             on_outline=on_outline,
             has_footway=node_id in footway_nodes,
-            site_entrance=node_id in a.site_entrances,
+            site_entrance=site,
         )
         if score is None:
             continue
@@ -159,7 +196,7 @@ def read_entrances(building: Building, dest_housenumber: str | None) -> list[Can
                 lon=e["lon"],
                 confidence=score,
                 band="door",  # bundle.rank() sets the band from the score
-                label=_label(tags),
+                label=_label(tags, main=site),
                 speak=_speak(tags),
                 provenance=[Provenance(source="osm_tag", ref=f"node/{node_id}", tags=tags)],
             )
@@ -177,56 +214,140 @@ def _is_road(w: overpass.Way) -> bool:
 
 
 def _norm(name: str) -> str:
-    return re.sub(r"[^a-z0-9 ]", "", name.lower()).strip()
+    """'Massachusetts Ave.' and 'Massachusetts Avenue' -> 'massachusetts avenue'."""
+    words = re.sub(r"[^a-z0-9 ]", " ", name.lower()).split()
+    return " ".join(STREET_WORDS.get(w, w) for w in words)
 
 
 def _street_name(point: GeocodedPoint) -> str | None:
-    """'77 Massachusetts Avenue' -> 'massachusetts avenue'."""
+    """'77 Massachusetts Ave' -> 'massachusetts avenue'."""
     if not point.street:
         return None
-    return _norm(re.sub(r"^\s*\d+[a-z]?(?:-\d+[a-z]?)?\s+", "", point.street, flags=re.I))
+    name = re.sub(r"^\s*\d+[a-z]?(?:-\d+[a-z]?)?\s+", "", point.street, flags=re.I)
+    return _norm(name) or None
+
+
+def _ring_xy(f: Frame, footprint: list[list[float]]) -> list[XY]:
+    """The footprint in local meters: closed, without repeated points."""
+    pts = [f.xy(lon, lat) for lon, lat in footprint]
+    ring = [p for k, p in enumerate(pts) if k == 0 or p != pts[k - 1]]
+    if ring and ring[0] != ring[-1]:
+        ring.append(ring[0])
+    return ring
+
+
+def _is_ccw(ring: list[XY]) -> bool:
+    return sum(a[0] * b[1] - b[0] * a[1] for a, b in itertools.pairwise(ring)) > 0
+
+
+def _outward(a: XY, b: XY, ccw: bool) -> XY:
+    """Unit normal of edge a-b pointing out of a ring with the given orientation."""
+    length = math.dist(a, b)
+    dx, dy = (b[0] - a[0]) / length, (b[1] - a[1]) / length
+    return (dy, -dx) if ccw else (-dy, dx)
+
+
+def _mid(w: tuple[XY, XY]) -> XY:
+    return ((w[0][0] + w[1][0]) / 2, (w[0][1] + w[1][1]) / 2)
+
+
+def _walls(ring: list[XY]) -> list[tuple[XY, XY]]:
+    """Straight walls of a closed ring as (start, end). Consecutive edges within 15 degrees
+    are merged, so a front wall split by door or party-wall nodes has one midpoint."""
+    edges = list(itertools.pairwise(ring))
+
+    def straight(e1: tuple[XY, XY], e2: tuple[XY, XY]) -> bool:
+        u = (e1[1][0] - e1[0][0], e1[1][1] - e1[0][1])
+        v = (e2[1][0] - e2[0][0], e2[1][1] - e2[0][1])
+        return u[0] * v[0] + u[1] * v[1] > STRAIGHT_COS * math.hypot(*u) * math.hypot(*v)
+
+    # Start at a corner, so the wall through the ring's first node is not cut in two.
+    k = next((i for i in range(len(edges)) if not straight(edges[i - 1], edges[i])), 0)
+    walls: list[tuple[XY, XY]] = []
+    for e in edges[k:] + edges[:k]:
+        if walls and straight(walls[-1], e):
+            walls[-1] = (walls[-1][0], e[1])
+        else:
+            walls.append(e)
+    return walls
+
+
+def _wall_normal(ring: list[XY], p: XY) -> XY | None:
+    """Outward normal of the wall at p, averaged over the walls meeting there (a corner door)."""
+    if len(ring) < 4 or area(ring[:-1]) == 0:
+        return None
+    ccw = _is_ccw(ring)
+    d0 = closest_on_line(p, ring)[0]
+    nx = ny = 0.0
+    for a, b in itertools.pairwise(ring):
+        if closest_on_segment(p, a, b)[0] <= d0 + 0.5:
+            n = _outward(a, b, ccw)
+            nx, ny = nx + n[0], ny + n[1]
+    size = math.hypot(nx, ny)
+    return (nx / size, ny / size) if size > 1e-9 else None
+
+
+def _faces(p: XY, normal: XY, pts: list[XY]) -> bool:
+    """True if the nearest point of the polyline pts is in front of p (within 60 degrees)."""
+    d, q, _ = closest_on_line(p, pts)
+    return d > 0 and (q[0] - p[0]) * normal[0] + (q[1] - p[1]) * normal[1] >= FACING_COS * d
 
 
 def entrance_street(
-    a: overpass.BuildingArea, f: Frame, target: XY, street: str | None
+    a: overpass.BuildingArea, f: Frame, target: XY, street: str | None, normal: XY | None = None
 ) -> overpass.Way | None:
-    """The address's street if it is mapped nearby, else the nearest named through road."""
+    """The road `target` faces. With `normal` (its wall's outward normal) only roads in front
+    count when there are any, so a door on a corner building's side wall gets the side street
+    (plan section 6: the entrance's street, not the address street). Among those: the
+    address's street if mapped, else the nearest named through road, else the nearest road."""
     roads = [w for w in a.roads if _is_road(w)]
+    xy = {w.ref: [f.xy(*p) for p in w.coords] for w in roads}
+    if normal is not None:
+        roads = [w for w in roads if _faces(target, normal, xy[w.ref])] or roads
 
     def dist(w: overpass.Way) -> float:
-        return closest_on_line(target, [f.xy(*p) for p in w.coords])[0]
+        return closest_on_line(target, xy[w.ref])[0]
 
-    if street:
-        same = [w for w in roads if _norm(w.tags.get("name", "")) == street]
-        if same:
-            return min(same, key=dist)
+    same = [w for w in roads if street and _norm(w.tags.get("name", "")) == street]
     named = [w for w in roads if w.tags.get("name") and w.tags.get("highway") != "service"]
-    pool = named or roads
+    pool = same or named or roads
     return min(pool, key=dist) if pool else None
+
+
+def _walk(start: XY, pts: list[XY], keep: float) -> list[XY]:
+    """From start along pts for `keep` meters, cutting the last segment at exactly `keep`."""
+    out, left = [start], keep
+    for p in pts:
+        d = math.dist(out[-1], p)
+        if d >= left:
+            t = left / d if d else 0.0
+            last = out[-1]
+            out.append((last[0] + (p[0] - last[0]) * t, last[1] + (p[1] - last[1]) * t))
+            break
+        out.append(p)
+        left -= d
+    return out
 
 
 def _clip(pts: list[XY], idx: int, q: XY, keep: float) -> list[XY]:
     """The polyline within `keep` meters (along it) either side of q, which is on segment idx."""
-    back, d, i = [q], 0.0, idx
-    while i >= 0 and d < keep:
-        d += math.dist(back[-1], pts[i])
-        back.append(pts[i])
-        i -= 1
-    fwd, d, i = [q], 0.0, idx + 1
-    while i < len(pts) and d < keep:
-        d += math.dist(fwd[-1], pts[i])
-        fwd.append(pts[i])
-        i += 1
-    line = back[:0:-1] + fwd
-    return [p for k, p in enumerate(line) if k == 0 or p != line[k - 1]]
+    line = _walk(q, pts[idx::-1], keep)[:0:-1] + _walk(q, pts[idx + 1 :], keep)
+    return [p for k, p in enumerate(line) if k == 0 or math.dist(p, line[k - 1]) > 1e-6]
 
 
-def street_side(a: overpass.BuildingArea, door: Candidate, street: str | None) -> StreetSide | None:
-    """The street_side block for `door`. The centerline is clipped to 60 m either side of the
-    door, so a long or curved way still gives the local road direction (E2E I-12)."""
+def street_side(
+    a: overpass.BuildingArea,
+    door: Candidate,
+    street: str | None,
+    footprint: list[list[float]] | None = None,
+) -> StreetSide | None:
+    """The street_side block for `door`. Given the footprint, the street is the one the door's
+    wall faces. The centerline is clipped to 60 m either side of the door, so a long or curved
+    way still gives the local road direction (E2E I-12)."""
     f = Frame(door.lat, door.lon)
     here = (0.0, 0.0)
-    road = entrance_street(a, f, here, street)
+    normal = _wall_normal(_ring_xy(f, footprint), here) if footprint else None
+    road = entrance_street(a, f, here, street, normal)
     if road is None:
         return None
     pts = [f.xy(*p) for p in road.coords]
@@ -246,33 +367,49 @@ def street_side(a: overpass.BuildingArea, door: Candidate, street: str | None) -
     )
 
 
+def _has_number(c: Candidate, housenumber: str | None) -> bool:
+    return bool(housenumber) and any(
+        housenumber.strip() in _numbers(p.tags) for p in c.provenance if p.tags
+    )
+
+
 def facade_fallback(building: Building, point: GeocodedPoint) -> dict:
-    """The middle of the street-facing side (0.30), then the address point (0.20), plus the
+    """The middle of the street-facing wall (0.30), then the address point (0.20), plus the
     street_side block for the best door (or the facade when there is no door).
 
-    The address point is snapped to the nearest wall: Nominatim often returns a point deep
-    inside the building, and guiding to it would point through walls (E2E I-11).
+    The street-facing wall faces the address's street when it is mapped (a corner building's
+    front is on its address street), else the nearest named road. An address point inside the
+    building is snapped to that wall: Nominatim often returns a point deep inside, and guiding
+    to it would point through walls (E2E I-11).
     """
     a = area_for(building)
     street = _street_name(point)
     f = Frame(building.footprint[0][1], building.footprint[0][0])
-    ring = [f.xy(lon, lat) for lon, lat in building.footprint]
-    edges = [(p, q) for p, q in zip(ring, ring[1:], strict=False) if p != q]
-    centroid = (sum(x for x, _ in ring[:-1]) / (len(ring) - 1),
-                sum(y for _, y in ring[:-1]) / (len(ring) - 1))
+    ring = _ring_xy(f, building.footprint)
+    usable = len(ring) >= 4 and area(ring[:-1]) > 1.0  # not a degenerate footprint
     candidates = []
 
-    road = entrance_street(a, f, centroid, street)
-    if road is not None and edges:
+    road = front = None
+    if usable:
+        n = len(ring) - 1
+        centroid = (sum(x for x, _ in ring[:-1]) / n, sum(y for _, y in ring[:-1]) / n)
+        road = entrance_street(a, f, centroid, street)
+    if road is not None:
         rpts = [f.xy(*p) for p in road.coords]
+        ccw = _is_ccw(ring)
 
-        def facing(edge: tuple[XY, XY]) -> tuple[float, float]:
-            mid = ((edge[0][0] + edge[1][0]) / 2, (edge[0][1] + edge[1][1]) / 2)
-            # Nearest wall to the street; among near-ties prefer the longer wall (the front).
-            return (round(closest_on_line(mid, rpts)[0] / 3), -math.dist(*edge))
+        def dist(w: tuple[XY, XY]) -> float:
+            return closest_on_line(_mid(w), rpts)[0]
 
-        p, q = min(edges, key=facing)
-        lon, lat = f.lonlat((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+        walls = _walls(ring)
+        facing = [w for w in walls if _faces(_mid(w), _outward(*w, ccw), rpts)] or walls
+        nearest = min(dist(w) for w in facing)
+        # The front: the longest wall that faces the street and is about as near as any.
+        front = max(
+            (w for w in facing if dist(w) <= nearest + FRONT_TOLERANCE_M),
+            key=lambda w: math.dist(*w),
+        )
+        lon, lat = f.lonlat(*closest_on_line(_mid(front), ring)[1])
         name = road.tags.get("name")
         candidates.append(
             Candidate(
@@ -281,15 +418,16 @@ def facade_fallback(building: Building, point: GeocodedPoint) -> dict:
                 lon=lon,
                 confidence=FACADE_FALLBACK,
                 band="facade",
-                label=f"Street-facing side on {name} (approximate)" if name
+                label=f"Street-facing side on {name} (approximate)"
+                if name
                 else "Street-facing side (approximate)",
                 provenance=[Provenance(source="geometry_fallback", ref=road.ref)],
             )
         )
 
     addr = f.xy(point.lon, point.lat)
-    if inside(addr, ring[:-1]) and edges:
-        addr = closest_on_line(addr, ring)[1]
+    if usable and inside(addr, ring[:-1]):
+        addr = closest_on_line(addr, list(front) if front else ring)[1]
     lon, lat = f.lonlat(*addr)
     candidates.append(
         Candidate(
@@ -304,8 +442,16 @@ def facade_fallback(building: Building, point: GeocodedPoint) -> dict:
     )
 
     doors = read_entrances(building, point.housenumber)
-    anchor = max(doors, key=lambda c: c.confidence) if doors else candidates[0]
-    return {"candidates": candidates, "street_side": street_side(a, anchor, street)}
+    # The best door; among equal scores the one with the destination's number, then the first.
+    anchor = (
+        min(doors, key=lambda c: (-c.confidence, not _has_number(c, point.housenumber)))
+        if doors
+        else candidates[0]
+    )
+    return {
+        "candidates": candidates,
+        "street_side": street_side(a, anchor, street, building.footprint),
+    }
 
 
 # ---------------------------------------------------------------------------------------------
@@ -315,12 +461,15 @@ def facade_fallback(building: Building, point: GeocodedPoint) -> dict:
 
 def _marked(crossing: dict) -> bool:
     t = crossing["tags"]
-    return t.get("crossing") not in UNMARKED and t.get("crossing:markings") != "no"
+    if "crossing:markings" in t:
+        return t["crossing:markings"] != "no"
+    return t.get("crossing") in MARKED or t.get("crossing_ref") == "zebra"
 
 
 def path_checks(building: Building, door: Candidate, side: StreetSide | None) -> PathChecks:
     """From the expected drop-off (the entrance street's curb nearest the door) to the door:
-    does the straight line cross another road? If so, the nearest marked crossing.
+    does the straight line cross another road? If so, the nearest marked crossing within
+    150 m of the drop-off.
 
     Driveways and parking aisles are not road crossings (plan section 8). The contract has no
     field yet for the driveway, through-the-building and off-the-sidewalk warnings.
@@ -343,14 +492,19 @@ def path_checks(building: Building, door: Candidate, side: StreetSide | None) ->
 
     nearest = None
     if crosses and start is not None:
-        marked = [c for c in a.crossings if _marked(c)]
-        best = min(marked, key=lambda c: math.dist(start, f.xy(c["lon"], c["lat"])), default=None)
-        if best is not None and math.dist(start, f.xy(best["lon"], best["lat"])) <= CROSSING_MAX_M:
+        marked = [
+            (math.dist(start, f.xy(c["lon"], c["lat"])), c) for c in a.crossings if _marked(c)
+        ]
+        dist, best = min(marked, key=lambda m: m[0], default=(math.inf, None))
+        if best is not None and dist <= CROSSING_MAX_M:
             nearest = [best["lon"], best["lat"]]
 
     node_id = next(
-        (int(p.ref.split("/")[1]) for p in door.provenance
-         if p.source == "osm_tag" and p.ref and p.ref.startswith("node/")),
+        (
+            int(p.ref.split("/")[1])
+            for p in door.provenance
+            if p.source == "osm_tag" and p.ref and p.ref.startswith("node/")
+        ),
         None,
     )
     footway = node_id is not None and any(

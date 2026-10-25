@@ -5,7 +5,7 @@ and 8); each bundle has exactly the shape of contract/resolve.example.json (sect
 scripts/build_bundles.py is the command-line wrapper.
 
 Each ladder step is a stage with a typed input and output (see `Stages`). The default stages are
-the resolver functions; tests and the offline mode swap them out. A stage that still raises
+resolver.geocode and the app/doors.py functions; tests and the offline mode swap them out. A stage that still raises
 NotImplementedError("BE-3") is reported as "blocked on BE-3", and the other sites still build.
 """
 
@@ -21,7 +21,8 @@ from typing import Literal, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
-from . import resolver, scoring
+from . import doors, resolver, scoring
+from .geo import Frame, closest_on_line
 from .merge import merge_candidates
 from .models import (
     Building,
@@ -50,6 +51,7 @@ COMBINE_FALLBACK_NOTE = (
 class PilotSite(BaseModel):
     # The id becomes the file name bundles/<id>.json, so keep it to a safe slug.
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    label: str | None = None  # for people (test runs, logs); never sent to the app
     address: str
     name: str | None = None
     scenario: Literal["same_side", "driveway", "opposite", "campus"]
@@ -62,20 +64,15 @@ class Facade(BaseModel):
     street_side: StreetSide | None = None
 
 
-def path_checks_todo(building: Building, door: Candidate, street_side: StreetSide | None):
-    """Path checks from the drop-off to `door` (plan section 8). TODO (BE-7)."""
-    raise NotImplementedError("BE-7")
-
-
 @dataclass(frozen=True)
 class Stages:
     """The ladder, one typed callable per step. Outputs may be models or plain dicts."""
 
     geocode: Callable[[ResolveRequest], GeocodedPoint] = resolver.geocode
-    find_building: Callable[[GeocodedPoint], Building] = resolver.find_building
-    read_entrances: Callable[[Building, str | None], list[Candidate]] = resolver.read_entrances
-    facade_fallback: Callable[[Building, GeocodedPoint], Facade] = resolver.facade_fallback
-    path_checks: Callable[[Building, Candidate, StreetSide | None], PathChecks] = path_checks_todo
+    find_building: Callable[[GeocodedPoint], Building] = doors.find_building
+    read_entrances: Callable[[Building, str | None], list[Candidate]] = doors.read_entrances
+    facade_fallback: Callable[[Building, GeocodedPoint], Facade] = doors.facade_fallback
+    path_checks: Callable[[Building, Candidate, StreetSide | None], PathChecks] = doors.path_checks
 
 
 class StageError(Exception):
@@ -122,9 +119,36 @@ def _stage(name: str, run: Callable[[], T]) -> T:
         raise StageError(name, exc) from exc
 
 
-def rank(candidates: list[Candidate]) -> list[Candidate]:
+def has_housenumber(c: Candidate, housenumber: str | None) -> bool:
+    """True if one of the candidate's OSM tags says addr:housenumber=<the destination's>."""
+    if not housenumber:
+        return False
+    want = housenumber.strip().lower()
+    return any(
+        want in {n.strip().lower() for n in p.tags.get("addr:housenumber", "").split(";")}
+        for p in c.provenance
+        if p.tags
+    )
+
+
+def meters_to_street(c: Candidate, street_side: StreetSide | None) -> float:
+    """Distance from the candidate to the entrance street's centerline (0 when unknown)."""
+    if street_side is None or not street_side.centerline:
+        return 0.0
+    f = Frame(c.lat, c.lon)
+    return closest_on_line((0.0, 0.0), [f.xy(lon, lat) for lon, lat in street_side.centerline])[0]
+
+
+def rank(
+    candidates: list[Candidate],
+    street_side: StreetSide | None = None,
+    housenumber: str | None = None,
+) -> list[Candidate]:
     """Cap confidence, set the band from scoring.band, sort best first, keep the top 5.
 
+    Equal confidence (e.g. several main doors capped at 0.95, E2E I-5) is broken by: the door
+    tagged with the destination's house number, then the door nearest the entrance street (plan
+    section 8: walking distance from the expected drop-off), then the original order.
     Ids are reassigned c1..cN in rank order so they stay unique across stages.
     """
     capped = []
@@ -133,7 +157,15 @@ def rank(candidates: list[Candidate]) -> list[Candidate]:
         capped.append(
             c.model_copy(update={"confidence": confidence, "band": scoring.band(confidence)})
         )
-    best = sorted(capped, key=lambda c: c.confidence, reverse=True)[:MAX_CANDIDATES]
+    # sorted() is stable, so the original order is the last tie-break.
+    best = sorted(
+        capped,
+        key=lambda c: (
+            -round(c.confidence, 6),
+            not has_housenumber(c, housenumber),
+            meters_to_street(c, street_side),
+        ),
+    )[:MAX_CANDIDATES]
     return [c.model_copy(update={"id": f"c{i}"}) for i, c in enumerate(best, start=1)]
 
 
@@ -159,13 +191,9 @@ def assemble(
     """
     if not ranked:
         raise ValueError("no candidates, not even a facade fallback")
-    text = [
-        t
-        for t in dict.fromkeys(
-            [building.housenumber or point.housenumber, building.name or site.name]
-        )
-        if t
-    ]
+    # The number, the mapped name and the pilot site's name, which often differ (E2E I-10).
+    names = [building.housenumber or point.housenumber, building.name, site.name]
+    text = list(dict.fromkeys(t for t in names if t))
     result = ResolveResult(
         destination_id=f"dst_{site.id}",
         # Facade only is a weak answer: the app should treat it as partial.
@@ -279,7 +307,7 @@ def build_bundle(
         "merge",
         lambda: merge(doors + facade.candidates, notes, same_face_on(building.footprint)),
     )
-    candidates = rank(merged)
+    candidates = rank(merged, facade.street_side, point.housenumber)
     if not candidates:
         raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
     checks = _stage(

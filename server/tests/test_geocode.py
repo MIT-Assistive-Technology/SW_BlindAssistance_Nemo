@@ -201,6 +201,7 @@ def test_phone_coordinates_are_used_without_calling_nominatim():
     point = geocode(request, client=client)
     assert (point.lat, point.lon, point.source) == (42.3592, -71.0934, "request")
     assert point.housenumber == "77"
+    assert point.street == "77 Massachusetts Avenue"
     assert seen == []
 
 
@@ -299,6 +300,14 @@ def test_street_only_match_is_flagged():
     point = geocode(MIT, client=client)
     assert point.precision == "street"
     assert point.housenumber == "77"
+    assert point.street == "77 Massachusetts Ave"  # no address.road: the parsed street
+
+
+def test_street_comes_from_nominatim_road():
+    result = _result()
+    result["address"]["road"] = "Massachusetts Avenue"
+    client, _ = _serve([result])
+    assert geocode(MIT, client=client).street == "Massachusetts Avenue"
 
 
 def test_prefers_the_matching_house_number():

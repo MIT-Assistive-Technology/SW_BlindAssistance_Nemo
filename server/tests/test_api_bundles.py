@@ -213,6 +213,7 @@ def test_bundle_etag_and_304(client):
     assert again.status_code == 304
     assert again.content == b""
     assert again.headers["etag"] == etag
+    assert again.headers["cache-control"] == r.headers["cache-control"] == "no-cache"  # I-13
     stale = client.get("/v1/bundles/site-b", headers={"If-None-Match": '"0000"'})
     assert stale.status_code == 200
 

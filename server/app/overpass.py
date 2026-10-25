@@ -73,7 +73,7 @@ def buildings_query(lat: float, lon: float, osm_ref: str | None = None) -> str:
         "  rel(pivot.a)[building];\n"
         f"  way(around:{BUILDING_RADIUS_M},{p})[building];\n"
         f"  rel(around:{BUILDING_RADIUS_M},{p})[building][type=multipolygon];\n"
-        f"  way(around:{BUILDING_RADIUS_M},{p})[\"building:part\"];\n"
+        f'  way(around:{BUILDING_RADIUS_M},{p})["building:part"];\n'
         f"{exact}"
         ");\n"
         "out body geom;\n"
@@ -84,10 +84,13 @@ def area_query(building_ref: str, bbox: tuple[float, float, float, float]) -> st
     """Everything the ladder needs about one building. bbox = (south, west, north, east)."""
     kind, osm_id = building_ref.split("/", 1)
     b = ",".join(f"{v:.7f}" for v in bbox)
+    is_rel = kind == "relation"
     return (
         "[out:json][timeout:90];\n"
-        f"{'rel' if kind == 'relation' else 'way'}({osm_id})->.b;\n"
-        '(way.b; way(r.b:"outer");)->.outlines;\n'
+        f"{'rel' if is_rel else 'way'}({osm_id})->.b;\n"
+        # The relation's own record (member roles) tells parse_area which ways are its outline.
+        + (".b out body;\n" if is_rel else "")
+        + '(way.b; way(r.b:"outer");)->.outlines;\n'
         ".outlines out body geom;\n"
         "(\n"
         "  node(w.outlines)[entrance];\n"
@@ -95,8 +98,10 @@ def area_query(building_ref: str, bbox: tuple[float, float, float, float]) -> st
         '  node(w.outlines)["routing:entrance"];\n'
         f"  node(around.outlines:{NEAR_OUTLINE_M})[entrance];\n"
         f"  node(around.outlines:{NEAR_OUTLINE_M})[door];\n"
+        f'  node(around.outlines:{NEAR_OUTLINE_M})["routing:entrance"];\n'
         ")->.ent;\n"
-        "rel(bw.outlines)[type=site]->.site;\n"
+        # A site lists the building way, or for a multipolygon building the relation itself.
+        "(rel(bw.outlines)[type=site]; rel(br.b)[type=site];)->.site;\n"
         '(.ent; node(r.site:"entrance");)->.ent;\n'
         ".ent out body;\n"
         ".site out body;\n"
@@ -135,33 +140,42 @@ class Client:
     )
     offline: bool = field(default_factory=lambda: os.environ.get("OVERPASS_OFFLINE") == "1")
     urls: tuple[str, ...] = field(
-        default_factory=lambda: tuple(
-            u.strip() for u in (os.environ.get("OVERPASS_URL") or "").split(",") if u.strip()
+        default_factory=lambda: (
+            tuple(u.strip() for u in (os.environ.get("OVERPASS_URL") or "").split(",") if u.strip())
+            or DEFAULT_URLS
         )
-        or DEFAULT_URLS
     )
     max_age_s: float = CACHE_MAX_AGE_S
     http: httpx.Client | None = None
     sleep: Callable[[float], None] = time.sleep
-    _last_call: float = 0.0
+    _last_call: float = field(default=0.0, init=False, repr=False)
 
     def path_for(self, query: str) -> Path:
         return self.cache_dir / f"{hashlib.sha256(query.encode()).hexdigest()[:20]}.json"
 
     def run(self, query: str) -> dict:
+        """The saved response if fresh (or offline), else a live one. When the live query
+        fails, a stale saved response is better than none."""
         path = self.path_for(query)
-        if path.exists():
+        saved = path.exists()
+        if saved:
             fresh = time.time() - path.stat().st_mtime < self.max_age_s
             if fresh or self.offline:
-                return json.loads(path.read_text(encoding="utf-8"))["response"]
+                return _read(path)
         if self.offline:
             raise OverpassUnavailable(
                 f"offline: no saved Overpass response {path.name}; run once online to save it"
             )
-        data = self._fetch(query)
+        try:
+            data = self._fetch(query)
+        except OverpassUnavailable:
+            if saved:
+                return _read(path)
+            raise
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        record = {"query": query, "response": data}
-        path.write_text(json.dumps(record, separators=(",", ":")), encoding="utf-8")
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"query": query, "response": data}), encoding="utf-8")
+        tmp.replace(path)  # never leave a half-written file in the cache
         return data
 
     def _fetch(self, query: str) -> dict:
@@ -187,9 +201,12 @@ class Client:
                     last = type(exc).__name__
                 else:
                     if r.status_code == 200:
-                        data = r.json()
+                        try:
+                            data = r.json()
+                        except ValueError:  # an HTML error page sent as 200
+                            data = {"remark": "error: the response is not JSON"}
                         # Overpass reports a timeout or memory error as a 200 with a remark.
-                        if "remark" in data and "error" in str(data["remark"]).lower():
+                        if "error" in str(data.get("remark", "")).lower():
                             last = f"remark: {data['remark']}"
                         else:
                             return data
@@ -203,6 +220,10 @@ class Client:
             if self.http is None:
                 http.close()
         raise OverpassUnavailable(f"Overpass failed after retries ({last})")
+
+
+def _read(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))["response"]
 
 
 # ---------------------------------------------------------------------------------------------
@@ -321,8 +342,9 @@ def parse_area(raw: dict, building_ref: str) -> BuildingArea:
     for e in elements:
         if e["type"] == "relation" and str(e["id"]) == osm_id and kind == "relation":
             outline_way_ids |= {
-                m["ref"] for m in e.get("members", []) if m.get("type") == "way"
-                and m.get("role") == "outer"
+                m["ref"]
+                for m in e.get("members", [])
+                if m.get("type") == "way" and m.get("role") == "outer"
             }
 
     outline_nodes: set[int] = set()

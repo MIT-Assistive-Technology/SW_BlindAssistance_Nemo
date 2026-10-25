@@ -69,8 +69,15 @@ def inside(p: XY, ring: Sequence[XY]) -> bool:
 
 def area(ring: Sequence[XY]) -> float:
     n = len(ring)
-    return abs(sum(ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]
-                   for i in range(n))) / 2
+    return (
+        abs(
+            sum(
+                ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]
+                for i in range(n)
+            )
+        )
+        / 2
+    )
 
 
 def segments_cross(p1: XY, p2: XY, q1: XY, q2: XY) -> bool:
@@ -81,8 +88,10 @@ def segments_cross(p1: XY, p2: XY, q1: XY, q2: XY) -> bool:
         return 0 if abs(v) < 1e-9 else (1 if v > 0 else -1)
 
     def on(a: XY, b: XY, c: XY) -> bool:
-        return (min(a[0], b[0]) - 1e-9 <= c[0] <= max(a[0], b[0]) + 1e-9
-                and min(a[1], b[1]) - 1e-9 <= c[1] <= max(a[1], b[1]) + 1e-9)
+        return (
+            min(a[0], b[0]) - 1e-9 <= c[0] <= max(a[0], b[0]) + 1e-9
+            and min(a[1], b[1]) - 1e-9 <= c[1] <= max(a[1], b[1]) + 1e-9
+        )
 
     o1, o2 = orient(p1, p2, q1), orient(p1, p2, q2)
     o3, o4 = orient(q1, q2, p1), orient(q1, q2, p2)
