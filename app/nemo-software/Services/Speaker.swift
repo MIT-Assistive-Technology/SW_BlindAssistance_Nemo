@@ -20,7 +20,6 @@ public protocol SpeechOutput: AnyObject {
   /// Verbalizes short status messages to the user.
   public final class Speaker: SpeechOutput {
     private let synthesizer = AVSpeechSynthesizer()
-    private var audioSessionConfigured = false
 
     public init() {}
 
@@ -30,7 +29,9 @@ public protocol SpeechOutput: AnyObject {
     /// `SpeechChannel`, so every channel shares one policy.
     public func speak(_ text: String) {
       guard !text.isEmpty else { return }
-      configureAudioSessionIfNeeded()
+      // The audio session is configured once by AppServices, not lazily here: the
+      // beacon shares it, and whichever started first would otherwise decide the
+      // category.
       let utterance = AVSpeechUtterance(string: text)
       // Use the voice and rate the rider already set up for VoiceOver, instead of
       // forcing en-US. This is the whole reason the app sounds familiar to them.
@@ -44,22 +45,6 @@ public protocol SpeechOutput: AnyObject {
       synthesizer.stopSpeaking(at: .immediate)
     }
 
-    /// Spoken audio that ducks music and mixes with the Uber app, and keeps working with
-    /// the screen locked (the `audio` background mode is in app/Info.plist).
-    /// TODO (FE-8): interruption and route-change handling, and the beacon's mixing rules.
-    private func configureAudioSessionIfNeeded() {
-      guard !audioSessionConfigured else { return }
-      audioSessionConfigured = true
-      let session = AVAudioSession.sharedInstance()
-      do {
-        try session.setCategory(
-          .playback, mode: .spokenAudio, options: [.duckOthers, .mixWithOthers])
-        try session.setActive(true)
-      } catch {
-        // Speech is a convenience here; losing the session must not take the app down.
-        print("[Speaker] audio session setup failed: \(error.localizedDescription)")
-      }
-    }
   }
 
 #else

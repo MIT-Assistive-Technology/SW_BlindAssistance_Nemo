@@ -45,6 +45,13 @@ struct ContentView: View {
       .navigationTitle("Nemo")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+          // TEMPORARY (FE-4 ear test): fires a beacon tone at a fixed angle.
+          ToolbarItem(placement: .topBarTrailing) {
+            Button("Beacon") { beaconTest() }
+              .accessibilityHint("Developer test: plays the beacon tone 45 degrees to your right.")
+          }
+        }
       #endif
     }
     // A trip interrupted by a relaunch picks up where it left off (FE-10).
@@ -63,6 +70,14 @@ private func makeCameraViewModel() -> CameraViewModel {
     speaker: Speaker()
   )
   return CameraViewModel(frameProvider: frameProvider, pipeline: pipeline)
+}
+
+// TEMPORARY (FE-4 ear test): press the Beacon button on a real device with
+// headphones — you should hear the tick coming from ~45° to your right.
+private let testBeacon = BeaconChannel()
+private func beaconTest() {
+  testBeacon.updateTarget(relativeAngleDegrees: 45)  // aim 45° right
+  testBeacon.play(.doorDetected(offsetDegrees: 45, meters: 5))  // start tone
 }
 
 #Preview {

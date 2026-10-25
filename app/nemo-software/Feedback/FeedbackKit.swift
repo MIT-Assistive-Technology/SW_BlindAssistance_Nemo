@@ -142,7 +142,10 @@ public final class SpeechChannel: FeedbackChannel {
   public func play(_ event: FeedbackEvent, force: Bool) {
     guard let phrase = Self.phrase(for: event, units: units) else { return }
     let moment = now()
-    if !force, phrase == lastPhrase, let last = lastSpokenAt,
+    // Critical events are never suppressed, even if they were just said (Trish's rule
+    // from FE-6). A `.lost` swallowed because the same words played three seconds ago
+    // is the one repeat that actually matters.
+    if !force, !Self.isCritical(event), phrase == lastPhrase, let last = lastSpokenAt,
       moment.timeIntervalSince(last) < repeatGuard
     {
       return
@@ -156,6 +159,16 @@ public final class SpeechChannel: FeedbackChannel {
     lastPhrase = nil
     lastSpokenAt = nil
     speaker.stop()
+  }
+
+  /// Events the rider must hear even if the same words were just spoken.
+  public static func isCritical(_ event: FeedbackEvent) -> Bool {
+    switch event {
+    case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied:
+      return true
+    default:
+      return false
+    }
   }
 
   /// Event -> phrase. Pure and public so the mapping is unit tested without audio.
