@@ -26,6 +26,7 @@ private func makeCameraViewModel() -> CameraViewModel {
   let detector: ObjectDetector = VisionObjectDetector()
   let pipeline = PerceptionPipeline(
     detector: detector,
+    numberRecognizer: VisionNumberRecognizer(),
     locationProvider: LocationService.shared,
     speaker: Speaker()
   )

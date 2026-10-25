@@ -38,6 +38,9 @@ nonisolated public struct FramePresentation {
   /// Raw detections from the object detector.
   public let detections: [Detection]
 
+  /// Building numbers read from the camera. Held briefly so one missed frame does not clear them.
+  public let numbers: [RecognizedNumber]
+
   /// Most recent device location/heading.
   public let location: LocationSnapshot?
 
@@ -55,8 +58,15 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   public let maxFramesPerSecond: Double
 
   private let detector: ObjectDetector
+  private let numberRecognizer: any NumberRecognizer
   private let locationProvider: LocationProvider
   private let speaker: Speaker
+  private let spokenNumbers = SpokenNumbers()
+
+  /// Only touched on `perceptionQueue`.
+  private var lastNumberRecognition: CFTimeInterval = 0
+  private var heldNumbers: [RecognizedNumber] = []
+  private var heldNumbersAt: CFTimeInterval = 0
 
   private let perceptionQueue = DispatchQueue(label: "nemo.perception", qos: .userInitiated)
 
@@ -69,11 +79,13 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
   public init(
     detector: ObjectDetector,
+    numberRecognizer: any NumberRecognizer,
     locationProvider: LocationProvider,
     speaker: Speaker,
     maxFramesPerSecond: Double = 10
   ) {
     self.detector = detector
+    self.numberRecognizer = numberRecognizer
     self.locationProvider = locationProvider
     self.speaker = speaker
     self.maxFramesPerSecond = maxFramesPerSecond
@@ -129,6 +141,10 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       orientation: orientation
     )
 
+    // Building-number check is 2–3 times a second. The buffer stays on this queue and is
+    // released when `process` returns, which is what the camera provider requires.
+    let freshNumbers = recognizeNumbers(in: buffer, orientation: orientation, now: started)
+
     let snapshot: FrameStats = lock.withLock {
       stats.processed += 1
       stats.lastProcessingMs = (CACurrentMediaTime() - started) * 1000
@@ -137,6 +153,8 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     }
 
     // `buffer` is not captured below, so the camera gets it back now.
+    let visibleNumbers = heldNumbers
+    let phrase = spokenNumbers.phrase(for: freshNumbers)
     Task { @MainActor [self] in
       // Speak the most interesting detection(s) so the user gets audio feedback.
       // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
@@ -144,15 +162,57 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       if let top = detections.first {
         speaker.speak(top.labels.first?.identifier ?? "something")
       }
+      if let phrase {
+        speaker.speak(phrase)
+      }
 
       // LocationService is main-actor, so the snapshot is read here, a few ms after capture.
       // TODO: attach location at capture time once LocationService is thread-safe (FE-3).
       onPresentation?(
         FramePresentation(
           detections: detections,
+          numbers: visibleNumbers,
           location: locationProvider.currentSnapshot,
           stats: snapshot
         ))
     }
+  }
+
+  /// Runs on `perceptionQueue`. Returns numbers read on this frame, not the held list.
+  private func recognizeNumbers(
+    in buffer: CVPixelBuffer,
+    orientation: CGImagePropertyOrientation,
+    now: CFTimeInterval
+  ) -> [RecognizedNumber] {
+    guard now - lastNumberRecognition >= 0.4 else { return [] }
+    lastNumberRecognition = now
+    let numbers = numberRecognizer.recognize(buffer, orientation: orientation)
+    if numbers.isEmpty {
+      if now - heldNumbersAt > 1.5 {
+        heldNumbers = []
+      }
+    } else {
+      heldNumbers = numbers
+      heldNumbersAt = now
+    }
+    return numbers
+  }
+}
+
+/// Doesn't repeat the same building number on every check.
+private nonisolated final class SpokenNumbers: @unchecked Sendable {
+  private let lock = NSLock()
+  private var lastValue: String?
+  private var lastAt = Date.distantPast
+
+  func phrase(for numbers: [RecognizedNumber]) -> String? {
+    guard let top = numbers.first else { return nil }
+    let now = Date()
+    lock.lock()
+    defer { lock.unlock() }
+    if lastValue == top.value, now.timeIntervalSince(lastAt) < 6 { return nil }
+    lastValue = top.value
+    lastAt = now
+    return "Number \(top.value)"
   }
 }
