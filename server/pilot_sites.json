@@ -1,0 +1,15 @@
+{
+  "about": "Pilot sites for scripts/build_bundles.py. Each becomes bundles/<id>.json. These are the same 10 sites as golden/locations.json (same ids and addresses), so every bundle can be scored against surveyed ground truth. Addresses are reused verbatim from tests/fixtures/nominatim/addresses.json so --offline can replay the saved Nominatim responses. 'scenario' is one of same_side, driveway, opposite, campus; golden/locations.json is the source of truth for scenarios (it spells opposite as opposite_side).",
+  "sites": [
+    {"id": "cambridge-city-hall", "address": "795 Massachusetts Ave, Cambridge, MA 02139", "name": "Cambridge City Hall", "scenario": "same_side"},
+    {"id": "cambridge-public-library", "address": "449 Broadway, Cambridge, MA 02138", "name": "Cambridge Public Library", "scenario": "same_side"},
+    {"id": "brattle-theatre", "address": "40 Brattle St, Cambridge MA 02138", "name": "Brattle Theatre", "scenario": "same_side"},
+    {"id": "harvard-smith-center", "address": "1350 Massachusetts Ave, Cambridge, MA 02138", "name": "Smith Campus Center", "scenario": "same_side"},
+    {"id": "cambridgeside", "address": "100 Cambridgeside Pl, Cambridge, MA 02141", "name": "CambridgeSide", "scenario": "driveway"},
+    {"id": "museum-of-fine-arts", "address": "465 Huntington Ave, Boston, MA 02115", "name": "Museum of Fine Arts", "scenario": "driveway"},
+    {"id": "mit-84-mass-ave", "address": "84 Massachusetts Ave, Cambridge, MA 02139", "name": "Stratton Student Center", "scenario": "opposite"},
+    {"id": "boston-public-library", "address": "700 Boylston St, Boston, MA 02116", "name": "Boston Public Library", "scenario": "opposite"},
+    {"id": "mit-77-mass-ave", "address": "77 Massachusetts Ave, Cambridge, MA 02139", "name": "MIT Building 7", "scenario": "campus"},
+    {"id": "mit-stata", "address": "32 Vassar St, Cambridge, MA 02139", "name": "Stata Center", "scenario": "campus"}
+  ]
+}

@@ -1,12 +1,11 @@
 """Expected behavior for app/scoring.py. Remove the skip marker when BE-4 is implemented."""
 
-# Forces Python to look at your current directory first
-
 import pytest
 
-from app.scoring import band, combine, score_door, CAP
+from app.scoring import CAP, band, combine, score_door
 
-#todo = pytest.mark.skip(reason="TODO BE-4: implement score_door and combine")
+# Remove this marker (and every @todo below) once score_door and combine pass these tests.
+todo = pytest.mark.skip(reason="TODO BE-4: implement score_door and combine")
 
 
 @todo

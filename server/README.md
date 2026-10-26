@@ -6,12 +6,18 @@ The server takes a destination address and returns the building's likely doors, 
 
 ## MVP: precomputed bundles first
 
-For the April MVP the app uses **precomputed entrance bundles** for the pilot sites: static JSON in the same shape as [`../contract/resolve.example.json`](../contract/resolve.example.json), built by a Python script from an OSM extract. The live service below is a stretch goal.
+For the April MVP the app uses **precomputed entrance bundles** for the pilot sites: JSON in the same shape as [`../contract/resolve.example.json`](../contract/resolve.example.json), built by `scripts/build_bundles.py` into `bundles/<id>.json`. The API serves those files; it never runs the ladder or calls Overpass per request.
 
-| Endpoint (stretch) | Purpose |
+**MVP flow:** at setup the app downloads `GET /v1/bundles` and every bundle in it, and caches them, so guidance works with no signal at the curb. `POST /v1/resolve` is only for a destination the phone hasn't cached.
+
+| Endpoint | Purpose |
 |---|---|
-| `POST /v1/resolve` | Resolve an address from the cache (≤ 3 s, no live Overpass/Nominatim calls); `status: "partial"` when weak |
-| `GET /v1/health` | Liveness and data version |
+| `GET /v1/bundles` | Manifest: `[{id, address, osm_id, data_version, sha256, url}]`, one per pilot bundle |
+| `GET /v1/bundles/{id}` | One bundle. `ETag` is its sha256; send `If-None-Match` to get `304` when unchanged |
+| `POST /v1/resolve` | Address or lat/lon → the pilot bundle for that building (≤ 3 s). Not in the pilot → `404 NOT_FOUND` |
+| `GET /v1/health` | Liveness, bundle count and data version |
+
+Settings: `BUNDLES_DIR` (default `bundles/`), `PILOT_SITES` (default `pilot_sites.json`, used for manifest addresses). Invalid bundle files are logged and skipped at startup. `DEV_EXAMPLE=1` makes `/v1/resolve` return the contract example, but only while `BUNDLES_DIR` is empty.
 
 Errors always use `{"error": {"code", "message", "request_id"}}`.
 
@@ -28,7 +34,8 @@ Rules:
 pyproject.toml     dependencies (FastAPI, Shapely, pyproj, httpx) and pytest/ruff config
 .env.example       settings; copy to .env
 app/
-  main.py          routes (returns the contract example until the ladder works)
+  main.py          routes and the error envelope
+  bundle_store.py  loads bundles/*.json, indexes them, matches a geocoded point to a bundle
   models.py        Pydantic mirror of ../contract/resolve.example.json
   resolver.py      the lookup ladder, one function per step
   scoring.py       door scoring rules

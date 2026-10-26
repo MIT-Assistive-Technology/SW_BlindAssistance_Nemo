@@ -10,11 +10,11 @@ python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 cp .env.example .env               # fill in; never commit .env
-pytest                             # 7 pass, 10 skipped (the skipped ones are your TODOs)
+pytest                             # all pass; the skipped ones are your TODOs
 uvicorn app.main:app --reload      # http://127.0.0.1:8000/docs
 ```
 
-`POST /v1/resolve` already returns `contract/resolve.example.json`, so the app team can build against the real shape while you fill in the lookup. For the MVP, the same JSON ships as precomputed bundles for the pilot sites (step 6); the live endpoint is a stretch goal.
+The API serves the prebuilt pilot bundles in `bundles/` (step 6): the app downloads `GET /v1/bundles` and each `GET /v1/bundles/{id}` at setup and caches them; `POST /v1/resolve` maps an address or lat/lon to a pilot bundle for anything not cached, and answers `404 NOT_FOUND` ("This destination isn't in the pilot yet.") otherwise. Until bundles exist, run with `DEV_EXAMPLE=1` to get `contract/resolve.example.json` from `/v1/resolve`.
 
 ## How the code is laid out
 
@@ -22,6 +22,7 @@ uvicorn app.main:app --reload      # http://127.0.0.1:8000/docs
 |---|---|---|
 | `app/models.py` | Pydantic mirror of the API contract | — (change the contract first) |
 | `app/main.py` | FastAPI routes and the error envelope | BE-1, BE-6 |
+| `app/bundle_store.py` | Loads and indexes `bundles/*.json`; point → bundle matching | — |
 | `app/resolver.py` | The lookup ladder, one function per step | BE-2 to BE-6 |
 | `app/scoring.py` | Door scoring rules and tables | BE-4 |
 | `app/geo.py` | Side of street, photo rays, wall intersection | BE-5, CV-5 |
@@ -61,13 +62,20 @@ File: `app/resolver.py` → `find_building`
 - [ ] `read_entrances`: use way membership (`node(w)`) and `score_door`. Combine agreeing evidence with `combine` (best score plus one step, not noisy-OR).
 - [ ] `facade_fallback` and the `street_side` block.
 - [ ] Path checks: crosses a road, passes through the building, footway to the entrance.
-- [ ] `resolve`: merge candidates within ~4 m, sort best first, return the top 5. Then delete the stub fallback in `main.py`.
+- [ ] `resolve`: merge candidates within ~4 m, sort best first, return the top 5. (The API serves prebuilt bundles and doesn't call it per request; it feeds `build_bundles.py`.)
 - [ ] Stretch: store results in SQLite (`DATABASE_PATH`, WAL mode) keyed by building and address hash, never with an install key.
 
 ## 6. Pilot bundles (the MVP deliverable)
 
-- [ ] Write `scripts/build_bundles.py`: for each pilot site, run the ladder on preloaded OSM data and write one JSON bundle in the contract's shape to `bundles/<site>.json`.
-- [ ] Validate every bundle with `ResolveResult.model_validate` in a test.
+- [x] `scripts/build_bundles.py` (logic in `app/bundle.py`, tests in `tests/test_bundle.py`): for each site in `pilot_sites.json` it runs geocode → find_building → read_entrances → facade_fallback → path checks, validates the result with `ResolveResult`, and writes `bundles/<id>.json`. Commit the bundles; they ship with the app.
+
+  ```bash
+  python scripts/build_bundles.py --offline              # replay saved Nominatim responses, no network
+  python scripts/build_bundles.py --only mit-stata       # one site (repeatable); live Nominatim needs USER_AGENT in .env
+  ```
+
+  A step that is still a TODO shows as `blocked on BE-3 (find_building)` and the other sites keep going. The exit code is 1 until every site builds. To add a site, record its address first (`scripts/record_nominatim_fixtures.py`).
+- [ ] Unblock it: BE-3, BE-4, BE-5 and the BE-7 path checks (`path_checks_todo` in `app/bundle.py`).
 - [ ] OSM entrance coverage is low (about 10% of MIT/Kendall buildings, 1.8% of Cambridge). Before building bundles, survey the pilot entrances on site and add them to OSM by hand, with changeset comments like "Add main entrance to … based on survey".
 
 ## Rules

@@ -1,0 +1,608 @@
+{
+  "about": "Golden locations (plan section 18). TEMPLATES ONLY: every measured value is null until a two-person site visit fills it in per golden/field-kit.md. Validated against golden/schema.json by server/tests/test_golden.py. JSON, not YAML, because PyYAML isn't a server dependency.",
+  "locations": [
+    {
+      "id": "cambridge-city-hall",
+      "status": "template",
+      "address": "795 Massachusetts Ave, Cambridge, MA 02139",
+      "fixture_id": "cambridge-city-hall",
+      "scenario": "same_side",
+      "tags": [
+        "neighbor_doors",
+        "steps"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate: civic building on a busy Mass Ave block with neighboring storefront doors; tests picking the right door on the drop-off side.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "mass-ave-front",
+          "lat": null,
+          "lon": null,
+          "street": "Massachusetts Ave",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm a legal, safe stopping spot in front."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: confirm on site which door is the public entrance and whether it has steps.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "cambridge-public-library",
+      "status": "template",
+      "address": "449 Broadway, Cambridge, MA 02138",
+      "fixture_id": "cambridge-public-library",
+      "scenario": "same_side",
+      "tags": [
+        "neighbor_doors"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate: public building set back from Broadway; tests same-side guidance where the door is not on the sidewalk line.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "broadway-front",
+          "lat": null,
+          "lon": null,
+          "street": "Broadway",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm the stopping spot nearest the main door."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: check whether the path from the curb crosses a plaza or lawn (plan 16 rule 4).",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "brattle-theatre",
+      "status": "template",
+      "address": "40 Brattle St, Cambridge MA 02138",
+      "fixture_id": "brattle-theatre",
+      "scenario": "same_side",
+      "tags": [
+        "one_way",
+        "neighbor_doors"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate one-way site: small door among Harvard Square storefronts on Brattle St. On a one-way street the car may stop on either curb, so side of street should come out unknown -> ask.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "brattle-st-front",
+          "lat": null,
+          "lon": null,
+          "street": "Brattle St",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm Brattle St is one-way here; if not, move the one_way tag to a site that is."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: verify one-way direction on site and set drop_off_points[].one_way.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "harvard-smith-center",
+      "status": "template",
+      "address": "1350 Massachusetts Ave, Cambridge, MA 02138",
+      "fixture_id": "harvard-smith-center",
+      "scenario": "same_side",
+      "tags": [
+        "neighbor_doors",
+        "bike_lane"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate: large building on Mass Ave in Harvard Square with several doors on one frontage; tests the neighbor-door problem.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "mass-ave-front",
+          "lat": null,
+          "lon": null,
+          "street": "Massachusetts Ave",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: check for a bike lane between the travel lane and the curb."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: confirm whether a bike lane is on the curb side; drop the bike_lane tag if not.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "cambridgeside",
+      "status": "template",
+      "address": "100 Cambridgeside Pl, Cambridge, MA 02141",
+      "fixture_id": "cambridgeside",
+      "scenario": "driveway",
+      "tags": [
+        "driveway",
+        "garage",
+        "many_doors"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate: shopping center with garage and service entrances near the doors; tests that driveways and garage doors are never called entrances.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "cambridgeside-pl",
+          "lat": null,
+          "lon": null,
+          "street": "Cambridgeside Pl",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: pick a stop where a driveway or garage entrance is between the car and the door."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: record every driveway and garage opening between the drop-off and the door (photos + positions).",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "museum-of-fine-arts",
+      "status": "template",
+      "address": "465 Huntington Ave, Boston, MA 02115",
+      "fixture_id": "museum-of-fine-arts",
+      "scenario": "driveway",
+      "tags": [
+        "driveway",
+        "wide_avenue"
+      ],
+      "counts_toward_april": true,
+      "why_chosen": "Candidate: museum frontage on a wide avenue with a possible vehicle driveway near the entrance; tests the driveway warning class.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "huntington-ave",
+          "lat": null,
+          "lon": null,
+          "street": "Huntington Ave",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm a driveway exists near the chosen entrance; if not, swap this site out."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: confirm the driveway on site; replace the site if there isn't one.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "mit-84-mass-ave",
+      "status": "template",
+      "address": "84 Massachusetts Ave, Cambridge, MA 02139",
+      "fixture_id": "mit-84-mass-ave",
+      "scenario": "opposite_side",
+      "tags": [
+        "both_sides_dropoff",
+        "wide_avenue",
+        "median"
+      ],
+      "counts_toward_april": false,
+      "why_chosen": "Same building with drop-offs on both sides of Mass Ave (plan 18). The near-side stop is the same-side control; the far-side stop must produce 'Your entrance is across the street' and no beacon across the road.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "mass-ave-near",
+          "lat": null,
+          "lon": null,
+          "street": "Massachusetts Ave",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: stop on the building's side."
+        },
+        {
+          "id": "mass-ave-far",
+          "lat": null,
+          "lon": null,
+          "street": "Massachusetts Ave",
+          "curb_side": null,
+          "side_vs_door": "opposite",
+          "one_way": null,
+          "note": "TODO: stop on the far side (77 Mass Ave side)."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: confirm whether Mass Ave has a median here; record the nearest marked crossing.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "boston-public-library",
+      "status": "template",
+      "address": "700 Boylston St, Boston, MA 02116",
+      "fixture_id": "boston-public-library",
+      "scenario": "opposite_side",
+      "tags": [
+        "wide_avenue"
+      ],
+      "counts_toward_april": false,
+      "why_chosen": "Candidate: entrance on a wide downtown street; drop-off on the far side tests the 'stop guiding until across' behavior.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "boylston-far",
+          "lat": null,
+          "lon": null,
+          "street": "Boylston St",
+          "curb_side": null,
+          "side_vs_door": "opposite",
+          "one_way": null,
+          "note": "TODO: pick a far-side stop; record the nearest marked crossing."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: confirm which BPL entrance the trial targets (the building has more than one).",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "mit-77-mass-ave",
+      "status": "template",
+      "address": "77 Massachusetts Ave, Cambridge, MA 02139",
+      "fixture_id": "mit-77-mass-ave",
+      "scenario": "campus",
+      "tags": [
+        "campus",
+        "address_not_door",
+        "steps",
+        "many_doors"
+      ],
+      "counts_toward_april": false,
+      "why_chosen": "Campus building where the address and the door differ; free-form geocoding returns a bus stop (see the Nominatim fixture note).",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "mass-ave-front",
+          "lat": null,
+          "lon": null,
+          "street": "Massachusetts Ave",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm the stopping spot in front."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: decide which door is the target and whether a step-free door elsewhere is the accessible entrance.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    },
+    {
+      "id": "mit-stata",
+      "status": "template",
+      "address": "32 Vassar St, Cambridge, MA 02139",
+      "fixture_id": "mit-stata",
+      "scenario": "campus",
+      "tags": [
+        "campus",
+        "many_doors",
+        "locked_doors"
+      ],
+      "counts_toward_april": false,
+      "why_chosen": "Campus building with many doors, some likely locked or badge-only; tests 'many doors' and honest end-state wording.",
+      "entrance_truth": {
+        "lat": null,
+        "lon": null,
+        "method": null,
+        "reference_point": null,
+        "measured_on": [],
+        "measurements": [],
+        "spread_m": null
+      },
+      "drop_off_points": [
+        {
+          "id": "vassar-st",
+          "lat": null,
+          "lon": null,
+          "street": "Vassar St",
+          "curb_side": null,
+          "side_vs_door": "same",
+          "one_way": null,
+          "note": "TODO: confirm the stopping spot and which door is public."
+        }
+      ],
+      "accessible_entrance": {
+        "is_main_entrance": null,
+        "steps": null,
+        "ramp": null,
+        "revolving_door": null,
+        "automatic_door": null,
+        "notes": "TODO: fill on site."
+      },
+      "osm_snapshot": {
+        "taken_on": null,
+        "has_entrance_tag": null,
+        "entrance_tag": null,
+        "distance_to_truth_m": null
+      },
+      "photos": [],
+      "truth_uncertain": false,
+      "todo": [
+        "TODO: record which doors are locked or badge-only, and when.",
+        "TODO: visit in daylight with 2 people; get building or property permission first.",
+        "TODO: measure the door point at least twice (tape from a surveyed corner, or RTK); fill entrance_truth and spread_m.",
+        "TODO: record each drop-off point's lat/lon (RTK or tape), street, curb_side and one_way.",
+        "TODO: fill accessible_entrance (steps, ramp, revolving or automatic door).",
+        "TODO: take the osm_snapshot AFTER truth is recorded; never copy OSM into entrance_truth.",
+        "TODO: add photos per golden/field-kit.md."
+      ]
+    }
+  ]
+}
