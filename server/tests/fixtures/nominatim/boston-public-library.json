@@ -1,0 +1,192 @@
+{
+  "id": "boston-public-library",
+  "address": "700 Boylston St, Boston, MA 02116",
+  "recorded_at": "2026-10-15T05:59:04+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "700 Boylston St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Boston"
+  },
+  "response": [
+    {
+      "place_id": 363400623,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "relation",
+      "osm_id": 63755,
+      "lat": "42.3493298",
+      "lon": "-71.0786547",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 0.468045927445346,
+      "addresstype": "amenity",
+      "name": "Boston Public Library",
+      "display_name": "Boston Public Library, 700, Boylston Street, Back Bay, Boston, Suffolk County, Massachusetts, 02116, United States",
+      "address": {
+        "amenity": "Boston Public Library",
+        "house_number": "700",
+        "road": "Boylston Street",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02116",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3488003",
+        "42.3498471",
+        "-71.0792691",
+        "-71.0773093"
+      ]
+    },
+    {
+      "place_id": 362770035,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 4786907848,
+      "lat": "42.3494397",
+      "lon": "-71.0781642",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 0.17283327415591612,
+      "addresstype": "amenity",
+      "name": "Norman B. Leventhal Map Center",
+      "display_name": "Norman B. Leventhal Map Center, 700, Boylston Street, Back Bay, Boston, Suffolk County, Massachusetts, 02176, United States",
+      "address": {
+        "amenity": "Norman B. Leventhal Map Center",
+        "house_number": "700",
+        "road": "Boylston Street",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02176",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3493897",
+        "42.3494897",
+        "-71.0782142",
+        "-71.0781142"
+      ]
+    },
+    {
+      "place_id": 361835840,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7644795792,
+      "lat": "42.3490723",
+      "lon": "-71.0781662",
+      "category": "amenity",
+      "type": "loading_dock",
+      "place_rank": 30,
+      "importance": 8.102616922250732e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "700, Boylston Street, Back Bay, Boston, Suffolk County, Massachusetts, 02116, United States",
+      "address": {
+        "house_number": "700",
+        "road": "Boylston Street",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02116",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3490223",
+        "42.3491223",
+        "-71.0782162",
+        "-71.0781162"
+      ]
+    },
+    {
+      "place_id": 361943632,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7761545678,
+      "lat": "42.3493651",
+      "lon": "-71.0784811",
+      "category": "amenity",
+      "type": "bench",
+      "place_rank": 30,
+      "importance": 8.102616922250732e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "700, Boylston Street, Back Bay, Boston, Suffolk County, Massachusetts, 02116, United States",
+      "address": {
+        "house_number": "700",
+        "road": "Boylston Street",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02116",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3493151",
+        "42.3494151",
+        "-71.0785311",
+        "-71.0784311"
+      ]
+    },
+    {
+      "place_id": 362587374,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 4786907864,
+      "lat": "42.3492400",
+      "lon": "-71.0790061",
+      "category": "amenity",
+      "type": "cafe",
+      "place_rank": 30,
+      "importance": 8.102616922250732e-05,
+      "addresstype": "amenity",
+      "name": "Newsfeed Cafe",
+      "display_name": "Newsfeed Cafe, 700, Boylston Street, Back Bay, Boston, Suffolk County, Massachusetts, 02116, United States",
+      "address": {
+        "amenity": "Newsfeed Cafe",
+        "house_number": "700",
+        "road": "Boylston Street",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02116",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3491900",
+        "42.3492900",
+        "-71.0790561",
+        "-71.0789561"
+      ]
+    }
+  ]
+}

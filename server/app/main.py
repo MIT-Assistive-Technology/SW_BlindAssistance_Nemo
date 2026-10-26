@@ -45,8 +45,9 @@ async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResp
 
 @app.exception_handler(StarletteHTTPException)
 async def _http_error(_: Request, exc: StarletteHTTPException) -> JSONResponse:
-    return _error(exc.status_code, "NOT_FOUND" if exc.status_code == 404 else "VALIDATION",
-                  str(exc.detail))
+    return _error(
+        exc.status_code, "NOT_FOUND" if exc.status_code == 404 else "VALIDATION", str(exc.detail)
+    )
 
 
 def _example() -> ResolveResult:
