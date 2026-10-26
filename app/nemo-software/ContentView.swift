@@ -9,12 +9,14 @@ struct ContentView: View {
         .navigationTitle("Nemo")
         #if os(iOS)
           .navigationBarTitleDisplayMode(.inline)
-          .toolbar {
-                      // TEMPORARY (FE-4 ear test): fires a beacon tone at a fixed angle.
-                      ToolbarItem(placement: .topBarTrailing) {
-                        Button("Beacon") { beaconTest() }
-                      }
-                    }
+          .toolbar {// TEMPORARY (FE-4 ear test): fires a beacon tone at a fixed angle.
+              ToolbarItem(placement: .topBarTrailing) {
+                  Button("Beacon") { beaconTest() }
+              }
+              ToolbarItem(placement: .topBarTrailing){
+                  Button("Buzz") { hapticTest() }
+              }
+          }
         #endif
     }
   }
@@ -45,3 +47,7 @@ private func beaconTest() {
     testBeacon.play(.doorDetected(offsetDegrees: 45, meters: 5))  // start tone
 }
 
+private let testHaptics = HapticsChannel()
+private func hapticTest() {
+    testHaptics.play(.warning("test"))
+}
