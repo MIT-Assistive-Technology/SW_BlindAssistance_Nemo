@@ -43,7 +43,7 @@ public final class AppServices: ObservableObject {
     // beacon the rider walks by. TODO (FE-8): interruptions and route changes.
     Self.configureAudioSession()
     let feedback = FeedbackKit(
-      channels: channels ?? [SpeechChannel(speaker: Speaker()), BeaconChannel()])
+      channels: channels ?? [SpeechChannel(speaker: Speaker()), BeaconChannel(), HapticsChannel()])
     self.feedback = feedback
     let sessionStore = SessionStore()
     self.sessionStore = sessionStore
