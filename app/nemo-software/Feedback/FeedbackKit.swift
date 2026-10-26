@@ -37,6 +37,11 @@ public final class FeedbackKit {
     
     public init(channels: [FeedbackChannel]) {
         self.channels = channels
+        // FE-8: Configure sessions + pause all channels when a call interupts
+        AudioSessionManager.shared.onInterruption = { [weak self] began in
+            if began { self?.stopAll() }
+        }
+        AudioSessionManager.shared.start()
     }
     
     public func emit(_ event: FeedbackEvent) {
