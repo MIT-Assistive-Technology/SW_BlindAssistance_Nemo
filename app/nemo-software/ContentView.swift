@@ -51,6 +51,11 @@ struct ContentView: View {
             Button("Beacon") { beaconTest() }
               .accessibilityHint("Developer test: plays the beacon tone 45 degrees to your right.")
           }
+          // TEMPORARY (FE-5 feel test): plays the warning haptic pattern.
+          ToolbarItem(placement: .topBarTrailing) {
+            Button("Buzz") { hapticTest() }
+              .accessibilityHint("Developer test: plays the warning vibration.")
+          }
         }
       #endif
     }
@@ -78,6 +83,11 @@ private let testBeacon = BeaconChannel()
 private func beaconTest() {
   testBeacon.updateTarget(relativeAngleDegrees: 45)  // aim 45° right
   testBeacon.play(.doorDetected(offsetDegrees: 45, meters: 5))  // start tone
+}
+
+private let testHaptics = HapticsChannel()
+private func hapticTest() {
+  testHaptics.play(.warning("test"))
 }
 
 #Preview {

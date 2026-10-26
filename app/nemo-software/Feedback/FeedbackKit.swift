@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import AVFoundation
+import CoreHaptics
 
 /// What happened, not how to present it. `nonisolated`, so guidance running off the
 /// main actor can emit events; the channels that play them are main-actor bound.
@@ -95,6 +97,14 @@ public final class FeedbackKit {
 
   public init(channels: [FeedbackChannel]) {
     self.channels = channels
+    // FE-8 (Trish): configure the audio session, and stop all channels when a call
+    // interrupts.
+    #if os(iOS)
+      AudioSessionManager.shared.onInterruption = { [weak self] began in
+        if began { self?.stopAll() }
+      }
+      AudioSessionManager.shared.start()
+    #endif
   }
 
   /// - Parameter force: set when the rider explicitly asked to hear it again. Without
@@ -260,5 +270,57 @@ extension String {
   }
 }
 
-// TODO (FE-4): BeaconChannel — AVAudioEngine + AVAudioEnvironmentNode (HRTF) tone at the door.
-// TODO (FE-5): HapticsChannel — Core Haptics AHAP patterns (tick, lock, pulse, arrival, warning).
+// HapticsChannel — Core Haptics AHAP patterns (tick, lock, pulse, arrival, warning). Fallback channel for riders who don't use headphones
+public final class HapticsChannel: FeedbackChannel {
+    public let name = "haptics"
+    
+    private var engine: CHHapticEngine?
+    
+    public init() { //Pre iphone-8 hardware can't do custom haptics
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        engine = try? CHHapticEngine()
+        try? engine?.start()
+        // engine dies on interruption (calls, audio changes), autorestart
+        engine?.resetHandler = { [weak self] in try? self?.engine?.start() }
+    }
+    
+    public func play(_ event: FeedbackEvent) {
+        switch event{
+        case .direction, .doorDetected:
+            haptic(intensity: 0.7, sharpness: 0.9)
+        case .bearingLock:
+            haptic(intensity: 1.0, sharpness: 1.0, repeats: 2)
+        case .distance:
+            haptic(intensity: 0.4, sharpness: 0.3)
+        case .arrival:
+            haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
+        case .warning, .lost:
+            haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
+        default:
+            break
+        }
+    }
+    
+
+    private func haptic(intensity: Float, sharpness:Float, repeats: Int = 1, spacing: TimeInterval = 0.12){
+        guard let engine else { return }
+        let events = (0..<repeats).map { i in
+            CHHapticEvent(
+                eventType: .hapticTransient,
+                parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+                ],
+                relativeTime: Double(i) * spacing
+            )
+        }
+        // pattern = rhythm of taps; player = the thing that runs it
+        guard let pattern = try? CHHapticPattern(events: events, parameters: []),
+              let player = try? engine.makePlayer(with: pattern) else { return }
+        try? player.start(atTime: CHHapticTimeImmediate)
+    }
+    
+    public func stop() {
+        engine?.stop()
+    }
+}
