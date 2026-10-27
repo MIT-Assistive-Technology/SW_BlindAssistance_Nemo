@@ -1,0 +1,170 @@
+{
+  "destination_id": "dst_brattle-theatre",
+  "status": "partial",
+  "building": {
+    "osm_id": "way/427505300",
+    "name": "Brattle Hall",
+    "housenumber": "40",
+    "footprint": [
+      [
+        -71.1217584,
+        42.3735123
+      ],
+      [
+        -71.1216561,
+        42.3733938
+      ],
+      [
+        -71.1214871,
+        42.3734733
+      ],
+      [
+        -71.1215004,
+        42.3734887
+      ],
+      [
+        -71.1213181,
+        42.3735745
+      ],
+      [
+        -71.1214151,
+        42.3736869
+      ],
+      [
+        -71.1214715,
+        42.3736604
+      ],
+      [
+        -71.1214559,
+        42.3736423
+      ],
+      [
+        -71.1215843,
+        42.3735819
+      ],
+      [
+        -71.1215919,
+        42.3735907
+      ],
+      [
+        -71.1217584,
+        42.3735123
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3736307,
+      "lon": -71.12136659999999,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Brattle Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/1408462420",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3736261286914,
+      "lon": -71.12136265500948,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/427505300",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": false
+  },
+  "street_side": {
+    "entrance_street": "Brattle Street",
+    "road_way": "way/1408462420",
+    "centerline": [
+      [
+        -71.1208369,
+        42.3732459
+      ],
+      [
+        -71.1208595,
+        42.3732586
+      ],
+      [
+        -71.1208798,
+        42.3732703
+      ],
+      [
+        -71.1209033,
+        42.373285
+      ],
+      [
+        -71.1209115,
+        42.3732907
+      ],
+      [
+        -71.1209255,
+        42.3733004
+      ],
+      [
+        -71.1209373,
+        42.3733094
+      ],
+      [
+        -71.1209497,
+        42.3733199
+      ],
+      [
+        -71.1209622,
+        42.3733315
+      ],
+      [
+        -71.1209769,
+        42.3733463
+      ],
+      [
+        -71.1209949,
+        42.3733653
+      ],
+      [
+        -71.1212657,
+        42.3736783
+      ],
+      [
+        -71.1214997,
+        42.3739489
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": true
+  },
+  "recognize": {
+    "text": [
+      "40",
+      "Brattle Hall",
+      "Brattle Theatre"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-26",
+    "model": "none"
+  }
+}

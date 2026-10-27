@@ -1,0 +1,189 @@
+{
+  "destination_id": "dst_mit-kresge-auditorium",
+  "status": "partial",
+  "building": {
+    "osm_id": "way/24494029",
+    "name": "W16 Kresge Auditorium",
+    "housenumber": "48",
+    "footprint": [
+      [
+        -71.0950286,
+        42.3583942
+      ],
+      [
+        -71.0949535,
+        42.3583506
+      ],
+      [
+        -71.0948999,
+        42.358305
+      ],
+      [
+        -71.0948543,
+        42.3582555
+      ],
+      [
+        -71.0948194,
+        42.3582
+      ],
+      [
+        -71.0947818,
+        42.3581187
+      ],
+      [
+        -71.0947711,
+        42.3580474
+      ],
+      [
+        -71.0947721,
+        42.3579927
+      ],
+      [
+        -71.0947722,
+        42.3579874
+      ],
+      [
+        -71.0948666,
+        42.3579684
+      ],
+      [
+        -71.0949611,
+        42.3579621
+      ],
+      [
+        -71.0950468,
+        42.3579621
+      ],
+      [
+        -71.0951584,
+        42.3579684
+      ],
+      [
+        -71.0952442,
+        42.3579874
+      ],
+      [
+        -71.0953165,
+        42.3580102
+      ],
+      [
+        -71.0953644,
+        42.3580319
+      ],
+      [
+        -71.0953532,
+        42.358089
+      ],
+      [
+        -71.0953344,
+        42.3581445
+      ],
+      [
+        -71.0952995,
+        42.3582019
+      ],
+      [
+        -71.0952459,
+        42.3582654
+      ],
+      [
+        -71.0951788,
+        42.3583189
+      ],
+      [
+        -71.0950983,
+        42.3583685
+      ],
+      [
+        -71.0950286,
+        42.3583942
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3579621,
+      "lon": -71.0949653,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Amherst Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/254299041",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3579740210686,
+      "lon": -71.09504414438456,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/24494029",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": true,
+    "nearest_crossing": [
+      -71.0947171,
+      42.3576445
+    ],
+    "footway_to_entrance": false
+  },
+  "street_side": {
+    "entrance_street": "Amherst Street",
+    "road_way": "way/254299041",
+    "centerline": [
+      [
+        -71.0952244,
+        42.3574784
+      ],
+      [
+        -71.0947654,
+        42.3576287
+      ],
+      [
+        -71.0947171,
+        42.3576445
+      ],
+      [
+        -71.0945601,
+        42.3576995
+      ],
+      [
+        -71.0941009,
+        42.3578525
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "48",
+      "W16 Kresge Auditorium",
+      "Kresge Auditorium"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-25",
+    "model": "none"
+  }
+}

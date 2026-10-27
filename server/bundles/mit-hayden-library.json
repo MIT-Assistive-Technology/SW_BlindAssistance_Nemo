@@ -1,0 +1,232 @@
+{
+  "destination_id": "dst_mit-hayden-library",
+  "status": "complete",
+  "building": {
+    "osm_id": "relation/5268202",
+    "name": "14",
+    "housenumber": "160",
+    "footprint": [
+      [
+        -71.0896278,
+        42.3590529
+      ],
+      [
+        -71.0896114,
+        42.3590254
+      ],
+      [
+        -71.0896175,
+        42.3590236
+      ],
+      [
+        -71.0895311,
+        42.3588818
+      ],
+      [
+        -71.0895023,
+        42.3588344
+      ],
+      [
+        -71.088749,
+        42.3590849
+      ],
+      [
+        -71.0888632,
+        42.3592721
+      ],
+      [
+        -71.0890073,
+        42.3595068
+      ],
+      [
+        -71.089124,
+        42.3594691
+      ],
+      [
+        -71.0891415,
+        42.3594619
+      ],
+      [
+        -71.0891804,
+        42.3595255
+      ],
+      [
+        -71.0898823,
+        42.3592913
+      ],
+      [
+        -71.089847,
+        42.3592336
+      ],
+      [
+        -71.0898859,
+        42.3592207
+      ],
+      [
+        -71.0900621,
+        42.3591621
+      ],
+      [
+        -71.0900473,
+        42.3591379
+      ],
+      [
+        -71.0900329,
+        42.3591142
+      ],
+      [
+        -71.0898521,
+        42.3591743
+      ],
+      [
+        -71.0898178,
+        42.3591857
+      ],
+      [
+        -71.0897274,
+        42.3592158
+      ],
+      [
+        -71.089724,
+        42.3592102
+      ],
+      [
+        -71.0896278,
+        42.3590529
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3590529,
+      "lon": -71.0896278,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/4039162284",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3594691,
+      "lon": -71.089124,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/9287309343",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.3592207,
+      "lon": -71.0898859,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/4329906127",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "lat": 42.35895965,
+      "lon": -71.08912565,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Memorial Drive (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/812712469",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "lat": 42.359038026392014,
+      "lon": -71.0888899576403,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "relation/5268202",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Memorial Drive",
+    "road_way": "way/812712469",
+    "centerline": [
+      [
+        -71.0886369,
+        42.3587423
+      ],
+      [
+        -71.0890552,
+        42.358602
+      ],
+      [
+        -71.0893021,
+        42.3585197
+      ],
+      [
+        -71.0899677,
+        42.3582977
+      ]
+    ],
+    "door_side_of_road": "right",
+    "oneway": true
+  },
+  "recognize": {
+    "text": [
+      "160",
+      "14",
+      "Hayden Library"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-25",
+    "model": "none"
+  }
+}

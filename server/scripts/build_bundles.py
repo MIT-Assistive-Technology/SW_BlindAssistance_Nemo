@@ -90,7 +90,7 @@ def main(argv: list[str] | None = None) -> int:
                     osm = version.model_copy(update={"osm": stamp})
                     result = result.model_copy(update={"data_version": osm})
                 path = bundle.write_bundle(result, site.id, args.out)
-                print(f"{site.id} [{site.label or site.name or '-'}]: {report.describe()} -> {path.relative_to(SERVER)}")
+                print(f"{site.id} [{site.label or site.name or '-'}]: {report.describe()} -> {os.path.relpath(path, SERVER)}")
             else:
                 failures += 1
                 print(f"{site.id} [{site.label or site.name or '-'}]: {report.describe()}")

@@ -1,0 +1,258 @@
+{
+  "destination_id": "dst_mit-building-7",
+  "status": "complete",
+  "building": {
+    "osm_id": "way/32517230",
+    "name": "7 Rogers Building",
+    "housenumber": "77",
+    "footprint": [
+      [
+        -71.0927221,
+        42.3592408
+      ],
+      [
+        -71.0927706,
+        42.3593211
+      ],
+      [
+        -71.0928166,
+        42.3593976
+      ],
+      [
+        -71.0928945,
+        42.3593719
+      ],
+      [
+        -71.0930255,
+        42.3593288
+      ],
+      [
+        -71.0930537,
+        42.3593775
+      ],
+      [
+        -71.0931517,
+        42.3593448
+      ],
+      [
+        -71.0933218,
+        42.3596277
+      ],
+      [
+        -71.0933977,
+        42.3596028
+      ],
+      [
+        -71.0934437,
+        42.3595877
+      ],
+      [
+        -71.0934918,
+        42.3595718
+      ],
+      [
+        -71.0935585,
+        42.3595499
+      ],
+      [
+        -71.0933874,
+        42.3592661
+      ],
+      [
+        -71.0933983,
+        42.3592625
+      ],
+      [
+        -71.0933847,
+        42.3592401
+      ],
+      [
+        -71.0934043,
+        42.3592337
+      ],
+      [
+        -71.0934093,
+        42.359232
+      ],
+      [
+        -71.0933469,
+        42.3591286
+      ],
+      [
+        -71.0932813,
+        42.3590196
+      ],
+      [
+        -71.0932552,
+        42.3590282
+      ],
+      [
+        -71.0932424,
+        42.3590072
+      ],
+      [
+        -71.0932315,
+        42.3590109
+      ],
+      [
+        -71.0931205,
+        42.3590476
+      ],
+      [
+        -71.0930123,
+        42.359084
+      ],
+      [
+        -71.0929947,
+        42.3590899
+      ],
+      [
+        -71.0929189,
+        42.3591152
+      ],
+      [
+        -71.0928978,
+        42.3591222
+      ],
+      [
+        -71.0929287,
+        42.3591728
+      ],
+      [
+        -71.0927986,
+        42.3592156
+      ],
+      [
+        -71.0927221,
+        42.3592408
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3591286,
+      "lon": -71.0933469,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/981493472",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3592337,
+      "lon": -71.0934043,
+      "confidence": 0.8,
+      "band": "door",
+      "label": "Door",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/9279372526",
+          "tags": {
+            "entrance": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.35912582335805,
+      "lon": -71.09334522892007,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Massachusetts Avenue (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/1321779881",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "lat": 42.359232,
+      "lon": -71.0934093,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "node/11623747407",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Massachusetts Avenue",
+    "road_way": "way/1092687153",
+    "centerline": [
+      [
+        -71.0932622,
+        42.3585527
+      ],
+      [
+        -71.0933085,
+        42.3586437
+      ],
+      [
+        -71.0933882,
+        42.3587785
+      ],
+      [
+        -71.0934676,
+        42.358898
+      ],
+      [
+        -71.0935541,
+        42.3590196
+      ],
+      [
+        -71.0935698,
+        42.3590415
+      ],
+      [
+        -71.0935712,
+        42.3590435
+      ]
+    ],
+    "door_side_of_road": "right",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "77",
+      "7 Rogers Building",
+      "MIT Building 7"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-25",
+    "model": "none"
+  }
+}

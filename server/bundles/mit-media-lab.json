@@ -1,0 +1,164 @@
+{
+  "destination_id": "dst_mit-media-lab",
+  "status": "complete",
+  "building": {
+    "osm_id": "way/177921761",
+    "name": "E14 Media Lab",
+    "housenumber": "75",
+    "footprint": [
+      [
+        -71.0875514,
+        42.3601734
+      ],
+      [
+        -71.08775,
+        42.360501
+      ],
+      [
+        -71.0877613,
+        42.3605203
+      ],
+      [
+        -71.0877199,
+        42.3605339
+      ],
+      [
+        -71.0877371,
+        42.3605623
+      ],
+      [
+        -71.0872472,
+        42.360724
+      ],
+      [
+        -71.0872332,
+        42.3607009
+      ],
+      [
+        -71.0871119,
+        42.3607409
+      ],
+      [
+        -71.0870918,
+        42.3607077
+      ],
+      [
+        -71.0870588,
+        42.3607185
+      ],
+      [
+        -71.0869656,
+        42.3605644
+      ],
+      [
+        -71.0869849,
+        42.360558
+      ],
+      [
+        -71.0869239,
+        42.3604572
+      ],
+      [
+        -71.0868853,
+        42.3603934
+      ],
+      [
+        -71.0875514,
+        42.3601734
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3604572,
+      "lon": -71.0869239,
+      "confidence": 0.8,
+      "band": "door",
+      "label": "Door",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/5562638424",
+          "tags": {
+            "entrance": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3602834,
+      "lon": -71.08721835,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Amherst Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/8615381",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.36028334091403,
+      "lon": -71.0872185288962,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/177921761",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Carleton Street",
+    "road_way": "way/8615700",
+    "centerline": [
+      [
+        -71.0863825,
+        42.3606236
+      ],
+      [
+        -71.0863453,
+        42.360895
+      ],
+      [
+        -71.0863089,
+        42.3611604
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "75",
+      "E14 Media Lab",
+      "MIT Media Lab"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-25",
+    "model": "none"
+  }
+}
