@@ -23,12 +23,12 @@ from .geo import (
 )
 from .models import Building, Candidate, PathChecks, Provenance, Speak, StreetSide
 from .resolver import GeocodedPoint
-from .scoring import ADDRESS_POINT, FACADE_FALLBACK, score_door
+from .scoring import ADDRESS_POINT, FACADE_FALLBACK, score_door, site_role_is_main
 
 SAME_NUMBER_M = 30  # plan section 8: a building with the house number within 30 m
 CENTERLINE_KEEP_M = 60  # street_side centerline: this far either side of the door (I-12)
 CURB_OFFSET_M = 6  # expected drop-off: this far from the centerline toward the door
-CROSSING_MAX_M = 150  # farther than this, "nearest marked crossing" is no help
+CROSSING_MAX_M = overpass.CROSSING_MAX_M  # farther than this, a crossing is no help
 NOT_A_ROAD = {"driveway", "parking_aisle", "drive-through"}  # service=*: separate warning class
 # crossing=* values that mean paint on the road. A bare highway=crossing is not assumed marked.
 MARKED = {"marked", "zebra", "uncontrolled", "traffic_signals"}
@@ -71,6 +71,17 @@ def client() -> overpass.Client:
     return CLIENT
 
 
+# Fix R5: every outer ring of each building find_building returned, by osm_id. The contract's
+# footprint is only the largest ring; a multipolygon's other wings are kept here.
+_RINGS: dict[str, list[list[list[float]]]] = {}
+
+
+def rings_of(building: Building) -> list[list[list[float]]]:
+    """All [lon, lat] outer rings of the building, its footprint first."""
+    rings = _RINGS.get(building.osm_id)
+    return rings if rings and rings[0] == building.footprint else [building.footprint]
+
+
 # ---------------------------------------------------------------------------------------------
 # Step 2: find the building (BE-3)
 # ---------------------------------------------------------------------------------------------
@@ -105,31 +116,37 @@ def find_building(point: GeocodedPoint) -> Building:
             o
             for o in near
             if point.housenumber
-            and point.housenumber in _numbers(o.tags)
+            and point.housenumber.strip().lower() in _numbers(o.tags)
             and wall_distance(o) <= SAME_NUMBER_M
         ]
         chosen = (same_number or near)[0]
+    _RINGS[chosen.ref] = [[[lon, lat] for lon, lat in ring] for ring in chosen.rings]
     return Building(
         osm_id=chosen.ref,
         name=chosen.tags.get("name"),
         housenumber=chosen.tags.get("addr:housenumber"),
-        footprint=[[lon, lat] for lon, lat in chosen.footprint],
+        footprint=_RINGS[chosen.ref][0],
     )
 
 
 def _numbers(tags: dict[str, str]) -> set[str]:
-    """addr:housenumber may list several numbers: "77;79"."""
-    return {n.strip() for n in tags.get("addr:housenumber", "").split(";") if n.strip()}
+    """addr:housenumber may list several numbers: "77;79". Lowercased, so "77A" matches "77a"
+    as bundle.has_housenumber does (Fix R10)."""
+    return {n.strip().lower() for n in tags.get("addr:housenumber", "").split(";") if n.strip()}
+
+
+def area_query(building: Building) -> str:
+    """The area query text for a building (tests save fixtures under exactly this text)."""
+    return overpass.area_query_for(building.osm_id, rings_of(building))
 
 
 @functools.lru_cache(maxsize=64)
-def _area(osm_id: str, footprint: tuple[tuple[float, float], ...]) -> overpass.BuildingArea:
-    query = overpass.area_query(osm_id, overpass.bbox_around([list(p) for p in footprint]))
+def _area(osm_id: str, query: str) -> overpass.BuildingArea:
     return overpass.parse_area(client().run(query), osm_id)
 
 
 def area_for(building: Building) -> overpass.BuildingArea:
-    return _area(building.osm_id, tuple((p[0], p[1]) for p in building.footprint))
+    return _area(building.osm_id, area_query(building))
 
 
 # ---------------------------------------------------------------------------------------------
@@ -166,13 +183,27 @@ def read_entrances(building: Building, dest_housenumber: str | None) -> list[Can
 
     A node off our outline that is on ANOTHER building's outline is that building's door
     (row houses share walls), so it is skipped. building:part ways don't count as another
-    building: they are usually parts of this one.
+    building: they are usually parts of this one. A site relation's entrance (a campus gate)
+    only counts when it is on or within 5 m of the outline.
     """
     a = area_for(building)
-    other_buildings = {n for w in a.ways_at_doors if "building" in w.tags for n in w.nodes}
+    other_buildings = {
+        n
+        for w in a.ways_at_doors
+        # Fix R4: a multipolygon neighbour's outer way is untagged; its relation is the building.
+        if "building" in w.tags or int(w.ref.split("/")[1]) in a.other_building_ways
+        for n in w.nodes
+    }
     footway_nodes = {
         n for w in a.ways_at_doors if w.tags.get("highway") in FOOTWAYS for n in w.nodes
     }
+    f = Frame(building.footprint[0][1], building.footprint[0][0])
+    rings = [_ring_xy(f, r) for r in rings_of(building)]
+
+    def near_outline(e: dict) -> bool:
+        p = f.xy(e["lon"], e["lat"])
+        return min(closest_on_line(p, r)[0] for r in rings) <= overpass.NEAR_OUTLINE_M
+
     out = []
     for node_id, e in sorted(a.entrances.items()):
         on_outline = node_id in a.outline_nodes
@@ -180,6 +211,9 @@ def read_entrances(building: Building, dest_housenumber: str | None) -> list[Can
             continue
         tags = e["tags"]
         site = node_id in a.site_entrances
+        # Fix R1: node(r.site:"entrance") has no distance limit; a gate 180 m away is no door.
+        if site and not on_outline and not near_outline(e):
+            continue
         score = score_door(
             tags,
             dest_housenumber,
@@ -196,7 +230,7 @@ def read_entrances(building: Building, dest_housenumber: str | None) -> list[Can
                 lon=e["lon"],
                 confidence=score,
                 band="door",  # bundle.rank() sets the band from the score
-                label=_label(tags, main=site),
+                label=_label(tags, main=site and site_role_is_main(tags)),
                 speak=_speak(tags),
                 provenance=[Provenance(source="osm_tag", ref=f"node/{node_id}", tags=tags)],
             )
@@ -335,18 +369,33 @@ def _clip(pts: list[XY], idx: int, q: XY, keep: float) -> list[XY]:
     return [p for k, p in enumerate(line) if k == 0 or math.dist(p, line[k - 1]) > 1e-6]
 
 
+def _oneway(tags: dict[str, str]) -> bool:
+    """Fix R7: any oneway value but no (yes, -1, reversible, alternating), and the implied
+    oneways: roundabouts and motorways."""
+    if "oneway" in tags:
+        return tags["oneway"] not in {"no", "0", "false"}
+    return tags.get("junction") in {"roundabout", "circular"} or tags.get("highway") in {
+        "motorway",
+        "motorway_link",
+    }
+
+
 def street_side(
     a: overpass.BuildingArea,
     door: Candidate,
     street: str | None,
-    footprint: list[list[float]] | None = None,
+    rings: list[list[list[float]]] | None = None,
 ) -> StreetSide | None:
-    """The street_side block for `door`. Given the footprint, the street is the one the door's
-    wall faces. The centerline is clipped to 60 m either side of the door, so a long or curved
-    way still gives the local road direction (E2E I-12)."""
+    """The street_side block for `door`. Given the building's rings, the street is the one the
+    door's wall faces (on the ring nearest the door). The centerline is clipped to 60 m either
+    side of the door, so a long or curved way still gives the local road direction (E2E I-12)."""
     f = Frame(door.lat, door.lon)
     here = (0.0, 0.0)
-    normal = _wall_normal(_ring_xy(f, footprint), here) if footprint else None
+    normal = None
+    if rings:
+        # Fix R5: the wall the door is on may be on a smaller wing, not the largest ring.
+        xy_rings = [_ring_xy(f, r) for r in rings]
+        normal = _wall_normal(min(xy_rings, key=lambda r: closest_on_line(here, r)[0]), here)
     road = entrance_street(a, f, here, street, normal)
     if road is None:
         return None
@@ -363,13 +412,19 @@ def street_side(
         road_way=road.ref,
         centerline=[[round(c, 7) for c in f.lonlat(*p)] for p in line],
         door_side_of_road=side,
-        oneway=road.tags.get("oneway") in {"yes", "1", "-1", "true"},
+        oneway=_oneway(road.tags),
     )
+
+
+def street_side_for(building: Building, door: Candidate, point: GeocodedPoint) -> StreetSide | None:
+    """street_side for the door the bundle finally guides to (Fix R10: bundle.build_bundle
+    calls this for candidates[0], so street_side and path_checks describe that door)."""
+    return street_side(area_for(building), door, _street_name(point), rings_of(building))
 
 
 def _has_number(c: Candidate, housenumber: str | None) -> bool:
     return bool(housenumber) and any(
-        housenumber.strip() in _numbers(p.tags) for p in c.provenance if p.tags
+        housenumber.strip().lower() in _numbers(p.tags) for p in c.provenance if p.tags
     )
 
 
@@ -450,7 +505,7 @@ def facade_fallback(building: Building, point: GeocodedPoint) -> dict:
     )
     return {
         "candidates": candidates,
-        "street_side": street_side(a, anchor, street, building.footprint),
+        "street_side": street_side(a, anchor, street, rings_of(building)),
     }
 
 
@@ -466,34 +521,63 @@ def _marked(crossing: dict) -> bool:
     return t.get("crossing") in MARKED or t.get("crossing_ref") == "zebra"
 
 
+def _drop_off(f: Frame, side: StreetSide) -> XY:
+    """The expected drop-off in f's meters: the entrance street's curb nearest the door at f's
+    origin, CURB_OFFSET_M from the centerline toward the door."""
+    here = (0.0, 0.0)
+    d, q, _ = closest_on_line(here, [f.xy(*p) for p in side.centerline])
+    k = min(CURB_OFFSET_M, d) / d if d > 0 else 0.0
+    return (q[0] + (here[0] - q[0]) * k, q[1] + (here[1] - q[1]) * k)
+
+
 def path_checks(building: Building, door: Candidate, side: StreetSide | None) -> PathChecks:
     """From the expected drop-off (the entrance street's curb nearest the door) to the door:
-    does the straight line cross another road? If so, the nearest marked crossing within
-    150 m of the drop-off.
+    does the straight line cross another road? If so, the nearest marked crossing ON a crossed
+    road within 150 m of the drop-off.
 
-    Driveways and parking aisles are not road crossings (plan section 8). The contract has no
-    field yet for the driveway, through-the-building and off-the-sidewalk warnings.
+    Driveways and parking aisles are not road crossings (plan section 8); path_warnings reports
+    them and a line through the building. The contract has no field for those warnings yet,
+    and the off-the-sidewalk check is not done (BE-7 is partial).
+
+    Raises ValueError without a street_side (Fix R6): nothing could be checked, and the
+    contract's crosses_road=False would claim the walk crosses no road.
     """
+    if side is None:
+        raise ValueError("no entrance street, so the road crossing was not checked")
     a = area_for(building)
     f = Frame(door.lat, door.lon)
     here = (0.0, 0.0)
-    crosses = False
-    start = None
-    if side is not None:
-        cl = [f.xy(*p) for p in side.centerline]
-        d, q, _ = closest_on_line(here, cl)
-        k = min(CURB_OFFSET_M, d) / d if d > 0 else 0.0
-        start = (q[0] + (here[0] - q[0]) * k, q[1] + (here[1] - q[1]) * k)
-        crosses = any(
-            line_crosses(start, here, [f.xy(*p) for p in w.coords])
-            for w in a.roads
-            if _is_road(w) and w.ref != side.road_way
-        )
+    start = _drop_off(f, side)
+    crossed = [
+        w
+        for w in a.roads
+        if _is_road(w)
+        # R17 (c), no test by design: the drop-off is already offset to the door's side of
+        # this road, so the walk can't cross it; the check only saves the geometry work.
+        and w.ref != side.road_way
+        and line_crosses(start, here, [f.xy(*p) for p in w.coords])
+    ]
 
     nearest = None
-    if crosses and start is not None:
+    if crossed:
+        # Fix R2: only a crosswalk over a road the walk crosses (any way of that street), never
+        # one over the entrance street the rider was just dropped beside.
+        names = {w.tags["name"] for w in crossed if w.tags.get("name")}
+        entrance = next((w for w in a.roads if w.ref == side.road_way), None)
+        entrance_name = entrance.tags.get("name") if entrance else None
+        on_crossed = {
+            n for w in a.roads if w in crossed or w.tags.get("name") in names for n in w.nodes
+        }
+        on_entrance = {
+            n
+            for w in a.roads
+            if w.ref == side.road_way or (entrance_name and w.tags.get("name") == entrance_name)
+            for n in w.nodes
+        }
         marked = [
-            (math.dist(start, f.xy(c["lon"], c["lat"])), c) for c in a.crossings if _marked(c)
+            (math.dist(start, f.xy(c["lon"], c["lat"])), c)
+            for c in a.crossings
+            if _marked(c) and c["id"] in on_crossed and c["id"] not in on_entrance
         ]
         dist, best = min(marked, key=lambda m: m[0], default=(math.inf, None))
         if best is not None and dist <= CROSSING_MAX_M:
@@ -510,4 +594,32 @@ def path_checks(building: Building, door: Candidate, side: StreetSide | None) ->
     footway = node_id is not None and any(
         w.tags.get("highway") in FOOTWAYS and node_id in w.nodes for w in a.ways_at_doors
     )
-    return PathChecks(crosses_road=crosses, nearest_crossing=nearest, footway_to_entrance=footway)
+    return PathChecks(
+        crosses_road=bool(crossed), nearest_crossing=nearest, footway_to_entrance=footway
+    )
+
+
+def path_warnings(building: Building, door: Candidate, side: StreetSide | None) -> list[str]:
+    """Fix R14: the BE-7 checks the contract has no field for yet, as build notes.
+    "driveway": the line from the drop-off crosses a driveway, parking aisle or drive-through
+    (plan section 8: "Driveway ahead. Listen for cars."). "through_building": the line passes
+    through the building (go around the nearest corner). Off-the-sidewalk is not checked."""
+    if side is None:
+        return []
+    a = area_for(building)
+    f = Frame(door.lat, door.lon)
+    start = _drop_off(f, side)
+    out = []
+    if any(
+        w.tags.get("service") in NOT_A_ROAD
+        and line_crosses(start, (0.0, 0.0), [f.xy(*p) for p in w.coords])
+        for w in a.roads
+    ):
+        out.append("driveway")
+    rings = [_ring_xy(f, r) for r in rings_of(building)]
+    length = math.hypot(*start)
+    # A point every metre from the drop-off, stopping 0.5 m short of the door on the wall.
+    ts = [m / length for m in range(int(length - 0.5) + 1)] if length > 0.5 else []
+    if any(inside((start[0] * (1 - t), start[1] * (1 - t)), r[:-1]) for t in ts for r in rings):
+        out.append("through_building")
+    return out

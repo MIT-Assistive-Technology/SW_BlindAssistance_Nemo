@@ -234,6 +234,22 @@ def test_same_face_on_footprint():
     assert bundle.same_face_on([]) is None
 
 
+# Fix R3: a door node on a straight wall is an outline vertex; both sides are one face.
+def test_r3_both_sides_of_a_door_vertex_on_a_straight_wall_are_one_face():
+    wall = [at(0, 0), at(-10, 0), at(-20, 0), at(-20, 20), at(0, 20), at(0, 0)]
+    same_face = bundle.same_face_on(wall)
+    door = point("osm", 0.75, "osm_tag", -10, 0)  # the door vertex itself
+    assert same_face(door, point("p", 0.6, "mapillary_cv", -7, -0.5))
+    assert same_face(door, point("p", 0.6, "mapillary_cv", -13, -0.5))
+    assert not same_face(door, point("p", 0.6, "mapillary_cv", -20.5, 3))  # round the corner
+
+
+def test_r3_other_rings_are_faces_too():
+    wing = [at(0, 40), at(-10, 40), at(-10, 50), at(0, 50), at(0, 40)]
+    same_face = bundle.same_face_on(SQUARE, [wing])
+    assert same_face(point("a", 0.75, "osm_tag", -3, 40), point("p", 0.6, "mapillary_cv", -6, 40))
+
+
 @pytest.mark.parametrize(
     ("photo_at", "boosted"),
     [((-3, 0), True), ((0, 2.83), False)],  # 2 m along the wall / 3 m around the corner

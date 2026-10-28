@@ -1,0 +1,174 @@
+{
+  "destination_id": "dst_cambridge-city-hall",
+  "status": "complete",
+  "building": {
+    "osm_id": "way/29889531",
+    "name": "Cambridge City Hall",
+    "housenumber": "795",
+    "footprint": [
+      [
+        -71.1055313,
+        42.366889
+      ],
+      [
+        -71.1057767,
+        42.3670326
+      ],
+      [
+        -71.1060006,
+        42.3671637
+      ],
+      [
+        -71.1057773,
+        42.3673735
+      ],
+      [
+        -71.1056038,
+        42.3672719
+      ],
+      [
+        -71.1056882,
+        42.3671927
+      ],
+      [
+        -71.1056362,
+        42.3671623
+      ],
+      [
+        -71.105585,
+        42.3671323
+      ],
+      [
+        -71.1055022,
+        42.3672101
+      ],
+      [
+        -71.1053096,
+        42.3670973
+      ],
+      [
+        -71.1055313,
+        42.366889
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3670326,
+      "lon": -71.1057767,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/8288483309",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3671623,
+      "lon": -71.1056362,
+      "confidence": 0.8,
+      "band": "door",
+      "label": "Door",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/8288483308",
+          "tags": {
+            "entrance": "yes",
+            "wheelchair": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.36702632508336,
+      "lon": -71.10576597670932,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Massachusetts Avenue (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/302156881",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "lat": 42.36701095506115,
+      "lon": -71.10573964914524,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/29889531",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Massachusetts Avenue",
+    "road_way": "way/302156881",
+    "centerline": [
+      [
+        -71.1065832,
+        42.3671706
+      ],
+      [
+        -71.1063302,
+        42.36701
+      ],
+      [
+        -71.1060314,
+        42.3668172
+      ],
+      [
+        -71.1058413,
+        42.3666945
+      ],
+      [
+        -71.1057771,
+        42.3666531
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "795",
+      "Cambridge City Hall"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-27",
+    "model": "none"
+  }
+}

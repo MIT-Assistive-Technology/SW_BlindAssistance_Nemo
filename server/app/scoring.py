@@ -55,17 +55,20 @@ def score_door(
       2. Split tags["entrance"] on ";" and drop values in EXCLUDE; None if nothing is left.
          A node with only door=* (no entrance=*) counts as entrance=yes.
       3. None if access or foot is in EXCLUDE_ACCESS.
-      4. Return CAP if tags["addr:housenumber"] == dest_housenumber (address match ranks first,
-         but the cap still holds).
+      4. (Moved to the end, Fix R11.)
       5. Start from the best BASE value (UNKNOWN_VALUE for unlisted values). routing:entrance
-         or a site relation's role=entrance (`site_entrance`) count as main. staircase and home
+         or a site relation's role=entrance (`site_entrance`) count as main, the site role only
+         when the node is not entrance=service or secondary (Fix R1). staircase and home
          only count for a residential address; shop never does (we can't tell it's the
          destination).
       6. Adjust: wheelchair yes/designated +0.05, wheelchair no -0.05, has_footway +0.05,
          not on_outline -0.10, level != "0" -0.10, door=overhead -0.10.
       7. Adjustments never lift a door into a higher band than its base value: a plain door
          with good tags is still spoken as "a door", never "the main entrance".
-      8. Return min(score, CAP).
+      8. If tags["addr:housenumber"] == dest_housenumber, raise the score to the top of its
+         band (0.95 for main, 0.80 for a door, 0.40 for facade): it ranks first in its band but
+         never changes the band, so "main" is only spoken for a mapped main entrance.
+      9. Return min(score, CAP).
     """
     if any(tags.get(k) in values for k, values in IGNORE_TAGS.items()):
         return None
@@ -79,9 +82,6 @@ def score_door(
     if tags.get("access") in EXCLUDE_ACCESS or tags.get("foot") in EXCLUDE_ACCESS:
         return None
 
-    if dest_housenumber is not None and tags.get("addr:housenumber") == dest_housenumber:
-        return CAP
-
     def base(value: str) -> float:
         if value in RESIDENTIAL_ONLY and not residential:
             return UNKNOWN_VALUE
@@ -90,7 +90,7 @@ def score_door(
         return BASE.get(value, UNKNOWN_VALUE)
 
     start = max(base(v) for v in usable)
-    if site_entrance or "routing:entrance" in tags:
+    if (site_entrance and site_role_is_main(tags)) or "routing:entrance" in tags:
         start = max(start, BASE["main"])
 
     score = start
@@ -111,7 +111,21 @@ def score_door(
     score = round(score, 4)  # 0.75 + 0.05 + 0.05 must not become 0.8500000001
     if band(score) != band(start) and score > start:
         score = BAND_TOP[band(start)]
+    # Fix R11: the house number ranks a door first within its own band, after the penalties.
+    # A service door tagged with the number is still a service door, never "the main entrance".
+    if dest_housenumber is not None and tags.get("addr:housenumber") == dest_housenumber:
+        score = max(score, BAND_TOP[band(score)])
     return min(score, CAP)
+
+
+SITE_NOT_MAIN = {"service", "secondary"}
+
+
+def site_role_is_main(tags: dict[str, str]) -> bool:
+    """Fix R1: a site relation's role=entrance counts as main unless the node itself says it is
+    a service or secondary door."""
+    values = {v.strip() for v in tags.get("entrance", "").split(";")}
+    return not values & SITE_NOT_MAIN
 
 
 def combine(best_by_class: dict[str, float]) -> float:
