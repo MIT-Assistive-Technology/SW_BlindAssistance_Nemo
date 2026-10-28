@@ -69,7 +69,9 @@ def fake_stages(doors, facade=(FACADE,), **overrides) -> Stages:
         facade_fallback=lambda building, point: Facade(
             candidates=list(facade), street_side=STREET_SIDE
         ),
+        street_side=lambda building, top, point: STREET_SIDE,
         path_checks=lambda building, top, street_side: CHECKS,
+        path_warnings=lambda building, top, street_side: [],
     )
     return dataclasses.replace(stages, **overrides)
 
@@ -153,6 +155,36 @@ def test_recognize_text_has_number_building_and_site_names(name, site_name, text
     assert bundle.run_site(site, stages, VERSION).bundle.recognize.text == text
 
 
+# Fix R12: the destination's number always; the building's numbers only when they include it.
+@pytest.mark.parametrize(
+    ("tagged", "text"),
+    [
+        ("75", ["77", "MIT Building 7"]),  # a fallback outline that is the neighbour
+        ("77;79", ["77", "79", "MIT Building 7"]),
+        (None, ["77", "MIT Building 7"]),
+    ],
+)
+def test_r12_recognize_text_keeps_the_destination_number(tagged, text):
+    stages = fake_stages(
+        [door(0.9, "node/1")], find_building=lambda p: BUILDING | {"housenumber": tagged}
+    )
+    assert bundle.run_site(SITE, stages, VERSION).bundle.recognize.text == text
+
+
+# Fix R10: street_side comes from the street_side stage for candidates[0], not the facade's.
+def test_r10_street_side_and_path_checks_get_the_top_candidate():
+    seen = []
+    other = STREET_SIDE | {"entrance_street": "Side Street", "road_way": "way/3"}
+    stages = fake_stages(
+        [door(0.80, "node/2"), door(0.90, "node/9")],
+        street_side=lambda b, top, p: seen.append(top.provenance[0].ref) or other,
+        path_checks=lambda b, top, side: seen.append(side.road_way) or CHECKS,
+    )
+    result = bundle.run_site(SITE, stages, VERSION).bundle
+    assert seen == ["node/9", "way/3"]
+    assert result.street_side.entrance_street == "Side Street"
+
+
 def test_band_comes_from_scoring_band_not_the_stage(monkeypatch):
     doors = [door(0.90, "node/1", band="facade"), door(0.50, "node/2", band="main")]
     result = bundle.run_site(SITE, fake_stages(doors), VERSION).bundle
@@ -211,20 +243,41 @@ def test_one_blocked_site_does_not_stop_the_others():
     assert [r.ok for r in reports] == [False, True]
 
 
-def test_offline_replay_runs_the_real_geocoder(monkeypatch):
-    """Default stages, real geocoder over saved responses, Overpass offline: geocode succeeds and
-    the run gets as far as the saved Overpass responses allow."""
+def replay_site(monkeypatch, overpass_dir: Path) -> bundle.SiteReport:
+    """Default stages, real geocoder over saved Nominatim responses, Overpass offline."""
     monkeypatch.setenv("USER_AGENT", "MIT-AT-CarToCurb/test")
-    offline = overpass.Client(cache_dir=SERVER / "tests" / "fixtures" / "overpass", offline=True)
-    monkeypatch.setattr(doors, "CLIENT", offline)
+    monkeypatch.setattr(doors, "CLIENT", overpass.Client(cache_dir=overpass_dir, offline=True))
     monkeypatch.setattr(resolver, "_nominatim_limiter", RateLimiter(0))
+    doors._area.cache_clear()
     resolver.clear_geocode_cache()
-    with bundle.replay_client(FIXTURES) as client:
-        stages = Stages(geocode=functools.partial(resolver.geocode, client=client))
-        report = bundle.run_site(SITE, stages, VERSION)
-    resolver.clear_geocode_cache()
+    try:
+        with bundle.replay_client(FIXTURES) as client:
+            stages = Stages(geocode=functools.partial(resolver.geocode, client=client))
+            return bundle.run_site(SITE, stages, VERSION)
+    finally:
+        resolver.clear_geocode_cache()
+        doors._area.cache_clear()
 
-    assert report.ok or report.error.stage != "geocode", report.describe()
+
+# Fix R15: the replay must really run BE-3/5/7 on saved Overpass data, not pass when blocked.
+def test_offline_replay_runs_the_whole_ladder_on_saved_overpass_data(monkeypatch):
+    report = replay_site(monkeypatch, SERVER / "tests" / "fixtures" / "overpass")
+    if not report.ok and isinstance(report.error.cause, overpass.OverpassUnavailable):
+        pytest.skip(
+            f"no saved Overpass responses for {SITE.id} ({report.error.stage}); "
+            "run scripts/build_bundles.py online and commit tests/fixtures/overpass"
+        )
+    assert report.ok, report.describe()
+    result = report.bundle
+    assert result.building.osm_id.split("/")[0] in {"way", "relation"}
+    assert result.candidates and result.street_side is not None
+    assert result.street_side.road_way.startswith("way/")
+
+
+def test_offline_replay_without_overpass_data_is_blocked_after_geocode(monkeypatch, tmp_path):
+    report = replay_site(monkeypatch, tmp_path)
+    assert not report.ok and report.error.stage == "find_building"
+    assert isinstance(report.error.cause, overpass.OverpassUnavailable)
 
 
 def test_offline_replay_refuses_unsaved_queries(monkeypatch):

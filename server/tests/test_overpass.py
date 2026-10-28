@@ -49,9 +49,34 @@ def test_area_query_for_a_way_and_a_relation():
     for q in (way_q, rel_q):
         assert "node(around.outlines:5)[entrance];" in q
         assert "rel(br.b)[type=site]" in q and "rel(bw.outlines)[type=site]" in q
-        assert "way(bn.ent);" in q
+        assert "way(bn.ent)->.dw;" in q
+        assert "rel(bw.dw)[building];" in q  # Fix R4: multipolygon neighbours
         assert "way(42.3500000,-71.1000000,42.3700000,-71.0800000)[highway~" in q
         assert "node(42.3500000,-71.1000000,42.3700000,-71.0800000)[highway=crossing];" in q
+        # Fix R8: crossings tagged on traffic-signal nodes
+        assert "node(42.3500000,-71.1000000,42.3700000,-71.0800000)[crossing];" in q
+
+
+# Fix R13: crossings come from a box CROSSING_MAX_M wider than the road box, so a crossing up to
+# 150 m from a drop-off anywhere in the road box can be returned.
+def test_r13_crossing_box_covers_crossing_max_m_beyond_the_road_box():
+    assert overpass.CROSSING_MARGIN_M >= overpass.AREA_MARGIN_M + overpass.CROSSING_MAX_M
+    ring = [list(ORIGIN.lonlat(x, y)) for x, y in [(0, 0), (20, 0), (20, 10), (0, 0)]]
+    q = overpass.area_query_for("way/9", [ring])
+    road = ",".join(f"{v:.7f}" for v in overpass.bbox_around(ring))
+    cross = ",".join(f"{v:.7f}" for v in overpass.bbox_around(ring, overpass.CROSSING_MARGIN_M))
+    assert f"way({road})[highway~" in q
+    assert f"node({cross})[highway=crossing];" in q and f"node({road})[highway" not in q
+
+
+# Fix R5: the boxes cover every outer ring, not only the largest.
+def test_r5_area_query_box_covers_every_ring():
+    big = [list(ORIGIN.lonlat(x, y)) for x, y in [(0, 0), (40, 0), (40, 30), (0, 0)]]
+    wing = [list(ORIGIN.lonlat(x, y)) for x, y in [(0, 200), (10, 200), (10, 210), (0, 200)]]
+    q = overpass.area_query_for("relation/9", [big, wing])
+    north = overpass.bbox_around(big + wing)[2]
+    road_line = next(line for line in q.splitlines() if "[highway~" in line)
+    assert f"{north:.7f}" in road_line  # the road box reaches past the wing
 
 
 def test_bbox_around_grows_the_footprint_by_the_margin():
@@ -183,6 +208,15 @@ def test_user_agent_is_required(tmp_path, monkeypatch):
     assert calls == []
 
 
+# Fix R9: a missing USER_AGENT blocks only live queries; a stale saved answer is still used.
+def test_r9_stale_cache_is_used_without_a_user_agent(tmp_path, monkeypatch):
+    monkeypatch.delenv("USER_AGENT", raising=False)
+    c, calls, _ = mock_client(tmp_path, [])
+    os.utime(save(c, QUERY, OLD), (0, 0))
+    assert c.run(QUERY) == OLD
+    assert calls == []
+
+
 # ---------------------------------------------------------------------------------------------
 # Parsing
 # ---------------------------------------------------------------------------------------------
@@ -259,5 +293,18 @@ def test_parse_area_relation_outline_nodes_and_ways():
     assert set(got.entrances) == {door}
     assert [w.ref for w in got.ways_at_doors] == ["way/30"]
     assert [w.ref for w in got.roads] == ["way/31"]
-    assert len(got.crossings) == 1
+    assert [c["id"] for c in got.crossings] == [251]
     assert got.osm_date == "2026-10-01"
+
+
+# Fix R8 (crossing=* on a traffic-signals node) and Fix R4 (a neighbour's multipolygon outers).
+def test_r4_r8_parse_area_signal_crossings_and_neighbour_relations():
+    osm = Osm()
+    osm.way(1, square(osm, 100, 0, 0, 10), building="yes")
+    osm.node(5, 20, -10, highway="traffic_signals", crossing="traffic_signals")
+    osm.way(41, square(osm, 200, 13, 0, 10), out=False)
+    osm.rel(40, [("way", 41, "outer")], type="multipolygon", building="yes")
+    got = overpass.parse_area(osm.response(), "way/1")
+    assert [c["id"] for c in got.crossings] == [5]
+    assert got.other_building_ways == {41}
+    assert overpass.parse_area(osm.response(), "relation/40").other_building_ways == set()

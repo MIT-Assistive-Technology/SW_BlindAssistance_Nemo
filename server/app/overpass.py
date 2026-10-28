@@ -5,8 +5,9 @@ Two small queries per destination instead of the plan's single one (section 9):
      CONTAINS the point (`is_in`). `around:40` measures distance to the walls, so a point deep
      inside a large building (CambridgeSide) matched nothing (E2E finding I-1).
   2. `area_query`: for the chosen building, its outlines, door nodes on or near them, site
-     relations, the ways that touch those doors, and every road and marked crossing in a box
-     around the footprint. `way(around.outlines:60)` returned no roads at 8 of 10 pilot sites
+     relations, the ways that touch those doors (and the building relations those ways are
+     outers of), every road in a box around the footprint, and every crossing in a box
+     CROSSING_MAX_M wider. `way(around.outlines:60)` returned no roads at 8 of 10 pilot sites
      (I-2), so roads come from a plain bounding box instead.
 
 Responses are cached on disk by query text (default server/data/overpass_cache, 7 days); the
@@ -41,7 +42,11 @@ RETRY_WAITS_S = (5, 15, 30, 60)  # after each failure (rotating mirrors); then g
 MIN_INTERVAL_S = 2.0  # between live queries, to stay polite to the public instance
 BUILDING_RADIUS_M = 40
 NEAR_OUTLINE_M = 5  # plan section 8: doors within 5 m of the outline count, with a penalty
-AREA_MARGIN_M = 80  # roads and crossings this far around the footprint
+AREA_MARGIN_M = 80  # roads this far around the footprint
+CROSSING_MAX_M = 150  # farther than this from the drop-off, "nearest marked crossing" is no help
+# Fix R13: the drop-off is on a road inside the road box, so crossings come from a box grown by
+# CROSSING_MAX_M more; an 80 m box could never return a crossing 80-150 m away.
+CROSSING_MARGIN_M = AREA_MARGIN_M + CROSSING_MAX_M
 
 ROAD_HIGHWAYS = (
     "motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service"
@@ -50,6 +55,10 @@ ROAD_HIGHWAYS = (
 
 class OverpassUnavailable(Exception):
     """Overpass failed, or offline mode has no cached response for this query."""
+
+
+class MissingUserAgent(RuntimeError):
+    """USER_AGENT is not set, so no live query may be sent (a deployment problem)."""
 
 
 # ---------------------------------------------------------------------------------------------
@@ -80,10 +89,16 @@ def buildings_query(lat: float, lon: float, osm_ref: str | None = None) -> str:
     )
 
 
-def area_query(building_ref: str, bbox: tuple[float, float, float, float]) -> str:
-    """Everything the ladder needs about one building. bbox = (south, west, north, east)."""
+def area_query(
+    building_ref: str,
+    bbox: tuple[float, float, float, float],
+    crossing_bbox: tuple[float, float, float, float] | None = None,
+) -> str:
+    """Everything the ladder needs about one building. bbox = (south, west, north, east) for
+    roads, crossing_bbox (default: bbox) for crossings. The ladder uses area_query_for."""
     kind, osm_id = building_ref.split("/", 1)
     b = ",".join(f"{v:.7f}" for v in bbox)
+    cb = ",".join(f"{v:.7f}" for v in crossing_bbox or bbox)
     is_rel = kind == "relation"
     return (
         "[out:json][timeout:90];\n"
@@ -105,13 +120,24 @@ def area_query(building_ref: str, bbox: tuple[float, float, float, float]) -> st
         '(.ent; node(r.site:"entrance");)->.ent;\n'
         ".ent out body;\n"
         ".site out body;\n"
-        "way(bn.ent);\n"  # footways to the doors, and other buildings the doors belong to
-        "out body geom;\n"
+        "way(bn.ent)->.dw;\n"  # footways to the doors, and other buildings the doors belong to
+        ".dw out body geom;\n"
+        # Fix R4: a multipolygon neighbour's tags sit on its relation, not on its outer way.
+        "rel(bw.dw)[building];\n"
+        "out body;\n"
         f'way({b})[highway~"^({ROAD_HIGHWAYS})(_link)?$"];\n'
         "out body geom;\n"
-        f"node({b})[highway=crossing];\n"
+        # Fix R8: signalised crosswalks are often crossing=* on a highway=traffic_signals node.
+        f"(node({cb})[highway=crossing]; node({cb})[crossing];);\n"
         "out body;\n"
     )
+
+
+def area_query_for(building_ref: str, rings: list[list[list[float]]]) -> str:
+    """area_query for a building with these [lon, lat] outer rings. Fix R5: the boxes cover
+    every ring, so the roads beside a second wing are fetched too."""
+    pts = [p for ring in rings for p in ring]
+    return area_query(building_ref, bbox_around(pts), bbox_around(pts, CROSSING_MARGIN_M))
 
 
 def bbox_around(footprint: list[list[float]], margin_m: float = AREA_MARGIN_M):
@@ -168,7 +194,7 @@ class Client:
             )
         try:
             data = self._fetch(query)
-        except OverpassUnavailable:
+        except (OverpassUnavailable, MissingUserAgent):  # Fix R9: a stale answer beats none
             if saved:
                 return _read(path)
             raise
@@ -181,7 +207,7 @@ class Client:
     def _fetch(self, query: str) -> dict:
         user_agent = os.environ.get("USER_AGENT", "").strip()
         if not user_agent:
-            raise RuntimeError("Set USER_AGENT in server/.env: Overpass asks for one.")
+            raise MissingUserAgent("Set USER_AGENT in server/.env: Overpass asks for one.")
         http = self.http or httpx.Client()
         last = "no attempt"
         try:
@@ -264,8 +290,10 @@ class BuildingArea:
     site_entrances: set[int]
     ways_at_doors: list[Way]  # ways containing a door node (footways, other buildings)
     roads: list[Way]
-    crossings: list[dict]  # highway=crossing nodes
+    crossings: list[dict]  # highway=crossing or crossing=* nodes: {"id", "lat", "lon", "tags"}
     osm_date: str
+    # Fix R4: outer ways of OTHER buildings' multipolygon relations (tags are on the relation).
+    other_building_ways: set[int] = field(default_factory=set)
 
 
 def _tags(element: dict) -> dict[str, str]:
@@ -352,12 +380,13 @@ def parse_area(raw: dict, building_ref: str) -> BuildingArea:
     site_entrances: set[int] = set()
     ways: dict[int, dict] = {}
     crossings: list[dict] = []
+    other_outer: set[int] = set()
     road_pattern = set(ROAD_HIGHWAYS.split("|"))
     for e in elements:
         tags = _tags(e)
         if e["type"] == "node":
-            if tags.get("highway") == "crossing":
-                crossings.append({"lat": e["lat"], "lon": e["lon"], "tags": tags})
+            if tags.get("highway") == "crossing" or "crossing" in tags:
+                crossings.append({"id": e["id"], "lat": e["lat"], "lon": e["lon"], "tags": tags})
             if {"entrance", "door", "routing:entrance"} & tags.keys():
                 entrances[e["id"]] = {"lat": e["lat"], "lon": e["lon"], "tags": tags}
         elif e["type"] == "way":
@@ -369,6 +398,14 @@ def parse_area(raw: dict, building_ref: str) -> BuildingArea:
                 m["ref"]
                 for m in e.get("members", [])
                 if m.get("type") == "node" and m.get("role") == "entrance"
+            }
+        elif (
+            e["type"] == "relation" and "building" in tags and f"relation/{e['id']}" != building_ref
+        ):
+            other_outer |= {
+                m["ref"]
+                for m in e.get("members", [])
+                if m.get("type") == "way" and m.get("role") == "outer"
             }
 
     door_ids = set(entrances)
@@ -386,4 +423,6 @@ def parse_area(raw: dict, building_ref: str) -> BuildingArea:
             roads.append(way)
 
     stamp = (raw.get("osm3s") or {}).get("timestamp_osm_base", "")[:10] or "unknown"
-    return BuildingArea(outline_nodes, entrances, site_entrances, at_doors, roads, crossings, stamp)
+    return BuildingArea(
+        outline_nodes, entrances, site_entrances, at_doors, roads, crossings, stamp, other_outer
+    )

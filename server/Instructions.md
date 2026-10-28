@@ -64,7 +64,8 @@ Files: `app/overpass.py`, `app/doors.py` → `find_building`
 
 - [x] `read_entrances` (`app/doors.py`): use way membership (`node(w)`) and `score_door`. Combine agreeing evidence with `combine` (best score plus one step, not noisy-OR).
 - [x] `facade_fallback` and the `street_side` block (`app/doors.py`).
-- [x] Path checks (`doors.path_checks`): crosses a road, nearest marked crossing, footway to the entrance. The contract has no field yet for "passes through the building".
+- [x] Path checks (`doors.path_checks`): crosses a road, nearest marked crossing, footway to the entrance.
+- [ ] Path warnings (`doors.path_warnings`, partial): "driveway" and "through_building" are found but only reach the build notes; the contract has no field for them yet, so the app can't say "Driveway ahead". The off-the-sidewalk check is not done.
 - [ ] `resolve`: merge candidates within ~4 m, sort best first, return the top 5. (The API serves prebuilt bundles and doesn't call it per request; it feeds `build_bundles.py`.)
 - [ ] Stretch: store results in SQLite (`DATABASE_PATH`, WAL mode) keyed by building and address hash, never with an install key.
 

@@ -30,8 +30,31 @@ def test_ignored_features_are_not_doors():
 
 
 def test_address_on_the_door_ranks_first_but_is_capped():
-    tags = {"entrance": "yes", "addr:housenumber": "77"}
+    tags = {"entrance": "main", "addr:housenumber": "77"}
     assert score_door(tags, "77", True, False) == CAP
+
+
+# Fix R11: the house number ranks a door first within its band, never into "main".
+@pytest.mark.parametrize(
+    ("tags", "on_outline", "want"),
+    [
+        ({"entrance": "service"}, True, 0.40),  # still facade band: a service door
+        ({"entrance": "secondary"}, True, 0.80),
+        ({"entrance": "yes"}, True, 0.80),
+        ({"entrance": "yes", "level": "2"}, False, 0.80),  # penalties apply first: 0.55 -> top
+        ({"entrance": "main"}, False, 0.80),  # main, but 5 m off the outline: door band
+    ],
+)
+def test_r11_house_number_never_lifts_a_door_out_of_its_band(tags, on_outline, want):
+    plain = score_door(tags, None, on_outline, False)
+    got = score_door(tags | {"addr:housenumber": "1"}, "1", on_outline, False)
+    assert got == want and band(got) == band(plain) and got >= plain
+
+
+# Fix R1: a site relation's role=entrance does not lift a service or secondary door to main.
+def test_r1_site_role_does_not_lift_service_or_secondary():
+    assert score_door({"entrance": "service"}, None, True, False, site_entrance=True) == 0.20
+    assert score_door({"entrance": "secondary"}, None, True, False, site_entrance=True) == 0.60
 
 
 def test_combined_value_uses_best_part():

@@ -9,7 +9,6 @@ resolver.geocode and the app/doors.py functions; tests and the offline mode swap
 NotImplementedError("BE-3") is reported as "blocked on BE-3", and the other sites still build.
 """
 
-import itertools
 import json
 import logging
 import math
@@ -72,7 +71,15 @@ class Stages:
     find_building: Callable[[GeocodedPoint], Building] = doors.find_building
     read_entrances: Callable[[Building, str | None], list[Candidate]] = doors.read_entrances
     facade_fallback: Callable[[Building, GeocodedPoint], Facade] = doors.facade_fallback
+    # Fix R10: street_side for the door the bundle guides to (candidates[0] after ranking).
+    street_side: Callable[[Building, Candidate, GeocodedPoint], StreetSide | None] = (
+        doors.street_side_for
+    )
     path_checks: Callable[[Building, Candidate, StreetSide | None], PathChecks] = doors.path_checks
+    # Fix R14: BE-7 warnings with no contract field yet, reported as build notes.
+    path_warnings: Callable[[Building, Candidate, StreetSide | None], list[str]] = (
+        doors.path_warnings
+    )
 
 
 class StageError(Exception):
@@ -192,7 +199,14 @@ def assemble(
     if not ranked:
         raise ValueError("no candidates, not even a facade fallback")
     # The number, the mapped name and the pilot site's name, which often differ (E2E I-10).
-    names = [building.housenumber or point.housenumber, building.name, site.name]
+    # Fix R12: always the destination's number; the building's numbers only when they include
+    # it (a fallback outline may be the neighbour, "75"), split so "77;79" gives "77", "79".
+    numbers = [point.housenumber]
+    if point.housenumber:
+        tagged = [n.strip() for n in (building.housenumber or "").split(";") if n.strip()]
+        if point.housenumber.strip().lower() in {n.lower() for n in tagged}:
+            numbers += tagged
+    names = [*numbers, building.name, site.name]
     text = list(dict.fromkeys(t for t in names if t))
     result = ResolveResult(
         destination_id=f"dst_{site.id}",
@@ -215,13 +229,18 @@ def assemble(
 CORNER_M = 1.5  # two candidates this close to a shared corner count as the same face
 
 
-def same_face_on(footprint: list[list[float]]) -> Callable[[Candidate, Candidate], bool] | None:
-    """A building-face predicate for merge_candidates, from a [lon, lat] footprint.
+def same_face_on(
+    footprint: list[list[float]], other_rings: list[list[list[float]]] = ()
+) -> Callable[[Candidate, Candidate], bool] | None:
+    """A building-face predicate for merge_candidates, from a [lon, lat] footprint (plus a
+    multipolygon's other outer rings, Fix R5).
 
-    Each candidate snaps to its nearest footprint edge. Same face = same edge, or adjacent
-    edges with both candidates within CORNER_M of their shared corner (a door right at a
-    corner). Works in local meters around the footprint's first point; buildings are small
-    enough for an equirectangular projection. None when the footprint has no usable edge.
+    Each candidate snaps to its nearest wall: consecutive edges within 15 degrees are one wall
+    (doors._walls), so a door node splitting a straight wall does not split the face (Fix R3).
+    Same face = same wall, or adjacent walls with both candidates within CORNER_M of their
+    shared corner (a door right at a corner). Works in local meters around the footprint's
+    first point; buildings are small enough for an equirectangular projection. None when the
+    footprint has no usable edge.
     """
     lon0, lat0 = footprint[0] if footprint else (0.0, 0.0)
     kx = math.radians(1) * 6_371_008.8 * math.cos(math.radians(lat0))
@@ -230,8 +249,12 @@ def same_face_on(footprint: list[list[float]]) -> Callable[[Candidate, Candidate
     def local(lon: float, lat: float) -> tuple[float, float]:
         return ((lon - lon0) * kx, (lat - lat0) * ky)
 
-    pts = [local(lon, lat) for lon, lat in footprint]
-    edges = [(a, b) for a, b in itertools.pairwise(pts) if a != b]
+    edges = []
+    for ring in [footprint, *other_rings]:
+        pts = [local(lon, lat) for lon, lat in ring]
+        pts = [p for k, p in enumerate(pts) if k == 0 or p != pts[k - 1]]
+        if len(pts) >= 2:
+            edges += doors._walls(pts)
     if not edges:
         return None
 
@@ -292,7 +315,7 @@ def build_bundle(
     request = ResolveRequest(address=site.address, name=site.name)
     point = _stage("geocode", lambda: stages.geocode(request))
     building = _stage("find_building", lambda: Building.model_validate(stages.find_building(point)))
-    doors = _stage(
+    found = _stage(
         "read_entrances",
         lambda: [
             Candidate.model_validate(c) for c in stages.read_entrances(building, point.housenumber)
@@ -305,22 +328,31 @@ def build_bundle(
     )
     merged = _stage(
         "merge",
-        lambda: merge(doors + facade.candidates, notes, same_face_on(building.footprint)),
+        lambda: merge(
+            found + facade.candidates,
+            notes,
+            same_face_on(building.footprint, doors.rings_of(building)[1:]),
+        ),
     )
     candidates = rank(merged, facade.street_side, point.housenumber)
     if not candidates:
         raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
+    # Fix R10: the anchor facade_fallback used for street_side may be another tied door; the
+    # street side and path checks must describe the door the rider is guided to.
+    raw_side = _stage("street_side", lambda: stages.street_side(building, candidates[0], point))
+    side = _stage(
+        "street_side", lambda: None if raw_side is None else StreetSide.model_validate(raw_side)
+    )
     checks = _stage(
         "path_checks",
-        lambda: PathChecks.model_validate(
-            stages.path_checks(building, candidates[0], facade.street_side)
-        ),
+        lambda: PathChecks.model_validate(stages.path_checks(building, candidates[0], side)),
     )
+    warnings = _stage("path_checks", lambda: stages.path_warnings(building, candidates[0], side))
+    if notes is not None:
+        notes += [f"path warning: {w}" for w in warnings]
     return _stage(
         "assemble",
-        lambda: assemble(
-            site, point, building, candidates, checks, facade.street_side, data_version
-        ),
+        lambda: assemble(site, point, building, candidates, checks, side, data_version),
     )
 
 
