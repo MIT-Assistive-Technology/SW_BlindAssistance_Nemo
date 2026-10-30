@@ -102,22 +102,6 @@
           "tags": null
         }
       ]
-    },
-    {
-      "id": "c3",
-      "lat": 42.36028334091403,
-      "lon": -71.0872185288962,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/177921761",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -126,30 +110,56 @@
     "footway_to_entrance": true
   },
   "street_side": {
-    "entrance_street": "Carleton Street",
-    "road_way": "way/8615700",
+    "entrance_street": "Amherst Street",
+    "road_way": "way/8615381",
     "centerline": [
       [
-        -71.0863825,
-        42.3606236
+        -71.0874862,
+        42.360067
       ],
       [
-        -71.0863453,
-        42.360895
+        -71.0868212,
+        42.3602899
       ],
       [
-        -71.0863089,
-        42.3611604
+        -71.0867182,
+        42.3603244
+      ],
+      [
+        -71.0866434,
+        42.3603494
+      ],
+      [
+        -71.0864977,
+        42.3603983
+      ],
+      [
+        -71.0864092,
+        42.3604299
+      ],
+      [
+        -71.0862133,
+        42.3604934
+      ],
+      [
+        -71.0861561,
+        42.3605126
       ]
     ],
     "door_side_of_road": "left",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.0861801,
+      42.3604342
+    ]
   },
   "recognize": {
     "text": [
       "75",
       "E14 Media Lab",
-      "MIT Media Lab"
+      "MIT Media Lab",
+      "Building E14",
+      "Media Lab"
     ]
   },
   "landmarks": null,

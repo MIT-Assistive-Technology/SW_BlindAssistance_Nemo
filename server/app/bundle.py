@@ -21,6 +21,7 @@ import httpx
 from pydantic import BaseModel, Field
 
 from . import doors, resolver, scoring
+from .evaluate import haversine_m
 from .geo import Frame, closest_on_line
 from .merge import merge_candidates
 from .models import (
@@ -39,9 +40,11 @@ MAX_CANDIDATES = 5
 OSM_ATTRIBUTION = "© OpenStreetMap contributors"
 MAPILLARY_ATTRIBUTION = "Street-level imagery © Mapillary contributors, CC BY-SA 4.0"
 MODEL_VERSION = "none"  # no CV model in the MVP bundles
+FALLBACK_NEAR_DOOR_M = 4.0  # merge radius: a guess this close to a mapped door says nothing new
 
 T = TypeVar("T")
 log = logging.getLogger(__name__)
+NO_STREET_SIDE_NOTE = "no entrance street: street_side is null and crosses_road is assumed true"
 COMBINE_FALLBACK_NOTE = (
     "scoring.combine blocked on BE-4: merged doors use the best score, no agreement step"
 )
@@ -150,12 +153,17 @@ def rank(
     candidates: list[Candidate],
     street_side: StreetSide | None = None,
     housenumber: str | None = None,
+    on_drop_off_street: Callable[[Candidate], bool] | None = None,
 ) -> list[Candidate]:
     """Cap confidence, set the band from scoring.band, sort best first, keep the top 5.
 
     Equal confidence (e.g. several main doors capped at 0.95, E2E I-5) is broken by: the door
     tagged with the destination's house number, then the door nearest the entrance street (plan
     section 8: walking distance from the expected drop-off), then the original order.
+    With on_drop_off_street: the car stops on the address's street, so when the best candidate
+    can't be walked to from it (its street_side is another road, or none) the best one that
+    can goes first and the rest keep their order (CambridgeSide's tagged main entrance is on
+    the canal side, 177 m from Cambridgeside Place). Nothing moves when none can.
     Ids are reassigned c1..cN in rank order so they stay unique across stages.
     """
     capped = []
@@ -172,7 +180,12 @@ def rank(
             not has_housenumber(c, housenumber),
             meters_to_street(c, street_side),
         ),
-    )[:MAX_CANDIDATES]
+    )
+    if on_drop_off_street and best and not on_drop_off_street(best[0]):
+        k = next((i for i, c in enumerate(best) if on_drop_off_street(c)), None)
+        if k is not None:
+            best.insert(0, best.pop(k))
+    best = best[:MAX_CANDIDATES]
     return [c.model_copy(update={"id": f"c{i}"}) for i, c in enumerate(best, start=1)]
 
 
@@ -191,10 +204,12 @@ def assemble(
     path_checks: PathChecks,
     street_side: StreetSide | None,
     data_version: DataVersion,
+    other_names: list[str] = (),
 ) -> ResolveResult:
     """Put the stage outputs into the contract shape and validate the result.
 
-    `ranked` is the output of rank(): capped, banded, best first, at most 5.
+    `ranked` is the output of rank(): capped, banded, best first, at most 5. `other_names`
+    (doors.names_of: alt_name, official_name, ...) go into recognize.text after the name.
     """
     if not ranked:
         raise ValueError("no candidates, not even a facade fallback")
@@ -206,7 +221,7 @@ def assemble(
         tagged = [n.strip() for n in (building.housenumber or "").split(";") if n.strip()]
         if point.housenumber.strip().lower() in {n.lower() for n in tagged}:
             numbers += tagged
-    names = [*numbers, building.name, site.name]
+    names = [*numbers, building.name, site.name, *other_names]
     text = list(dict.fromkeys(t for t in names if t))
     result = ResolveResult(
         destination_id=f"dst_{site.id}",
@@ -280,6 +295,24 @@ def same_face_on(
     return same_face
 
 
+def drop_fallbacks_near_doors(candidates: list[Candidate]) -> list[Candidate]:
+    """Drop street-facing and address-point guesses within FALLBACK_NEAR_DOOR_M of a mapped
+    door. merge_candidates never merges a guess, so at MIT Building 7 the facade midpoint
+    (0.4 m from the main entrance) and the address point (0.5 m from the side door) were
+    listed as extra candidates that point at the same doors with less confidence."""
+
+    def is_guess(c: Candidate) -> bool:
+        return any(p.source == "geometry_fallback" for p in c.provenance)
+
+    # Also one guess per spot: a facade point and an address point 0.02 m apart (MIT Media
+    # Lab) keep only the higher-scoring one.
+    kept = [c for c in candidates if not is_guess(c)]
+    for c in sorted(filter(is_guess, candidates), key=lambda c: -c.confidence):
+        if all(haversine_m(c.lat, c.lon, d.lat, d.lon) > FALLBACK_NEAR_DOOR_M for d in kept):
+            kept.append(c)
+    return [c for c in candidates if any(c is k for k in kept)]
+
+
 def merge(
     candidates: list[Candidate],
     notes: list[str] | None = None,
@@ -322,7 +355,7 @@ def build_bundle(
         ],
     )
     # Always run: besides the fallback doors it builds street_side, which the app needs even
-    # when OSM has a main entrance. Fallback candidates rank last, so they never outrank a door.
+    # when OSM has a main entrance. Fallback candidates rank last unless no door can be walked to from the address's street.
     facade = _stage(
         "facade_fallback", lambda: Facade.model_validate(stages.facade_fallback(building, point))
     )
@@ -334,7 +367,22 @@ def build_bundle(
             same_face_on(building.footprint, doors.rings_of(building)[1:]),
         ),
     )
-    candidates = rank(merged, facade.street_side, point.housenumber)
+    street = doors._street_name(point)
+
+    def on_drop_off_street(c: Candidate) -> bool:
+        raw = stages.street_side(building, c, point)
+        s = None if raw is None else StreetSide.model_validate(raw)
+        return s is not None and street is not None and doors._norm(s.entrance_street) == street
+
+    candidates = _stage(
+        "street_side",
+        lambda: rank(
+            drop_fallbacks_near_doors(merged),
+            facade.street_side,
+            point.housenumber,
+            on_drop_off_street,
+        ),
+    )
     if not candidates:
         raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
     # Fix R10: the anchor facade_fallback used for street_side may be another tied door; the
@@ -349,10 +397,14 @@ def build_bundle(
     )
     warnings = _stage("path_checks", lambda: stages.path_warnings(building, candidates[0], side))
     if notes is not None:
+        if side is None:
+            notes.append(NO_STREET_SIDE_NOTE)
         notes += [f"path warning: {w}" for w in warnings]
     return _stage(
         "assemble",
-        lambda: assemble(site, point, building, candidates, checks, side, data_version),
+        lambda: assemble(
+            site, point, building, candidates, checks, side, data_version, doors.names_of(building)
+        ),
     )
 
 

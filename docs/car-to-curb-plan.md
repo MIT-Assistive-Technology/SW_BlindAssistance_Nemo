@@ -559,6 +559,7 @@ There's no `202` and no polling. A weak result comes back as `200` with `status:
 | `candidates[].provenance` | `source`: `osm_tag`, `mapillary_cv`, `crowd` or `geometry_fallback`, plus refs |
 | `street_side.door_side_of_road` | `"left"` or `"right"`, relative to the centerline's direction (first → last point) |
 | `street_side.centerline`, `oneway`, `entrance_street` | Inputs for side-of-street detection |
+| `street_side.crossing` | Optional `[lon, lat]` where the nearest marked crosswalk over the entrance street meets its centerline, within 150 m of the door, for a rider dropped on the far side; `null` when none is mapped |
 | `path_checks` | `crosses_road`, `nearest_crossing`, `footway_to_entrance` |
 | `recognize.text` | Strings the building check looks for, e.g. `"77"`, the building name |
 | `landmarks` | 2–3 fixed objects along the path, with side and distance to the door |

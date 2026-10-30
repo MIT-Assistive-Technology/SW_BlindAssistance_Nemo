@@ -1,6 +1,6 @@
 """Overpass queries and parsing for the lookup ladder (BE-3, BE-5, BE-7).
 
-Two small queries per destination instead of the plan's single one (section 9):
+Three small queries per destination instead of the plan's single one (section 9):
   1. `buildings_query`: building outlines around the geocoded point, plus the outline that
      CONTAINS the point (`is_in`). `around:40` measures distance to the walls, so a point deep
      inside a large building (CambridgeSide) matched nothing (E2E finding I-1).
@@ -9,6 +9,9 @@ Two small queries per destination instead of the plan's single one (section 9):
      outers of), every road in a box around the footprint, and every crossing in a box
      CROSSING_MAX_M wider. `way(around.outlines:60)` returned no roads at 8 of 10 pilot sites
      (I-2), so roads come from a plain bounding box instead.
+  3. `paths_query`: footway=crossing ways in the crossing box (R8: a signalised crosswalk is
+     often only a crossing way over a highway=traffic_signals node) and steps ways in the road
+     box. Separate from area_query so that saved area responses stay valid.
 
 Responses are cached on disk by query text (default server/data/overpass_cache, 7 days); the
 public Overpass instance allows apps only ~100 queries/day. Offline mode reads the cache only.
@@ -138,6 +141,28 @@ def area_query_for(building_ref: str, rings: list[list[list[float]]]) -> str:
     every ring, so the roads beside a second wing are fetched too."""
     pts = [p for ring in rings for p in ring]
     return area_query(building_ref, bbox_around(pts), bbox_around(pts, CROSSING_MARGIN_M))
+
+
+def paths_query(
+    bbox: tuple[float, float, float, float], crossing_bbox: tuple[float, float, float, float]
+) -> str:
+    """Crossing ways in crossing_bbox and steps in bbox, (south, west, north, east)."""
+    b = ",".join(f"{v:.7f}" for v in bbox)
+    cb = ",".join(f"{v:.7f}" for v in crossing_bbox)
+    return (
+        "[out:json][timeout:90];\n"
+        "(\n"
+        f"  way({cb})[highway][footway=crossing];\n"
+        f"  way({cb})[highway][path=crossing];\n"
+        f"  way({b})[highway=steps];\n"
+        ");\n"
+        "out body geom;\n"
+    )
+
+
+def paths_query_for(rings: list[list[list[float]]]) -> str:
+    pts = [p for ring in rings for p in ring]
+    return paths_query(bbox_around(pts), bbox_around(pts, CROSSING_MARGIN_M))
 
 
 def bbox_around(footprint: list[list[float]], margin_m: float = AREA_MARGIN_M):
@@ -294,6 +319,53 @@ class BuildingArea:
     osm_date: str
     # Fix R4: outer ways of OTHER buildings' multipolygon relations (tags are on the relation).
     other_building_ways: set[int] = field(default_factory=set)
+    steps: list[Way] = field(default_factory=list)  # highway=steps ways (paths_query)
+
+
+def add_paths(a: BuildingArea, raw: dict) -> BuildingArea:
+    """Merge a paths_query response into `a`. Each node a crossing way shares with a road
+    becomes a crossing, tagged with the way's tags under the node's own (Fix R8): the crosswalk
+    over Mass Ave at MIT Lobby 7 is a footway=crossing way over a highway=traffic_signals node."""
+    road_nodes = {
+        n: c
+        for w in a.roads
+        if len(w.nodes) == len(w.coords)
+        for n, c in zip(w.nodes, w.coords, strict=True)
+    }
+    by_id = {c["id"]: c for c in a.crossings}
+    for e in raw.get("elements", []):
+        if e["type"] != "way":
+            continue
+        tags = _tags(e)
+        way = Way(f"way/{e['id']}", tags, tuple(e.get("nodes", [])), _coords(e))
+        if len(way.coords) != len(way.nodes) or len(way.coords) < 2:
+            continue
+        if tags.get("highway") == "steps":
+            a.steps.append(way)
+            continue
+        kinds = {tags.get(k) for k in ("footway", "path", "cycleway")}
+        if tags.get("highway") not in {"footway", "path", "cycleway", "pedestrian"} or not (
+            "crossing" in tags or "crossing" in kinds
+        ):
+            continue  # only crossing ways: a road sharing a node is no crosswalk
+        # Its kerb ends: the way's end nodes off the road. A crosswalk split at the centerline
+        # (Harvard Square) is two ways that each end on the road node and give one kerb.
+        ends = [
+            c
+            for n, c in ((way.nodes[0], way.coords[0]), (way.nodes[-1], way.coords[-1]))
+            if n not in road_nodes
+        ]
+        for n in way.nodes:
+            if n not in road_nodes:
+                continue
+            lon, lat = road_nodes[n]
+            if n in by_id:
+                by_id[n]["tags"] = {**tags, **by_id[n]["tags"]}
+                by_id[n].setdefault("ends", []).extend(ends)
+            else:
+                by_id[n] = {"id": n, "lat": lat, "lon": lon, "tags": dict(tags), "ends": ends}
+                a.crossings.append(by_id[n])
+    return a
 
 
 def _tags(element: dict) -> dict[str, str]:

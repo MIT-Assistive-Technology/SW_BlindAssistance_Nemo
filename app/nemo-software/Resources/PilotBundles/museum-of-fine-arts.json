@@ -1,6 +1,6 @@
 {
   "destination_id": "dst_museum-of-fine-arts",
-  "status": "complete",
+  "status": "partial",
   "building": {
     "osm_id": "relation/63938",
     "name": "Museum of Fine Arts",
@@ -223,6 +223,22 @@
   "candidates": [
     {
       "id": "c1",
+      "lat": 42.339005400000005,
+      "lon": -71.0933086,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Huntington Avenue (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/798289594",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
       "lat": 42.339,
       "lon": -71.0951092,
       "confidence": 0.8,
@@ -242,7 +258,7 @@
       ]
     },
     {
-      "id": "c2",
+      "id": "c3",
       "lat": 42.3389704,
       "lon": -71.0948888,
       "confidence": 0.8,
@@ -256,22 +272,6 @@
           "tags": {
             "entrance": "yes"
           }
-        }
-      ]
-    },
-    {
-      "id": "c3",
-      "lat": 42.339005400000005,
-      "lon": -71.0933086,
-      "confidence": 0.3,
-      "band": "facade",
-      "label": "Street-facing side on Huntington Avenue (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/798289594",
-          "tags": null
         }
       ]
     },
@@ -295,52 +295,45 @@
   "path_checks": {
     "crosses_road": false,
     "nearest_crossing": null,
-    "footway_to_entrance": true
+    "footway_to_entrance": false
   },
   "street_side": {
-    "entrance_street": "Museum Road",
-    "road_way": "way/8651231",
+    "entrance_street": "Huntington Avenue",
+    "road_way": "way/798289594",
     "centerline": [
       [
-        -71.0961547,
-        42.3387618
+        -71.0924977,
+        42.3390336
       ],
       [
-        -71.0959353,
-        42.3386643
+        -71.0925847,
+        42.3389979
       ],
       [
-        -71.0957012,
-        42.3385602
+        -71.093138,
+        42.3387745
       ],
       [
-        -71.0955291,
-        42.3384837
+        -71.0933247,
+        42.3386992
       ],
       [
-        -71.0955205,
-        42.3384799
-      ],
-      [
-        -71.0953021,
-        42.3383828
-      ],
-      [
-        -71.0952684,
-        42.3383678
-      ],
-      [
-        -71.0949036,
-        42.3382056
+        -71.0937807,
+        42.3385186
       ]
     ],
-    "door_side_of_road": "left",
-    "oneway": false
+    "door_side_of_road": "right",
+    "oneway": true,
+    "crossing": [
+      -71.0925876,
+      42.3390764
+    ]
   },
   "recognize": {
     "text": [
       "465",
-      "Museum of Fine Arts"
+      "Museum of Fine Arts",
+      "MFA"
     ]
   },
   "landmarks": null,

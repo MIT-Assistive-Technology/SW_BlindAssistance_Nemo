@@ -304,22 +304,6 @@
           "tags": null
         }
       ]
-    },
-    {
-      "id": "c2",
-      "lat": 42.36189880493159,
-      "lon": -71.082478779366,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "node/9634756224",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -331,6 +315,10 @@
     "entrance_street": "Main Street",
     "road_way": "way/761056855",
     "centerline": [
+      [
+        -71.083163,
+        42.3620892
+      ],
       [
         -71.0830162,
         42.3620573
@@ -361,7 +349,11 @@
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": true
+    "oneway": true,
+    "crossing": [
+      -71.0826078,
+      42.3622242
+    ]
   },
   "recognize": {
     "text": [

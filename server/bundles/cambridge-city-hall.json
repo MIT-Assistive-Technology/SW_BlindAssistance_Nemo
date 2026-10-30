@@ -89,38 +89,6 @@
           }
         }
       ]
-    },
-    {
-      "id": "c3",
-      "lat": 42.36702632508336,
-      "lon": -71.10576597670932,
-      "confidence": 0.3,
-      "band": "facade",
-      "label": "Street-facing side on Massachusetts Avenue (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/302156881",
-          "tags": null
-        }
-      ]
-    },
-    {
-      "id": "c4",
-      "lat": 42.36701095506115,
-      "lon": -71.10573964914524,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/29889531",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -151,10 +119,26 @@
       [
         -71.1057771,
         42.3666531
+      ],
+      [
+        -71.1056907,
+        42.3666011
+      ],
+      [
+        -71.1056038,
+        42.3665423
+      ],
+      [
+        -71.1054765,
+        42.3664665
       ]
     ],
     "door_side_of_road": "left",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.1058602,
+      42.3665703
+    ]
   },
   "recognize": {
     "text": [

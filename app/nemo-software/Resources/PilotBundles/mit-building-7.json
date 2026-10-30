@@ -151,7 +151,7 @@
       "id": "c2",
       "lat": 42.3592337,
       "lon": -71.0934043,
-      "confidence": 0.8,
+      "confidence": 0.7,
       "band": "door",
       "label": "Door",
       "speak": null,
@@ -162,38 +162,29 @@
           "tags": {
             "entrance": "yes"
           }
-        }
-      ]
-    },
-    {
-      "id": "c3",
-      "lat": 42.35912582335805,
-      "lon": -71.09334522892007,
-      "confidence": 0.3,
-      "band": "facade",
-      "label": "Street-facing side on Massachusetts Avenue (approximate)",
-      "speak": null,
-      "provenance": [
+        },
         {
-          "source": "geometry_fallback",
-          "ref": "way/1321779881",
-          "tags": null
-        }
-      ]
-    },
-    {
-      "id": "c4",
-      "lat": 42.359232,
-      "lon": -71.0934093,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
+          "source": "osm_tag",
+          "ref": "way/1005738160",
+          "tags": {
+            "highway": "footway",
+            "incline": "down",
+            "surface": "paving_stones",
+            "wheelchair": "yes"
+          }
+        },
         {
-          "source": "geometry_fallback",
-          "ref": "node/11623747407",
-          "tags": null
+          "source": "osm_tag",
+          "ref": "way/1005738158",
+          "tags": {
+            "handrail": "yes",
+            "highway": "steps",
+            "incline": "down",
+            "ramp": "no",
+            "step_count": "6",
+            "surface": "paving_stones",
+            "tactile_paving": "no"
+          }
         }
       ]
     }
@@ -234,16 +225,38 @@
       [
         -71.0935712,
         42.3590435
+      ],
+      [
+        -71.0936536,
+        42.3591504
+      ],
+      [
+        -71.0937599,
+        42.359273
+      ],
+      [
+        -71.0938706,
+        42.3593898
+      ],
+      [
+        -71.093977,
+        42.3594884
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.0936796,
+      42.3590093
+    ]
   },
   "recognize": {
     "text": [
       "77",
       "7 Rogers Building",
-      "MIT Building 7"
+      "MIT Building 7",
+      "William Barton Rogers Building",
+      "Rogers Building"
     ]
   },
   "landmarks": null,
@@ -252,7 +265,7 @@
     "© OpenStreetMap contributors"
   ],
   "data_version": {
-    "osm": "2026-05-31",
+    "osm": "2026-10-30",
     "model": "none"
   }
 }

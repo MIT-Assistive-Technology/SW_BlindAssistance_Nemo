@@ -216,22 +216,6 @@
           "tags": null
         }
       ]
-    },
-    {
-      "id": "c4",
-      "lat": 42.3588777,
-      "lon": -71.0962359,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/29127389",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -243,6 +227,22 @@
     "entrance_street": "Vassar Street",
     "road_way": "way/1288824556",
     "centerline": [
+      [
+        -71.0971887,
+        42.3590088
+      ],
+      [
+        -71.097161,
+        42.3590225
+      ],
+      [
+        -71.0969139,
+        42.3591456
+      ],
+      [
+        -71.0968992,
+        42.3591529
+      ],
       [
         -71.0968347,
         42.359185
@@ -265,13 +265,18 @@
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.0969648,
+      42.3592298
+    ]
   },
   "recognize": {
     "text": [
       "120",
       "W35 Zesiger Sports & Fitness Center",
-      "Zesiger Center"
+      "Zesiger Center",
+      "Zesiger Sports & Fitness Center"
     ]
   },
   "landmarks": null,

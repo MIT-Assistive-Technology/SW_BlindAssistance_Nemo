@@ -194,30 +194,33 @@
     "road_way": "way/812712469",
     "centerline": [
       [
-        -71.0886369,
-        42.3587423
+        -71.0887883,
+        42.3586915
       ],
       [
         -71.0890552,
         42.358602
       ],
       [
-        -71.0893021,
-        42.3585197
+        -71.0894536,
+        42.3584691
       ],
       [
-        -71.0899677,
-        42.3582977
+        -71.0901192,
+        42.3582472
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": true
+    "oneway": true,
+    "crossing": null
   },
   "recognize": {
     "text": [
       "160",
       "14",
-      "Hayden Library"
+      "Hayden Library",
+      "MIT Building 14",
+      "Hayden Memorial Library"
     ]
   },
   "landmarks": null,

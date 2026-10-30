@@ -47,6 +47,7 @@ def score_door(
     *,
     site_entrance: bool = False,
     residential: bool = False,
+    below_street: bool = False,
 ) -> float | None:
     """Score one OSM entrance node. Returns None when the door must never be used.
 
@@ -62,7 +63,8 @@ def score_door(
          only count for a residential address; shop never does (we can't tell it's the
          destination).
       6. Adjust: wheelchair yes/designated +0.05, wheelchair no -0.05, has_footway +0.05,
-         not on_outline -0.10, level != "0" -0.10, door=overhead -0.10.
+         not on_outline -0.10, level != "0" -0.10, door=overhead -0.10. `below_street`
+         (every path to the door goes down toward it) counts as level != "0", once.
       7. Adjustments never lift a door into a higher band than its base value: a plain door
          with good tags is still spoken as "a door", never "the main entrance".
       8. If tags["addr:housenumber"] == dest_housenumber, raise the score to the top of its
@@ -103,7 +105,7 @@ def score_door(
         score += 0.05
     if not on_outline:
         score -= 0.10
-    if tags.get("level", "0").strip() not in {"0", ""}:
+    if below_street or tags.get("level", "0").strip() not in {"0", ""}:
         score -= 0.10
     if tags.get("door") == "overhead":
         score -= 0.10

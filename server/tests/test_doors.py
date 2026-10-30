@@ -4,12 +4,13 @@ Done criteria from docs/car-to-curb-plan.md: BE-3 on a multipolygon building and
 node, BE-5 on a corner building, BE-7 each path check on a fixture.
 """
 
+import itertools
 import math
 
 import pytest
 from osm_builder import Osm, lonlat, save, xy
 
-from app import bundle, doors, overpass
+from app import bundle, doors, geo, overpass
 from app.models import Building, Candidate, DataVersion, Provenance
 from app.resolver import GeocodedPoint
 
@@ -40,6 +41,7 @@ def building(ref: str, corners: list[tuple[float, float]]) -> Building:
 
 def save_area(b: Building, osm: Osm) -> None:
     save(doors.CLIENT, doors.area_query(b), osm.response())
+    save(doors.CLIENT, doors.paths_query(b), osm.response())
 
 
 def at(c: Candidate | list[float]) -> tuple[float, float]:
@@ -764,17 +766,337 @@ def test_facade_candidate_and_unknown_street_side():
         label="x",
         provenance=[Provenance(source="geometry_fallback", ref="way/900")],
     )
-    # Fix R6: with no street side nothing was checked; "crosses no road" would overstate it.
-    with pytest.raises(ValueError, match="not checked"):
-        doors.path_checks(b, fac, None)
+    # Fix R6: with no street side nothing was checked; "crosses no road" would overstate it,
+    # so the walk is assumed to cross one, with no crossing to point to.
+    checks = doors.path_checks(b, fac, None)
+    assert checks.crosses_road is True and checks.nearest_crossing is None
     assert doors.path_warnings(b, fac, None) == []
 
 
-def test_r6_site_without_an_entrance_street_fails_at_path_checks():
+def test_r6_site_without_an_entrance_street_builds_with_null_street_side():
     b, osm = corner_scene(roads=False)
     save_area(b, osm)
     p = point(10, 8, housenumber="1", street="1 Main Street")
     stages = bundle.Stages(geocode=lambda request: p, find_building=lambda point: b)
     site = bundle.PilotSite(id="r6", address="1 Main Street", scenario="same_side")
     report = bundle.run_site(site, stages, DataVersion(osm="2026-10-01", model="none"))
-    assert not report.ok and report.error.stage == "path_checks"
+    assert report.ok, report.describe()
+    assert report.bundle.street_side is None
+    assert report.bundle.path_checks.crosses_road is True
+    assert report.bundle.path_checks.nearest_crossing is None
+    assert bundle.NO_STREET_SIDE_NOTE in report.notes
+
+
+# ---------------------------------------------------------------------------------------------
+# door_street: which road street_side describes
+# ---------------------------------------------------------------------------------------------
+#
+#   building (0..30, 0..20), door 7 on the front wall at (15, 0), facing south
+#   address street: "Address Street"; other roads as each test places them
+
+
+def street_scene(roads: list[tuple[str, list[tuple[float, float]], dict]]) -> tuple[Building, Osm]:
+    osm = Osm()
+    a, b_, c, d = osm.path(5000, [(0, 0), (30, 0), (30, 20), (0, 20)])
+    osm.node(7, 15, 0, entrance="main")
+    osm.way(500, [a, 7, b_, c, d, a], building="yes")
+    for k, (name, pts, tags) in enumerate(roads):
+        osm.way(900 + k, osm.path(9000 + 100 * k, pts), name=name, **tags)
+    return building("way/500", [(0, 0), (30, 0), (30, 20), (0, 20)]), osm
+
+
+def side_of(b: Building, osm: Osm):
+    save_area(b, osm)
+    door = next(c for c in doors.read_entrances(b, None) if c.id == "osm7")
+    return doors.street_side_for(b, door, point(15, 10, housenumber="1", street="1 Address St"))
+
+
+RES = {"highway": "residential"}
+
+
+def test_near_address_street_wins_though_the_door_does_not_face_it():
+    # MIT Stata: the door's wall faces Facing Street 45 m away; the address street passes the
+    # building's corner, 27 m from the door and 70 degrees off its wall's normal (not facing).
+    # The walk from its curb misses the building, and the car stops on the address street.
+    b, osm = street_scene(
+        [
+            ("Address Street", [(4, -109), (76, 91)], RES),
+            ("Facing Street", [(-100, -45), (150, -45)], RES),
+        ]
+    )
+    assert side_of(b, osm).entrance_street == "Address Street"
+
+
+def test_far_address_street_loses_to_a_near_facing_road():
+    # MIT Kresge: the address street is 150 m away; the door faces a street 40 m away.
+    b, osm = street_scene(
+        [
+            ("Address Street", [(-100, -150), (150, -150)], RES),
+            ("Facing Street", [(-100, -40), (150, -40)], RES),
+        ]
+    )
+    side = side_of(b, osm)
+    assert side.entrance_street == "Facing Street" and side.road_way == "way/901"
+
+
+def test_address_street_behind_the_building_loses_to_a_facing_road():
+    # MIT Medical: the address street runs behind the building; walking from its curb to the
+    # door would go through the building. The facing road is used.
+    b, osm = street_scene(
+        [
+            ("Address Street", [(-100, 30), (150, 30)], RES),
+            ("Facing Street", [(-100, -50), (150, -50)], RES),
+        ]
+    )
+    assert side_of(b, osm).entrance_street == "Facing Street"
+
+
+def test_no_road_within_the_limit_gives_no_street_side():
+    # CambridgeSide: the nearest road is 83 m from the only door; a road behind the building
+    # (even the address street) and a facing service road do not count either.
+    far = doors.ENTRANCE_STREET_MAX_M + 5
+    b, osm = street_scene(
+        [
+            ("Address Street", [(-100, 30), (150, 30)], RES),
+            ("Far Street", [(-100, -far), (150, -far)], RES),
+            ("Mall Drive", [(-100, -20), (150, -20)], {"highway": "service"}),
+        ]
+    )
+    assert side_of(b, osm) is None
+
+
+def test_facade_label_names_only_the_street_that_street_side_names():
+    # The address street the front faces is 100 m away: no street_side, so the facade label
+    # must not name it (MIT Media Lab's label once said Amherst while street_side said Carleton).
+    b, osm = corner_scene(main=[(-100, -100), (150, -100)])
+    out = facade(b, osm)
+    assert out["candidates"][0].label == "Street-facing side (approximate)"
+    assert out["street_side"] is None
+
+
+def test_road_just_within_the_limit_is_used():
+    near = doors.ENTRANCE_STREET_MAX_M - 5
+    b, osm = street_scene([("Far Street", [(-100, -near), (150, -near)], RES)])
+    assert side_of(b, osm).entrance_street == "Far Street"
+
+
+def test_address_street_counts_when_its_nearest_curb_is_behind_a_corner():
+    # MIT Hayden: the address street's point nearest the door is behind the building, but its
+    # curb farther along has a clear walk; that point is also path_checks' drop-off.
+    # Nearest: (15, 30), behind the building; clear from about (-26, -8), 33 m away.
+    b, osm = street_scene([("Address Street", [(15, 30), (-30, 30), (0, -60)], RES)])
+    side = side_of(b, osm)
+    assert side is not None and side.entrance_street == "Address Street"
+    door = next(c for c in doors.read_entrances(b, None) if c.id == "osm7")
+    assert doors.path_warnings(b, door, side) == []
+
+
+def test_centerline_runs_on_through_the_next_way_of_the_same_name():
+    # MIT Stratton: OSM splits the street at the point nearest the door; the centerline keeps
+    # going through the next way of the same name instead of stopping there.
+    b, osm = street_scene(
+        [
+            ("Address Street", [(-100, -30), (15, -30)], RES),
+            ("Address Street", [(15, -30), (150, -30)], RES),
+        ]
+    )
+    side = side_of(b, osm)
+    f = geo.Frame(side.centerline[0][1], side.centerline[0][0])
+    pts = [f.xy(*p) for p in side.centerline]
+    length = sum(math.dist(p, q) for p, q in itertools.pairwise(pts))
+    assert length == pytest.approx(2 * doors.CENTERLINE_KEEP_M, abs=0.5)
+
+
+def test_a_road_with_only_a_ref_can_be_the_entrance_street():
+    b, osm = street_scene([("Address Street", [(-100, -150), (150, -150)], RES)])
+    osm.way(990, osm.path(9900, [(-100, -20), (150, -20)]), ref="MA 2A", highway="primary")
+    side = side_of(b, osm)
+    assert side.entrance_street == "MA 2A"
+
+
+# ---------------------------------------------------------------------------------------------
+# Crossing ways, the entrance street's crosswalk, steps and descents at the door
+# ---------------------------------------------------------------------------------------------
+
+LIGHTS = {
+    "highway": "footway",
+    "footway": "crossing",
+    "crossing": "traffic_signals",
+    "crossing:markings": "zebra",
+}
+
+
+# Fix R8 (finished): a signalised crosswalk mapped only as a footway=crossing way over a
+# highway=traffic_signals node (no crossing=* on the node) is a marked crossing.
+def test_r8_crossing_way_over_a_plain_signal_node_is_used():
+    b, osm = path_scene(FRONTAGE, crossings=[(30, -20, {"highway": "traffic_signals"})])
+    ends = [osm.node(9600, 30, -15, out=False), 800, osm.node(9601, 30, -25, out=False)]
+    osm.way(960, ends, **LIGHTS)
+    _, checks = run_path(b, osm)
+    assert at(checks.nearest_crossing) == pytest.approx((30, -20), abs=0.05)
+
+
+def test_r8_unmarked_crossing_way_is_not_used():
+    b, osm = path_scene(FRONTAGE, crossings=[(30, -20, {"highway": "traffic_signals"})])
+    ends = [osm.node(9600, 30, -15, out=False), 800, osm.node(9601, 30, -25, out=False)]
+    osm.way(960, ends, highway="footway", footway="crossing", crossing="unmarked")
+    _, checks = run_path(b, osm)
+    assert checks.crosses_road is True and checks.nearest_crossing is None
+
+
+#   building (0..30, 0..20), main door 7 at (15, 0)
+#   Main Street (y = -20) in two ways split at signal node 70 (x = 15, abeam the door);
+#   crosswalk way 960 over node 70, a second marked crosswalk over node 71 at x = 100.
+def split_street_scene(crosswalk: dict | None = None, oneway: bool = False):
+    osm = Osm()
+    a, b_, c, d = osm.path(5000, [(0, 0), (30, 0), (30, 20), (0, 20)])
+    osm.node(7, 15, 0, entrance="main")
+    osm.way(500, [a, 7, b_, c, d, a], building="yes")
+    osm.node(70, 15, -20, highway="traffic_signals")
+    osm.node(71, 100, -20, out=False)
+    road = {"highway": "primary", "name": "Main Street"} | ({"oneway": "yes"} if oneway else {})
+    west = osm.path(9000, [(-200, -20), (-100, -20)])
+    osm.way(900, [*west, 70], **road)
+    if oneway:  # the east half drawn against the direction of the west half
+        osm.way(901, [osm.node(9010, 200, -20, out=False), 71, 70], **road)
+    else:
+        osm.way(901, [70, 71, osm.node(9010, 200, -20, out=False)], **road)
+    far = [osm.node(9700, 100, -12, out=False), 71, osm.node(9701, 100, -28, out=False)]
+    osm.way(961, far, highway="footway", footway="crossing", **{"crossing:markings": "zebra"})
+    if crosswalk is not None:
+        ends = [osm.node(9600, 15, -12, out=False), 70, osm.node(9601, 15, -28, out=False)]
+        osm.way(960, ends, **crosswalk)
+    b = building("way/500", [(0, 0), (30, 0), (30, 20), (0, 20)])
+    return b, facade(b, osm, street="Main Street", where=(15, -1))["street_side"]
+
+
+def test_street_side_crossing_is_the_marked_crosswalk_over_the_entrance_street():
+    _, side = split_street_scene(LIGHTS)
+    assert side.entrance_street == "Main Street"
+    assert at(side.crossing) == pytest.approx((15, -28), abs=0.05)  # far kerb, not node 70
+
+
+def test_street_side_crossing_skips_an_unmarked_crosswalk():
+    _, side = split_street_scene({"highway": "footway", "footway": "crossing", "crossing": "no"})
+    assert at(side.crossing) == pytest.approx((100, -28), abs=0.05)  # next marked one, far kerb
+
+
+def test_street_side_crossing_farther_than_150_m_is_none():
+    b, osm = corner_scene()
+    osm.node(880, 180, -10, out=False)
+    road = next(e for e in osm.elements if e.get("id") == 900)
+    road["nodes"].insert(1, 880)
+    road["geometry"].insert(1, {"lat": osm.coords[880][1], "lon": osm.coords[880][0]})
+    osm.way(960, [osm.node(9600, 180, -2, out=False), 880], **LIGHTS)
+    side = facade(b, osm)["street_side"]
+    assert side.entrance_street == "Main Street" and side.crossing is None
+
+
+def test_centerline_continues_into_the_next_way_of_the_same_street():
+    _, side = split_street_scene()
+    xs = [at(p)[0] for p in side.centerline]
+    assert min(xs) == pytest.approx(-45, abs=0.1) and max(xs) == pytest.approx(75, abs=0.1)
+    assert side.door_side_of_road == "left"  # the centerline runs east, the door is north
+
+
+def test_centerline_never_joins_a_oneway_way_drawn_the_other_way():
+    _, side = split_street_scene(oneway=True)
+    xs = [at(p)[0] for p in side.centerline]
+    assert max(xs) == pytest.approx(15, abs=0.1)  # way 900 ends at the signal
+
+
+#   door 7 (entrance=yes) at (15, 0) on the front wall; the given ways reach it from the south.
+def steps_scene(*ways: tuple[list[tuple[float, float]], dict]) -> Candidate:
+    osm = Osm()
+    a, b_, c, d = osm.path(5000, [(0, 0), (30, 0), (30, 20), (0, 20)])
+    osm.node(7, 15, 0, entrance="yes")
+    osm.way(500, [a, 7, b_, c, d, a], building="yes")
+    osm.way(900, osm.path(9000, [(-200, -20), (200, -20)]), highway="primary", name="Main Street")
+    for i, (pts, tags) in enumerate(ways):
+        ids = [
+            7 if p == (15, 0) else osm.node(9600 + 10 * i + k, *p, out=False)
+            for k, p in enumerate(pts)
+        ]
+        osm.way(960 + i, ids, **tags)
+    b = building("way/500", [(0, 0), (30, 0), (30, 20), (0, 20)])
+    save_area(b, osm)
+    doors._area.cache_clear()  # several scenes per test share one building id
+    return next(c for c in doors.read_entrances(b, None) if c.id == "osm7")
+
+
+STEPS_UP = {"highway": "steps", "incline": "up", "step_count": "17"}
+
+
+def test_step_count_comes_from_the_steps_that_lead_to_the_door():
+    door = steps_scene(([(15, -6), (15, 0)], STEPS_UP))
+    assert door.speak.step_count == 17
+    assert door.confidence == pytest.approx(0.80)  # 0.75 + footway; going up: no penalty
+
+
+def test_steps_ending_near_the_door_count_and_untagged_steps_give_no_count():
+    assert steps_scene(([(15, -8), (15, -2)], STEPS_UP)).speak.step_count == 17
+    assert steps_scene(([(15, -8), (15, -4)], STEPS_UP)).speak is None  # 4 m: not at the door
+    assert steps_scene(([(15, -6), (15, 0)], {"highway": "steps"})).speak is None
+
+
+def test_a_step_free_path_to_the_door_means_no_step_count():
+    door = steps_scene(
+        ([(15, -6), (15, 0)], STEPS_UP),
+        ([(25, -6), (15, 0)], {"highway": "footway", "wheelchair": "yes"}),
+    )
+    assert door.speak is None
+
+
+@pytest.mark.parametrize(
+    "pts, incline",
+    [([(15, -6), (15, 0)], "down"), ([(15, 0), (15, -6)], "up"), ([(15, -6), (15, 0)], "-8%")],
+    ids=["down-to-door", "up-away-from-door", "negative-grade"],
+)
+def test_a_door_every_path_descends_to_scores_like_a_lower_level_door(pts, incline):
+    door = steps_scene((pts, {"highway": "footway", "incline": incline}))
+    assert door.confidence == pytest.approx(0.70)  # 0.75 + footway - 0.10
+
+
+def test_one_level_path_to_the_door_means_no_descent_penalty():
+    door = steps_scene(
+        ([(15, -6), (15, 0)], {"highway": "footway", "incline": "down"}),
+        ([(25, -6), (15, 0)], {"highway": "footway"}),
+    )
+    assert door.confidence == pytest.approx(0.80)
+
+
+def test_names_of_reads_alt_and_official_names_and_the_name_after_its_ref():
+    p = point(10, 10)
+    osm = Osm()
+    tags = {
+        "building": "university",
+        "name": "7 Rogers Building",
+        "ref": "7",
+        "alt_name": "MIT Building 7",
+        "official_name": "William Barton Rogers Building",
+    }
+    osm.way(500, box(osm, 5000, 0, 0, 20, 20), **tags)
+    save_buildings(p, osm)
+    b = doors.find_building(p)
+    assert doors.names_of(b) == [
+        "MIT Building 7",
+        "William Barton Rogers Building",
+        "Rogers Building",
+    ]
+    assert doors.names_of(building("way/1", [(0, 0), (1, 0), (1, 1)])) == []
+
+
+def test_only_the_ways_at_this_door_decide_its_steps():
+    osm = Osm()
+    a, b_, c, d = osm.path(5000, [(0, 0), (30, 0), (30, 20), (0, 20)])
+    osm.node(7, 15, 0, entrance="yes")
+    osm.node(8, 25, 0, entrance="yes")
+    osm.way(500, [a, 7, 8, b_, c, d, a], building="yes")
+    osm.way(900, osm.path(9000, [(-200, -20), (200, -20)]), highway="primary", name="Main Street")
+    osm.way(960, [osm.node(9600, 15, -6, out=False), 7], **STEPS_UP)
+    osm.way(961, [osm.node(9610, 25, -6, out=False), 8], highway="footway", incline="down")
+    b = building("way/500", [(0, 0), (30, 0), (30, 20), (0, 20)])
+    save_area(b, osm)
+    found = {c.id: c for c in doors.read_entrances(b, None)}
+    assert found["osm7"].speak.step_count == 17 and found["osm7"].confidence == pytest.approx(0.80)
+    assert found["osm8"].speak is None and found["osm8"].confidence == pytest.approx(0.70)

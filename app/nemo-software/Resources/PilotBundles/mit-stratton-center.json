@@ -132,22 +132,6 @@
           "tags": null
         }
       ]
-    },
-    {
-      "id": "c4",
-      "lat": 42.35919714100231,
-      "lon": -71.09432476389598,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/24494019",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -156,54 +140,72 @@
     "footway_to_entrance": true
   },
   "street_side": {
-    "entrance_street": "Amherst Street",
-    "road_way": "way/254299041",
+    "entrance_street": "Massachusetts Avenue",
+    "road_way": "way/1321779881",
     "centerline": [
       [
-        -71.094526,
-        42.3577109
+        -71.0933237,
+        42.3586694
       ],
       [
-        -71.0940915,
-        42.3578556
+        -71.0933882,
+        42.3587785
       ],
       [
-        -71.0940075,
-        42.3578836
+        -71.0934676,
+        42.358898
       ],
       [
-        -71.0939862,
-        42.3578907
+        -71.0935541,
+        42.3590196
       ],
       [
-        -71.0938603,
-        42.3579326
+        -71.0935712,
+        42.3590435
       ],
       [
-        -71.0936624,
-        42.3579985
+        -71.0936536,
+        42.3591504
       ],
       [
-        -71.0936308,
-        42.358009
+        -71.0937599,
+        42.359273
       ],
       [
-        -71.0932284,
-        42.358143
+        -71.0938706,
+        42.3593898
       ],
       [
-        -71.0931945,
-        42.3581542
+        -71.0939877,
+        42.3594983
+      ],
+      [
+        -71.0940326,
+        42.3595392
+      ],
+      [
+        -71.0940668,
+        42.3595699
+      ],
+      [
+        -71.0940852,
+        42.3595848
       ]
     ],
     "door_side_of_road": "left",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.0934904,
+      42.3590723
+    ]
   },
   "recognize": {
     "text": [
       "84",
       "W20 Stratton Student Center",
-      "Stratton Student Center"
+      "Stratton Student Center",
+      "Building W20",
+      "The Julius Adams Stratton Building"
     ]
   },
   "landmarks": null,
@@ -212,7 +214,7 @@
     "© OpenStreetMap contributors"
   ],
   "data_version": {
-    "osm": "2026-05-31",
+    "osm": "2026-10-30",
     "model": "none"
   }
 }

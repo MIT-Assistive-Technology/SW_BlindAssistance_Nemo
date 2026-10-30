@@ -56,7 +56,8 @@ def door(confidence, ref, band="door", lon=-71.0930, tags=None):
     }
 
 
-FACADE = door(0.30, None, band="facade") | {
+# 25 m east of the doors, so drop_fallbacks_near_doors keeps it.
+FACADE = door(0.30, None, band="facade", lon=-71.0927) | {
     "provenance": [{"source": "geometry_fallback"}],
 }
 
@@ -181,8 +182,25 @@ def test_r10_street_side_and_path_checks_get_the_top_candidate():
         path_checks=lambda b, top, side: seen.append(side.road_way) or CHECKS,
     )
     result = bundle.run_site(SITE, stages, VERSION).bundle
-    assert seen == ["node/9", "way/3"]
+    # rank asks street_side of each candidate in turn (none is on the address street here).
+    assert seen[-2:] == ["node/9", "way/3"]
     assert result.street_side.entrance_street == "Side Street"
+
+
+def test_a_candidate_on_the_address_street_goes_before_one_that_is_not():
+    """The car stops on the address's street: a lower door reachable from it goes first."""
+    other = STREET_SIDE | {"entrance_street": "Side Street", "road_way": "way/3"}
+
+    def side(b, top, p):
+        return STREET_SIDE if top.provenance[0].ref == "node/2" else other
+
+    point = dataclasses.replace(POINT, street="77 Massachusetts Ave")
+    stages = fake_stages(
+        [door(0.80, "node/2"), door(0.90, "node/9")], street_side=side, geocode=lambda r: point
+    )
+    result = bundle.run_site(SITE, stages, VERSION).bundle
+    assert [c.provenance[0].ref for c in result.candidates[:2]] == ["node/2", "node/9"]
+    assert [c.id for c in result.candidates[:2]] == ["c1", "c2"]
 
 
 def test_band_comes_from_scoring_band_not_the_stage(monkeypatch):
@@ -243,7 +261,7 @@ def test_one_blocked_site_does_not_stop_the_others():
     assert [r.ok for r in reports] == [False, True]
 
 
-def replay_site(monkeypatch, overpass_dir: Path) -> bundle.SiteReport:
+def replay_site(monkeypatch, overpass_dir: Path, site: PilotSite = SITE) -> bundle.SiteReport:
     """Default stages, real geocoder over saved Nominatim responses, Overpass offline."""
     monkeypatch.setenv("USER_AGENT", "MIT-AT-CarToCurb/test")
     monkeypatch.setattr(doors, "CLIENT", overpass.Client(cache_dir=overpass_dir, offline=True))
@@ -253,7 +271,7 @@ def replay_site(monkeypatch, overpass_dir: Path) -> bundle.SiteReport:
     try:
         with bundle.replay_client(FIXTURES) as client:
             stages = Stages(geocode=functools.partial(resolver.geocode, client=client))
-            return bundle.run_site(SITE, stages, VERSION)
+            return bundle.run_site(site, stages, VERSION)
     finally:
         resolver.clear_geocode_cache()
         doors._area.cache_clear()
@@ -307,3 +325,65 @@ def test_duplicate_site_ids_are_rejected(tmp_path):
 def test_site_ids_must_be_safe_file_names():
     with pytest.raises(ValueError):
         PilotSite(id="../etc", address="1 Broadway", scenario="campus")
+
+
+def test_fallback_guesses_on_top_of_a_mapped_door_are_dropped():
+    on_door = FACADE | {"lon": -71.09302}  # about 1.6 m from the door at -71.0930
+    far = FACADE  # 25 m away
+    result = bundle.run_site(SITE, fake_stages([door(0.90, "node/3")], (on_door, far)), VERSION)
+    assert [c.provenance[0].source for c in result.bundle.candidates] == [
+        "osm_tag",
+        "geometry_fallback",
+    ]
+    assert result.bundle.candidates[1].lon == pytest.approx(-71.0927)
+    # With no mapped door the guesses are all there is, and they stay.
+    alone = bundle.run_site(SITE, fake_stages([], (on_door, far)), VERSION)
+    assert len(alone.bundle.candidates) == 2
+
+
+B7 = PilotSite(
+    id="mit-building-7",
+    address="77 Massachusetts Ave, Cambridge, MA 02139",
+    name="MIT Building 7",
+    scenario="campus",
+)
+
+
+def test_building_7_from_the_saved_osm_data(monkeypatch):
+    """MIT Building 7 (Lobby 7) on the committed Overpass responses of 2026-10-30, a regression
+    pin (c2 below street level is inferred from incline=down tags, not surveyed). Raw OSM:
+    node/981493472 entrance=main at the top of steps way/243332876 (step_count=17, but
+    ramp=separate, so no count is spoken); node/9279372526 reached only by paths tagged incline=down; crosswalk
+    way/84473999 (crossing=traffic_signals) over Massachusetts Avenue at node/579060230."""
+    report = replay_site(monkeypatch, SERVER / "tests" / "fixtures" / "overpass", B7)
+    assert report.ok, report.describe()
+    r = report.bundle
+    assert r.building.osm_id == "way/32517230"
+    main, side_door = r.candidates  # the facade and address guesses sat on these two doors
+    assert main.provenance[0].ref == "node/981493472" and main.band == "main"
+    # A ramp exists elsewhere (ramp=separate), so "17 steps" is not the only way in.
+    assert main.speak is None
+    assert [p.ref for p in main.provenance] == ["node/981493472"]
+    assert side_door.provenance[0].ref == "node/9279372526"
+    assert side_door.confidence == pytest.approx(0.70) and side_door.speak is None
+    # the incline=down ways the 0.10 drop came from are cited
+    assert {"way/1005738160", "way/1005738158"} <= {p.ref for p in side_door.provenance}
+    s = r.street_side
+    assert (s.entrance_street, s.door_side_of_road, s.oneway) == (
+        "Massachusetts Avenue",
+        "right",
+        False,
+    )
+    # The far-side kerb end of crosswalk way/84473999 (node/10988282760), not the signal node
+    # node/579060230 in the middle of the road.
+    assert s.crossing == [-71.0936796, 42.3590093]
+    # The centerline continues north past the signal into way/1321779881.
+    assert max(lat for _, lat in s.centerline) > main.lat + 0.0003
+    assert r.path_checks.crosses_road is False and r.path_checks.nearest_crossing is None
+    assert r.recognize.text == [
+        "77",
+        "7 Rogers Building",
+        "MIT Building 7",
+        "William Barton Rogers Building",
+        "Rogers Building",
+    ]

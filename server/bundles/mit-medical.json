@@ -1,6 +1,6 @@
 {
   "destination_id": "dst_mit-medical",
-  "status": "complete",
+  "status": "partial",
   "building": {
     "osm_id": "way/177921760",
     "name": "E23",
@@ -95,6 +95,22 @@
   "candidates": [
     {
       "id": "c1",
+      "lat": 42.36106760057372,
+      "lon": -71.08649025688175,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Carleton Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/8615700",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
       "lat": 42.3612024,
       "lon": -71.0867821,
       "confidence": 0.95,
@@ -112,7 +128,7 @@
       ]
     },
     {
-      "id": "c2",
+      "id": "c3",
       "lat": 42.3608018,
       "lon": -71.0867831,
       "confidence": 0.8,
@@ -126,22 +142,6 @@
           "tags": {
             "entrance": "yes"
           }
-        }
-      ]
-    },
-    {
-      "id": "c3",
-      "lat": 42.36106760057372,
-      "lon": -71.08649025688175,
-      "confidence": 0.3,
-      "band": "facade",
-      "label": "Street-facing side on Carleton Street (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/8615700",
-          "tags": null
         }
       ]
     },
@@ -165,81 +165,66 @@
   "path_checks": {
     "crosses_road": false,
     "nearest_crossing": null,
-    "footway_to_entrance": true
+    "footway_to_entrance": false
   },
   "street_side": {
-    "entrance_street": "Ames Street",
-    "road_way": "way/42769910",
+    "entrance_street": "Carleton Street",
+    "road_way": "way/8615700",
     "centerline": [
       [
-        -71.0878156,
-        42.360274
+        -71.0863968,
+        42.3605182
       ],
       [
-        -71.0881113,
-        42.3607674
+        -71.0863962,
+        42.3605241
       ],
       [
-        -71.0882029,
-        42.3609201
+        -71.0863825,
+        42.3606236
       ],
       [
-        -71.0882131,
-        42.3609372
+        -71.0863453,
+        42.360895
       ],
       [
-        -71.0882862,
-        42.36106
+        -71.0863233,
+        42.3610551
       ],
       [
-        -71.0883039,
-        42.3610897
+        -71.0862756,
+        42.3614031
       ],
       [
-        -71.0883222,
-        42.3611213
+        -71.0862709,
+        42.3614375
       ],
       [
-        -71.0883318,
-        42.3611405
+        -71.0862599,
+        42.3615186
       ],
       [
-        -71.0883379,
-        42.3611556
+        -71.0862532,
+        42.3615686
       ],
       [
-        -71.0883448,
-        42.3611771
-      ],
-      [
-        -71.088351,
-        42.3611985
-      ],
-      [
-        -71.0883564,
-        42.3612237
-      ],
-      [
-        -71.0883591,
-        42.3612504
-      ],
-      [
-        -71.0883596,
-        42.3612678
-      ],
-      [
-        -71.0883597,
-        42.3612708
+        -71.0862505,
+        42.361592
       ]
     ],
-    "door_side_of_road": "right",
-    "oneway": false
+    "door_side_of_road": "left",
+    "oneway": false,
+    "crossing": [
+      -71.0861647,
+      42.3615119
+    ]
   },
   "recognize": {
     "text": [
       "25",
       "E23",
-      "MIT Medical"
+      "MIT Medical",
+      "Building E23"
     ]
   },
   "landmarks": null,

@@ -67,6 +67,11 @@ class StreetSide(BaseModel):
     # Side of the road the door is on, relative to the centerline's direction (first -> last point).
     door_side_of_road: Literal["left", "right"]
     oneway: bool
+    # [lon, lat] of the far-side kerb end of the nearest marked crosswalk over the entrance
+    # street (any way of the same name, crossing it within 150 m of the door): where a rider
+    # dropped on the far side starts to cross. Never a centerline point. It can be up to 150 m
+    # from the door, so a client should say the distance. Optional; older bundles validate.
+    crossing: LonLat | None = None
 
 
 class Recognize(BaseModel):

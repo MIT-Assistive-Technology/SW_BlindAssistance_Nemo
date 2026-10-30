@@ -85,6 +85,10 @@ nonisolated public struct StreetSide: Codable, Sendable {
   /// "left" or "right", relative to the centerline's direction (first → last point).
   public let doorSideOfRoad: String
   public let oneway: Bool
+  /// [lon, lat] where the nearest marked crosswalk over the entrance street meets its
+  /// centerline (within 150 m of the door), for a rider dropped on the far side. Optional:
+  /// nil when none is mapped, and absent from bundles built before it existed.
+  public let crossing: [Double]?
 }
 
 /// Text the camera building check should look for (CV-9).
