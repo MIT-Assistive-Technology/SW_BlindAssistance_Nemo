@@ -331,10 +331,23 @@ public final class RideViewModel: ObservableObject {
   }
 
   /// "I'm across the street now": the door's side is reachable, so guidance may start.
+  /// Said back out loud, because a tap with no answer is indistinguishable from a broken
+  /// app. Guidance itself starts from the Walk screen, which feeds it positions.
   public func riderCrossedStreet() {
     riderSaysSameSide = true
     sideAnswer = .sameSide
-    session?.riderIsOnDoorSide(true)
+    if let session {
+      session.riderIsAcross(startGuiding: false)
+    } else {
+      feedback.emit(.readyToStartGuidance, force: true)
+    }
+  }
+
+  /// The door is across the street, so the screen offers "I'm across" (S5): without it
+  /// guidance would wait forever.
+  public var isWaitingToCross: Bool {
+    if case .some(.acrossStreet) = sideAnswer { return true }
+    return false
   }
 
   private static func isOnDoorSide(_ answer: SideOfStreetAnswer) -> Bool? {

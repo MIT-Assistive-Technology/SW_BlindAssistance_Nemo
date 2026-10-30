@@ -117,6 +117,13 @@ struct RideView: View {
               viewModel.answerSideQuestion(sameSide: false)
             }
           }
+          if viewModel.isWaitingToCross {
+            Button("I'm across the street now", action: viewModel.riderCrossedStreet)
+              .buttonStyle(.borderedProminent)
+              .accessibilityHint(
+                "Tap once you're on the entrance side. The app never tells you when it's safe to cross."
+              )
+          }
           Button("Repeat", action: viewModel.repeatSideAnswer)
             .accessibilityHint("Says the side of the street again.")
         } header: {

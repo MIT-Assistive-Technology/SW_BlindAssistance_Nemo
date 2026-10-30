@@ -36,6 +36,14 @@ struct GuidanceView: View {
           .frame(maxWidth: .infinity)
           .accessibilityHint("Says the direction and distance again.")
 
+        if viewModel.isWaitingToCross && !viewModel.isGuiding {
+          Button("I'm across the street", action: viewModel.riderIsAcross)
+            .buttonStyle(.borderedProminent)
+            .accessibilityHint(
+              "Tap once you're across. Guidance then starts. The app never tells you when it's safe to cross."
+            )
+        }
+
         if viewModel.isGuiding {
           Button("Stop guiding", role: .destructive, action: viewModel.stop)
             .accessibilityHint("Ends the trip.")

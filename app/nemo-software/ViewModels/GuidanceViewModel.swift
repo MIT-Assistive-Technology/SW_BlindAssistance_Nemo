@@ -17,6 +17,9 @@ public final class GuidanceViewModel: ObservableObject {
   @Published public private(set) var metersToDoor: Double?
   @Published public private(set) var offsetDegrees: Double?
   @Published public private(set) var hasFix = false
+  /// The door is across the street, or the way to it crosses a road: the screen offers
+  /// "I'm across", or guidance would wait forever (S5).
+  @Published public private(set) var isWaitingToCross = false
 
   private let session: NavigationSession
   private let location: LocationService
@@ -29,6 +32,11 @@ public final class GuidanceViewModel: ObservableObject {
     session.$state.sink { [weak self] in self?.state = $0 }.store(in: &cancellables)
     session.$metersToDoor.sink { [weak self] in self?.metersToDoor = $0 }.store(in: &cancellables)
     session.$offsetDegrees.sink { [weak self] in self?.offsetDegrees = $0 }
+      .store(in: &cancellables)
+    session.$riderIsOnDoorSide.combineLatest(session.$isWaitingAtRoad)
+      .sink { [weak self] onDoorSide, atRoad in
+        self?.isWaitingToCross = onDoorSide == false || atRoad
+      }
       .store(in: &cancellables)
 
     // Every position update drives one step of the machine.
@@ -71,6 +79,8 @@ public final class GuidanceViewModel: ObservableObject {
   }
 
   public func start() { session.startGuidance() }
+  /// This screen feeds the session positions, so guidance can start straight away.
+  public func riderIsAcross() { session.riderIsAcross(startGuiding: true) }
   public func stop() { session.stop() }
   public func repeatGuidance() { session.repeatGuidance() }
 
