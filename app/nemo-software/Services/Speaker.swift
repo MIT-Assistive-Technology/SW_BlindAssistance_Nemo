@@ -10,42 +10,38 @@ import Foundation
 
 #if os(iOS)
 
-  /// Verbalizes short status messages to the user.
-  public final class Speaker {
+/// Verbalizes short status messages to the user.
+public final class Speaker {
     private let synthesizer = AVSpeechSynthesizer()
-
+    
     public init() {}
-
+    
     /// Speak a phrase, interrupting anything currently spoken.
     ///
     /// In a real app you may want to avoid repeating the same phrase too often
     /// (a "chatter guard"). This is the natural place to add that.
     public func speak(_ text: String) {
-      // TODO: Implement TTS.
-      //
-      // Pseudocode:
-      //   let utterance = AVSpeechUtterance(string: text)
-      //   utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-      //   synthesizer.stopSpeaking(at: .immediate)
-      //   synthesizer.speak(utterance)
-      print("[Speaker] would say: \(text)")
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.prefersAssistiveTechnologySettings = true
+        synthesizer.stopSpeaking(at: .immediate)
+        synthesizer.speak(utterance)
     }
-
+    
     /// Stop any speech in progress.
     public func stop() {
-      // TODO: Call synthesizer.stopSpeaking(at: .immediate).
+        synthesizer.stopSpeaking(at: .immediate)
     }
-  }
+}
 
 #else
 
-  /// Non-iOS stub.
-  public final class Speaker {
+/// Non-iOS stub.
+public final class Speaker {
     public init() {}
     public func speak(_ text: String) {
-      print("[Speaker] would say: \(text)")
+        print("[Speaker] would say: \(text)")
     }
     public func stop() {}
-  }
+}
 
 #endif
