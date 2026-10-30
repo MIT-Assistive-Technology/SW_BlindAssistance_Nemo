@@ -6,216 +6,267 @@
 //  in their profile. Never call AVSpeechSynthesizer or Core Haptics from guidance code.
 //
 
-import Foundation
 import AVFoundation
 import CoreHaptics
+import Foundation
 
-/// What happened, not how to present it.
-public enum FeedbackEvent: Sendable {
-    case direction(offsetDegrees: Double)
-    case distance(meters: Double)
-    case bearingLock
-    case landmark(phrase: String)
-    case buildingConfirmed(text: String)
-    case doorDetected(offsetDegrees: Double, meters: Double)
-    case warning(String)
-    case lost
-    case arrival
-    // No free-text case on purpose: every spoken phrase is written in SpeechChannel so the
-    // certainty-word test (SAFE-1) can check all of them.
+/// What happened, not how to present it. `nonisolated`, so guidance running off the
+/// main actor can emit events; the channels that play them are main-actor bound.
+nonisolated public enum FeedbackEvent: Sendable {
+  case direction(offsetDegrees: Double)
+  case distance(meters: Double)
+  case bearingLock(metersToDoor: Double?)
+  case landmark(phrase: String)
+  /// The camera read the building where the map said it would be (CV-9). `text` came
+  /// from the bundle's `recognize.text`, so nothing free-form is spoken.
+  case buildingConfirmed(text: String, offsetDegrees: Double?)
+  /// Read, but not where the building should be: the same number elsewhere.
+  case buildingUncertain(text: String)
+  /// The camera check couldn't run, and says so rather than failing silently.
+  case cameraCheckUnavailable(CameraCheckProblem)
+  case doorDetected(offsetDegrees: Double, meters: Double)
+  case warning(String)
+  case lost
+  case arrival
+  // No free-text case on purpose: every spoken phrase is written in Phrases so the
+  // certainty-word test (SAFE-1) can check all of them.
+
+  /// Live compass reading for the heading screen (FE-3).
+  case heading(degrees: Double, accuracyDegrees: Double)
+  /// The compass is too rough to steer by; ask for a figure eight (FE-3).
+  case compassCalibration
+  /// The device has no compass at all.
+  case headingUnavailable
+  /// Location permission is denied or restricted. Spoken, not just shown.
+  case locationPermissionDenied
+
+  /// "I'm in the car" tracking started / stopped (FE-13).
+  case rideTracking(started: Bool)
+  /// Said the moment the car stops, before the side of street is known (FE-13).
+  case exitCurbSide
+  /// The phone thinks the car has stopped but won't act on it alone: ask the rider
+  /// whether this is the drop-off, with the distance to the entrance so the question
+  /// can be answered (FE-13).
+  case possibleDropOff(metersToDoor: Double?)
+  /// The side-of-street result, with the walk left to the door when it's known (FE-13).
+  case sideOfStreet(SideOfStreetAnswer, SideOfStreetContext)
+  /// The side couldn't be decided, so the rider is asked (FE-13).
+  case askSideOfStreet(SideOfStreetContext)
+  /// What the map says about the destination, spoken at setup (bundle from FE-11).
+  case destinationBrief(DestinationBrief)
+
+  /// A destination lookup started: the rider tapped something, so make a sound (FE-11).
+  case lookingUpDestination
+  /// ...and failed. Spoken, never left on screen for someone to notice.
+  case destinationLookupFailed(LookupFailure)
+  /// An action needs a destination and there isn't one yet.
+  case noDestinationLoaded
+  /// The bundle couldn't be written to the phone, so the walk may need a signal.
+  case bundleNotSavedForOffline
+
+  // MARK: The walk (FE-10)
+
+  /// Guidance is starting: stand still while the anchor settles.
+  case startingGuidance
+  /// Guidance ended, by the rider or by the trip finishing. It never ends silently.
+  case guidanceStopped
+  /// The door is across the road, so guidance waits for the rider to cross.
+  case waitingToCrossStreet
+  /// The first-steps check failed: say so before giving any more guidance.
+  case directionUncertain
+  /// The last few meters, with the door facts from the bundle.
+  case finalApproach(metersToDoor: Double?, DestinationBrief)
 }
 
 /// One output: speech, spatial beacon, haptics, earcons, Apple Watch.
 public protocol FeedbackChannel: AnyObject {
-    var name: String { get }
-    func play(_ event: FeedbackEvent)
-    func stop()
+  var name: String { get }
+  func play(_ event: FeedbackEvent)
+  /// `force` means the rider asked for this again ("repeat", "where am I"), so any
+  /// anti-repeat rule must get out of the way.
+  func play(_ event: FeedbackEvent, force: Bool)
+  func stop()
+}
+
+extension FeedbackChannel {
+  public func play(_ event: FeedbackEvent, force: Bool) { play(event) }
 }
 
 public final class FeedbackKit {
-    private var channels: [FeedbackChannel]
-    
-    public init(channels: [FeedbackChannel]) {
-        self.channels = channels
-        // FE-8: Configure sessions + pause all channels when a call interupts
-        AudioSessionManager.shared.onInterruption = { [weak self] began in
-            if began { self?.stopAll() }
-        }
-        AudioSessionManager.shared.start()
+  private var channels: [FeedbackChannel]
+
+  public init(channels: [FeedbackChannel]) {
+    self.channels = channels
+    // FE-8: configure the audio session, and stop every channel when a call interrupts.
+    AudioSessionManager.shared.onInterruption = { [weak self] began in
+      if began { self?.stopAll() }
     }
-    
-    public func emit(_ event: FeedbackEvent) {
-        // TODO (FE-6/FE-7): route by the rider's FeedbackProfile (which channels are on,
-        // per-event overrides, verbosity). Critical events (.warning, .lost, .arrival) go
-        // to at least 2 channels by default.
-        channels.forEach { $0.play(event) }
-    }
-    
-    /// Stop everything immediately (magic tap / Back Tap "stop").
-    public func stopAll() {
-        channels.forEach { $0.stop() }
-    }
+    AudioSessionManager.shared.start()
+  }
+
+  /// - Parameter force: set when the rider explicitly asked to hear it again. Without
+  ///   it a "repeat" tap can land inside the chatter guard and do nothing at all, which
+  ///   to someone who can't see the screen is indistinguishable from a broken app.
+  public func emit(_ event: FeedbackEvent, force: Bool = false) {
+    // TODO (FE-6/FE-7): route by the rider's FeedbackProfile (which channels are on,
+    // per-event overrides, verbosity). Critical events (.warning, .lost, .arrival) go
+    // to at least 2 channels by default.
+    channels.forEach { $0.play(event, force: force) }
+  }
+
+  /// Stop everything immediately (magic tap / Back Tap "stop").
+  public func stopAll() {
+    channels.forEach { $0.stop() }
+  }
 }
 
 /// Speech channel built on the existing `Speaker`.
 public final class SpeechChannel: FeedbackChannel {
-    public let name = "speech"
-    private let speaker: Speaker
-    private var lastPhrase = ""
-    private var lastSpokenAt = Date.distantPast
-    private let minRepeatInterval: TimeInterval = 4
-    
-    public init(speaker: Speaker) {
-        self.speaker = speaker
+  public let name = "speech"
+  /// Don't repeat the same phrase inside this window (the chatter guard, FE-6).
+  public var repeatGuard: TimeInterval = 4
+
+  private let speaker: any SpeechOutput
+  private let units: Units
+  private let now: () -> Date
+  private var lastPhrase: String?
+  private var lastSpokenAt: Date?
+
+  public init(
+    speaker: any SpeechOutput,
+    units: Units = .feet,
+    now: @escaping () -> Date = Date.init
+  ) {
+    self.speaker = speaker
+    self.units = units
+    self.now = now
+  }
+
+  public func play(_ event: FeedbackEvent) {
+    play(event, force: false)
+  }
+
+  public func play(_ event: FeedbackEvent, force: Bool) {
+    guard let phrase = Self.phrase(for: event, units: units) else { return }
+    let moment = now()
+    // Critical events are never suppressed, even if they were just said (Trish's rule
+    // from FE-6). A `.lost` swallowed because the same words played three seconds ago
+    // is the one repeat that actually matters.
+    if !force, !Self.isCritical(event), phrase == lastPhrase, let last = lastSpokenAt,
+      moment.timeIntervalSince(last) < repeatGuard
+    {
+      return
     }
-    
-    public func play(_ event: FeedbackEvent) {
-        let phrase = phrase(for: event)
-        // Critical events bypass the chatter guard (warning is never suppressed
-        switch event{
-        case .warning, .lost, .arrival:
-            speaker.speak(phrase)
-            return
-        default:
-            break
-        }
-        
-        // Chatter guard + speak(ONLY IF it's a new phrase OR 4s+ since the last one)
-        let now = Date()
-        guard phrase != lastPhrase || now.timeIntervalSince(lastSpokenAt) >= minRepeatInterval else {return}
-        lastPhrase = phrase
-        lastSpokenAt = now
-        speaker.speak(phrase)
+    lastPhrase = phrase
+    lastSpokenAt = moment
+    speaker.speak(phrase)
+  }
+
+  public func stop() {
+    lastPhrase = nil
+    lastSpokenAt = nil
+    speaker.stop()
+  }
+
+  /// Events the rider must hear even if the same words were just spoken.
+  public static func isCritical(_ event: FeedbackEvent) -> Bool {
+    switch event {
+    case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied:
+      return true
+    default:
+      return false
     }
-    
-    // Maps event to fixed, reviewed phrase
-    func phrase(for event: FeedbackEvent) -> String{
-        // Picking the phrase
-        switch event {
-        case .warning(let message):
-            return message
-        case .lost:
-            return "I've lost the door. Stop and scan slowly."
-        case .arrival:
-            return "The door should be right in front of you. Feel for the handle."
-        case .direction(let offset):
-            return directionName(offset)
-        case .distance(let meters):
-            return "About \(feet(fromMeters: meters)) feet"
-        case .bearingLock:
-            return "Locked on"
-        case .landmark(let landmarkPhrase):
-            return landmarkPhrase
-        case .buildingConfirmed(let text):
-            return "That looks like your building. I see \(text)"
-        case .doorDetected(let offset, let meters):
-            return "Door \(directionName(offset).lowercased()), \(feet(fromMeters: meters)) feet"
-        }
+  }
+
+  /// Event -> phrase. Pure and public so the mapping is unit tested without audio.
+  /// Returns nil for events this channel has no words for yet.
+  public static func phrase(for event: FeedbackEvent, units: Units = .feet) -> String? {
+    switch event {
+    case .heading(let degrees, let accuracy):
+      return Phrases.heading(degrees: degrees, accuracyDegrees: accuracy)
+    case .compassCalibration:
+      return Phrases.compassCalibration
+    case .headingUnavailable:
+      return Phrases.headingUnavailable
+    case .locationPermissionDenied:
+      return Phrases.locationPermissionDenied
+    case .rideTracking(let started):
+      return started ? Phrases.rideTrackingStarted : Phrases.rideTrackingStopped
+    case .exitCurbSide:
+      return Phrases.exitCurbSide
+    case .possibleDropOff(let metersToDoor):
+      return Phrases.possibleDropOff(metersToDoor: metersToDoor, units: units)
+    case .sideOfStreet(let answer, let context):
+      switch answer {
+      case .sameSide:
+        return Phrases.sameSideOfStreet(metersToDoor: context.metersToDoor, units: units)
+      case .acrossStreet:
+        return Phrases.acrossStreet(metersToCrossing: context.metersToCrossing, units: units)
+      case .unknown:
+        // Never guess a side. Ask, and name the street so the question is answerable.
+        return Phrases.askSideOfStreet(
+          entranceStreet: context.entranceStreet,
+          streetSideDescription: context.streetSideDescription)
+      }
+    case .askSideOfStreet(let context):
+      return Phrases.askSideOfStreet(
+        entranceStreet: context.entranceStreet,
+        streetSideDescription: context.streetSideDescription)
+    case .destinationBrief(let brief):
+      return Phrases.destinationBrief(brief, units: units)
+    case .lookingUpDestination:
+      return Phrases.lookingUpEntrance
+    case .destinationLookupFailed(let failure):
+      return Phrases.lookupFailed(failure)
+    case .noDestinationLoaded:
+      return Phrases.noDestinationLoaded
+    case .bundleNotSavedForOffline:
+      return Phrases.bundleNotSavedForOffline
+    case .distance(let meters):
+      return Phrases.distance(meters: meters, units: units).capitalizedFirst
+    case .direction(let offset):
+      return Phrases.turn(offsetDegrees: offset).capitalizedFirst
+
+    case .startingGuidance:
+      return Phrases.startingGuidance
+    case .guidanceStopped:
+      return Phrases.guidanceStopped
+    case .waitingToCrossStreet:
+      return Phrases.waitingToCrossStreet
+    case .bearingLock(let metersToDoor):
+      return Phrases.bearingLock(metersToDoor: metersToDoor, units: units)
+    case .directionUncertain:
+      return Phrases.directionUncertain
+    case .lost:
+      return Phrases.offRoute
+    case .finalApproach(let metersToDoor, let brief):
+      return Phrases.finalApproach(metersToDoor: metersToDoor, brief: brief, units: units)
+    case .arrival:
+      return Phrases.arrivedAtDoor
+
+    case .buildingConfirmed(let text, let offsetDegrees):
+      return Phrases.buildingConfirmed(text: text, offsetDegrees: offsetDegrees)
+    case .buildingUncertain(let text):
+      return Phrases.buildingUncertain(text: text)
+    case .cameraCheckUnavailable(let problem):
+      return Phrases.cameraCheckUnavailable(problem)
+
+    // TODO (FE-6): these need reviewed phrases once the landmark and door-detector work
+    // lands, written here and listed in Phrases.all so SAFE-1 checks them. `.warning`
+    // carries free text and should be replaced by specific cases.
+    case .landmark, .doorDetected, .warning:
+      return nil
     }
-        
-    
-    // Produces directionName based on angle degree
-    private func directionName(_ offset: Double) -> String{
-        switch abs(offset) {
-        case 0..<8: return "Ahead"
-        case 8..<20: return offset < 0 ? "Slightly left" : "Slightly right"
-        default: return offset < 0 ? "Left" : "Right"
-        }
-    }
-    
-    // Converts meters to rounded feet
-    private func feet(fromMeters meters: Double) -> Int{
-        Int ((meters * 3.28084 / 5).rounded()) * 5
-    }
-    public func stop() { speaker.stop() }
+  }
 }
 
-// Directional audio beacon: a tone that sounds like it sits at the door's position in space(HRTF spatialization on stereo headphones)
-public final class BeaconChannel: FeedbackChannel {
-    public let name = "beacon"
-    
-    private let engine = AVAudioEngine() // wires node to output
-    private let environment = AVAudioEnvironmentNode() // gives sound a 3D position
-    private let player = AVAudioPlayerNode() // plays looping tone
-    private var buffer: AVAudioPCMBuffer?
-    
-    public init() {
-        setupGraph()
-    }
-    
-    //Point the tone at the door
-    public func updateTarget(relativeAngleDegrees angle: Double) {
-        let radians = angle * .pi / 180
-        let distance: Float = 2
-        // Environment space: you sit at (0,0,0) facing -z. +x = your right ear.
-        player.position = AVAudio3DPoint(
-            x: Float(sin(radians)) * distance,
-            y: 0,
-            z: Float(-cos(radians)) * distance        )
-    }
-    
-    public func play(_ event: FeedbackEvent) {
-        switch event {
-        case .direction(let offset), .doorDetected(let offset, _):
-            updateTarget(relativeAngleDegrees: offset)   // aim the tone at the angle
-            startTone()                                   // make sure it's playing
-        case .bearingLock:
-            startTone()                                   // locked on — keep ticking
-        case .arrival, .lost:
-            stop()                                        // no valid target → silence
-        default:
-            break                                         // speech/haptics own the rest
-        }
-        }
-    // Wires audio graph: player - environment - mixer - speakers
-    private func setupGraph() {
-        guard let buffer = makeBeaconBuffer() else { return }
-        self.buffer = buffer
-        
-        engine.attach(player) //plug player into engine
-        engine.attach(environment) //plug 3d node into engine
-        engine.connect(player, to: environment, format: buffer.format) // player feed 3d node
-        engine.connect(environment, to: engine.mainMixerNode, format: nil) // 3d node feeds output
-    }
-    
-    // Start engine, loop tone
-    private func startTone() {
-        guard let buffer else { return } // do nothing if setup failed
-        if !engine.isRunning {
-            engine.prepare()
-            try? engine.start()
-        }
-        if !player.isPlaying {
-            player.scheduleBuffer(buffer, at: nil, options: .loops) // loop tick
-            player.play()
-        }
-    }
-    
-    // Generates audio buffer that we loop
-    private func makeBeaconBuffer() -> AVAudioPCMBuffer? {
-        guard let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 1)
-        else { return nil}
-        let frameCount = AVAudioFrameCount(44100 * 0.5) // 0.5s buffer
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
-                let data = buffer.floatChannelData?[0] else { return nil}
-        buffer.frameLength = frameCount
-        
-        let tickFrames = Int(44100 * 0.06)
-        for i in 0..<tickFrames {
-            let t = Double(i) / 44100
-            let envelope = exp(-t * 40)
-            data[i] = Float(sin(2 * .pi * 880 * t) * envelope * 0.3)
-        }
-        return buffer
-    }
-    
-
-            	
-    public func stop() {
-        player.stop()
-        engine.stop()
-    }
+extension String {
+  fileprivate var capitalizedFirst: String {
+    guard let first else { return self }
+    return first.uppercased() + dropFirst()
+  }
 }
+
 // HapticsChannel — Core Haptics AHAP patterns (tick, lock, pulse, arrival, warning). Fallback channel for riders who don't use headphones
 public final class HapticsChannel: FeedbackChannel {
     public let name = "haptics"

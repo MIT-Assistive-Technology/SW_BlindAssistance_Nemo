@@ -136,6 +136,13 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       return stats
     }
 
+    // TODO (CV-9): when Vision text recognition lands, match each result against the
+    // bundle's `recognize.text`, turn the box's centre column into a bearing with
+    // `BuildingSighting(text:headingDegrees:xPixels:widthPixels:fovDegrees:confidence:)`
+    // and pass it to `NavigationSession.observe(_:)`. The session checks the direction
+    // against the building outline before it believes it, and corrects the heading bias.
+    // In low light, call `cameraCheckUnavailable(.lowLight)` instead of failing quietly.
+
     // `buffer` is not captured below, so the camera gets it back now.
     Task { @MainActor [self] in
       // Speak the most interesting detection(s) so the user gets audio feedback.

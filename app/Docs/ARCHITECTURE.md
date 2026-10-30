@@ -14,22 +14,32 @@ This is the starting structure for the iOS side of Car to Curb. The full system 
 
 ```
 Views (SwiftUI, VoiceOver-first)
+  ContentView                hub: Ride, Walk, Heading, Camera (debug)
   |
 ViewModels / Session
+  RideViewModel              destination bundle + ride tracking + side of street
+  GuidanceViewModel          feeds positions and heading into the state machine
+  HeadingViewModel           live true heading, announcement throttling
   CameraViewModel            debug camera screen
-  NavigationSession          trip state machine (Setup → Arrival → Orient → Guide → Confirm)
+  NavigationSession          trip state machine, Setup → Riding → Arrival → Orient →
+                             Guide → Confirm → Arrived, with Lost; breadcrumbs, the
+                             first-steps check, and resume-after-relaunch via SessionStore
   |
 Services
+  AppServices                composition root (sensors, feedback, bundle cache)
   PerceptionPipeline         frames → detections (+ location)
   FeedbackKit                events → speech / beacon / haptics   (Speaker is the speech channel)
   |
   +--> FramePublishers       CameraFrameProvider (AVFoundation); later ARFrameProvider (ARKit)
-  +--> Location              LocationService (CLLocationManager + true heading)
-  +--> LocationKit           Geo: distance, bearing, relative angle, side of street (pure math)
+  +--> Location              LocationService (CLLocationManager + true heading + car course)
+  +--> LocationKit           pure math and rules: Geo, HeadingReadout, CarCourseTrack,
+  |                          SideOfStreetResolver
   +--> Perception            VisionObjectDetector (Core ML / Vision); later text recognition
-  +--> EntranceAPI           EntranceClient (stub JSON now, live server later)
+  +--> EntranceAPI           EntranceClient (stub JSON, live server, caching wrapper) +
+  |                          BundleStore (on-phone cache)
   |
 Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contract)
+Phrases: Feedback/Phrases.swift — every spoken string, checked by SAFE-1
 ```
 
 ## Responsibilities
@@ -38,12 +48,12 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 |---|---|---|
 | `Core/` | Value types with no UI or framework logic | — |
 | `FramePublishers/` | Produces `CVPixelBuffer` frames behind the `FrameProvider` protocol | FE-12 (ARKit adapter) |
-| `Location/` | Publishes `LocationSnapshot` (GPS + true heading) | FE-3 |
-| `LocationKit/` | Geometry math, unit-tested | FE-2, FE-13 |
+| `Location/` | Publishes `LocationSnapshot` (GPS + true heading) and records the car's course for the ride | FE-3, FE-13 |
+| `LocationKit/` | Geometry math and the rules built on it, unit-tested, no CoreLocation | FE-2, FE-3, FE-13 |
 | `Perception/` | Object detection to `[Detection]`, later building text check | CV-8, CV-9 |
-| `EntranceAPI/` | Server contract types and client; stub loads `Resources/resolve.example.json`, or a real pilot bundle from `Resources/PilotBundles/` with `StubEntranceClient(site: "mit-stata")` | FE-11 |
-| `Feedback/` | `FeedbackKit` and its channels; the only place that makes sound or vibration | FE-4, FE-5, FE-6 |
-| `Session/` | `NavigationSession` trip state machine | FE-10 |
+| `EntranceAPI/` | Server contract types, clients (stub / live / caching) and the on-phone `BundleStore`; the stub loads `Resources/resolve.example.json`, or a real pilot bundle from `Resources/PilotBundles/` with `StubEntranceClient(site: "mit-stata")` | FE-11 |
+| `Feedback/` | `FeedbackKit`, its channels and the `Phrases` table; the only place that makes sound or vibration | FE-4, FE-5, FE-6 |
+| `Session/` | `NavigationSession` trip state machine and `SessionStore` (resume after relaunch). Takes value types in through `update(position:heading:)`, emits `FeedbackEvent`s — no CoreLocation, so a recorded trace replays headless | FE-10 |
 | `Services/` | `PerceptionPipeline` wiring, `Speaker` (speech) | — |
 | `ViewModels/`, `Views/` | SwiftUI screens; the camera screen is a debug view | FE-7, FE-9 |
 
@@ -64,7 +74,10 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 
 ## Concurrency
 
-- The project's default actor isolation is `MainActor`. Frame providers, `PerceptionPipeline`, detectors and the `Core/` types are marked `nonisolated` so they can run on background queues. Mark new types in those folders `nonisolated` too.
+The project builds with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, so **every type is main-actor isolated unless it says otherwise**. Plan section 11 says that must not cover the data types or the perception path.
+
+- Pure math, rules, contract models and the bundle cache are marked `nonisolated`: `Geo`, `HeadingReadout`, `CarCourseTrack`, `SideOfStreetResolver`, `Phrases`, `EntranceModels`, the entrance clients, `BundleStore`, `LocationSnapshot`, `FeedbackEvent`, and the perception path (frame providers, `PerceptionPipeline`, detectors, `Core/` types). Mark new ones the same way, or they can only be used from the main thread — and the unit tests, which are not main-actor isolated, won't compile against them.
+- View models, views, `LocationService` and the feedback channels stay main-actor isolated on purpose.
 - Camera work runs on the provider's queue; detection runs on one serial perception queue, one frame at a time, dropping frames while busy. Only the presentation update and speech run on `@MainActor`.
 - Never keep a pixel buffer after processing it. The camera has a small buffer pool and stalls when it runs out.
 - **TODO:** `LocationService` is main-actor, so location is read when the result is published, a few ms after capture. Attach it at capture time once `LocationService` is thread-safe (FE-3).
