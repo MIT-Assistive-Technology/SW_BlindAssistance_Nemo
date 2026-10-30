@@ -219,8 +219,11 @@ public final class SpeechChannel: FeedbackChannel {
   /// Events the rider must hear even if the same words were just spoken.
   public static func isCritical(_ event: FeedbackEvent) -> Bool {
     switch event {
+    // A change of plan is never silent (SAFE-10), so the lines that announce one
+    // (reorienting, resumed, the lock) can't be dropped behind a warning either.
     case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied,
-      .positionUncertain, .noSafePath, .roadToCross, .atCrossing, .arrivalUncertain:
+      .positionUncertain, .noSafePath, .roadToCross, .atCrossing, .arrivalUncertain,
+      .reorienting, .guidanceResumed, .bearingLock:
       return true
     default:
       return false

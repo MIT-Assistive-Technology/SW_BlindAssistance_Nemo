@@ -376,6 +376,7 @@ final class SpeechChannelTests: XCTestCase {
       .lost, .arrival, .arrivalUncertain, .directionUncertain, .positionUncertain,
       .noSafePath(roadCrossing: true), .noSafePath(roadCrossing: false),
       .roadToCross(metersToCrossing: 30), .atCrossing, .locationPermissionDenied,
+      .reorienting, .guidanceResumed, .bearingLock(metersToDoor: 12),
     ]
     for event in critical {
       channel.play(event)
