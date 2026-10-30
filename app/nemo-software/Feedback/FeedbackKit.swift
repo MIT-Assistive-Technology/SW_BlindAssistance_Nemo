@@ -315,19 +315,39 @@ extension String {
 public final class HapticsChannel: FeedbackChannel {
     public let name = "haptics"
     
+    /// Turn taps no closer together than this, or a stream of direction updates
+    /// becomes one long buzz.
+    public var directionInterval: TimeInterval = 1
+    
     private var engine: CHHapticEngine?
+    private var lastDirectionAt: Date?
     
     public init() { //Pre iphone-8 hardware can't do custom haptics
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        engine = try? CHHapticEngine()
-        try? engine?.start()
-        // engine dies on interruption (calls, audio changes), autorestart
-        engine?.resetHandler = { [weak self] in try? self?.engine?.start() }
+        do {
+            engine = try CHHapticEngine()
+        } catch {
+            print("[HapticsChannel] engine unavailable: \(error.localizedDescription)")
+            return
+        }
+        // The engine is started before every pattern (`haptic`), so it can shut itself
+        // down when idle, and recovers after stop(), a reset or an interruption.
+        // Both handlers run on a framework queue, hence @Sendable and log only.
+        engine?.isAutoShutdownEnabled = true
+        engine?.stoppedHandler = { @Sendable reason in
+            print("[HapticsChannel] engine stopped: \(reason.rawValue)")
+        }
+        engine?.resetHandler = { @Sendable in
+            print("[HapticsChannel] engine reset; restarts on the next pattern")
+        }
     }
     
     public func play(_ event: FeedbackEvent) {
         switch event{
         case .direction, .doorDetected:
+            let now = Date()
+            if let last = lastDirectionAt, now.timeIntervalSince(last) < directionInterval { return }
+            lastDirectionAt = now
             haptic(intensity: 0.7, sharpness: 0.9)
         case .bearingLock:
             haptic(intensity: 1.0, sharpness: 1.0, repeats: 2)
@@ -337,6 +357,9 @@ public final class HapticsChannel: FeedbackChannel {
             haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
         case .warning, .lost:
             haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
+        case .arrivalUncertain:
+            // Close, but not "you're there": softer and slower than the arrival pattern.
+            haptic(intensity: 0.6, sharpness: 0.3, repeats: 2, spacing: 0.3)
         default:
             break
         }
@@ -345,6 +368,12 @@ public final class HapticsChannel: FeedbackChannel {
 
     private func haptic(intensity: Float, sharpness:Float, repeats: Int = 1, spacing: TimeInterval = 0.12){
         guard let engine else { return }
+        do {
+            try engine.start()
+        } catch {
+            print("[HapticsChannel] engine failed to start: \(error.localizedDescription)")
+            return
+        }
         let events = (0..<repeats).map { i in
             CHHapticEvent(
                 eventType: .hapticTransient,
