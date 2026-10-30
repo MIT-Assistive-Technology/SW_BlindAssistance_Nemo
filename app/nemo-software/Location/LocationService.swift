@@ -114,7 +114,9 @@ public protocol LocationProvider: AnyObject {
       rideSession?.invalidate()
       rideSession = nil
       locationManager.allowsBackgroundLocationUpdates = false
-      locationManager.pausesLocationUpdatesAutomatically = true
+      // Stays off for the walk: orient asks the rider to stand still, and a paused fix
+      // would age past the 5 s limit and hold guidance with "I'm not sure where you are".
+      locationManager.pausesLocationUpdatesAutomatically = false
       locationManager.activityType = .other
     }
 
