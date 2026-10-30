@@ -20,6 +20,22 @@ extension SpeechOutput {
   public func speak(_ text: String, critical: Bool) { speak(text) }
 }
 
+/// What a new phrase does to the one being spoken. Pure, so the rule that a routine
+/// phrase never cuts off a critical one is unit tested without a synthesizer.
+nonisolated enum SpeechPolicy: Equatable {
+  /// Out of date by the time it could be said; never heard.
+  case drop
+  /// Waits for the critical phrase in progress to finish.
+  case queue
+  /// Cuts off whatever routine phrase is playing.
+  case interrupt
+
+  static func decide(critical: Bool, criticalInProgress: Bool) -> SpeechPolicy {
+    guard criticalInProgress else { return .interrupt }
+    return critical ? .queue : .drop
+  }
+}
+
 #if os(iOS)
   import UIKit
 
@@ -57,15 +73,16 @@ extension SpeechOutput {
         UIAccessibility.post(notification: .announcement, argument: announcement)
         return
       }
-      let criticalInProgress = speakingCritical && synthesizer.isSpeaking
-      if !critical && criticalInProgress { return }
+      let policy = SpeechPolicy.decide(
+        critical: critical, criticalInProgress: speakingCritical && synthesizer.isSpeaking)
+      if policy == .drop { return }
       // Other audio is ducked until the phrase ends; AudioSessionManager owns the session.
       AudioSessionManager.shared.setSpeaking(true)
       let utterance = AVSpeechUtterance(string: text)
       // Use the voice and rate the rider already set up for VoiceOver, instead of
       // forcing en-US. This is the whole reason the app sounds familiar to them.
       utterance.prefersAssistiveTechnologySettings = true
-      if !criticalInProgress { synthesizer.stopSpeaking(at: .immediate) }
+      if policy == .interrupt { synthesizer.stopSpeaking(at: .immediate) }
       speakingCritical = critical
       synthesizer.speak(utterance)
     }

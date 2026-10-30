@@ -354,6 +354,76 @@ final class SpeechChannelTests: XCTestCase {
     XCTAssertEqual(speaker.spoken.count, 2)
   }
 
+  // MARK: Critical speech (A3)
+
+  /// Records the `critical` flag the channel passes, which is what the Speaker uses to
+  /// keep routine phrases from cutting off warnings.
+  private final class CriticalRecordingSpeaker: SpeechOutput {
+    var spoken: [(text: String, critical: Bool)] = []
+    func speak(_ text: String) { speak(text, critical: false) }
+    func speak(_ text: String, critical: Bool) { spoken.append((text, critical)) }
+    func stop() {}
+  }
+
+  /// Fails if `SpeechChannel.isCritical` drops one of these events, or if the channel
+  /// stops passing `critical:` to the speaker (every phrase would then be cut off by
+  /// the next routine one).
+  func testSafetyPhrasesAreSpokenAsCritical() {
+    let speaker = CriticalRecordingSpeaker()
+    let channel = SpeechChannel(speaker: speaker)
+    channel.repeatGuard = 0
+    let critical: [FeedbackEvent] = [
+      .lost, .arrival, .arrivalUncertain, .directionUncertain, .positionUncertain,
+      .noSafePath(roadCrossing: true), .noSafePath(roadCrossing: false),
+      .roadToCross(metersToCrossing: 30), .atCrossing, .locationPermissionDenied,
+    ]
+    for event in critical {
+      channel.play(event)
+    }
+    XCTAssertEqual(speaker.spoken.count, critical.count)
+    for (text, isCritical) in speaker.spoken {
+      XCTAssertTrue(isCritical, "\"\(text)\" can be cut off by a routine phrase")
+    }
+  }
+
+  /// Fails if routine guidance is marked critical: then a stream of turn and distance
+  /// phrases would queue up and play long after they stopped being true.
+  func testRoutinePhrasesAreNotCriticalUnlessTheRiderAskedAgain() {
+    let speaker = CriticalRecordingSpeaker()
+    let channel = SpeechChannel(speaker: speaker)
+    channel.play(.direction(offsetDegrees: 60))
+    channel.play(.distance(meters: 18))
+    channel.play(.startingGuidance)
+    XCTAssertEqual(speaker.spoken.map { $0.critical }, [false, false, false])
+    // "Repeat" is the rider's own request, so it is never dropped behind other speech.
+    channel.play(.startingGuidance, force: true)
+    XCTAssertEqual(speaker.spoken.last?.critical, true)
+  }
+
+  /// The rule the Speaker applies. Fails if a routine phrase is allowed to interrupt a
+  /// critical one in progress (the bug this replaced), or if a critical phrase cuts off
+  /// another critical one instead of waiting for it.
+  func testARoutinePhraseNeverCutsOffACriticalOne() {
+    XCTAssertEqual(SpeechPolicy.decide(critical: false, criticalInProgress: true), .drop)
+    XCTAssertEqual(SpeechPolicy.decide(critical: true, criticalInProgress: true), .queue)
+    XCTAssertEqual(SpeechPolicy.decide(critical: true, criticalInProgress: false), .interrupt)
+    XCTAssertEqual(SpeechPolicy.decide(critical: false, criticalInProgress: false), .interrupt)
+  }
+
+  /// Hysteresis at the 35° band edge. Fails if `steadied` is removed: 36° after 34°
+  /// would flip "slightly right" to "to your right" on a 2° wobble.
+  func testTurnWordingHoldsNearABandEdge() {
+    let speaker = RecordingSpeaker()
+    let channel = SpeechChannel(speaker: speaker)
+    channel.repeatGuard = 0
+    channel.play(.direction(offsetDegrees: 34))
+    channel.play(.direction(offsetDegrees: 36))
+    XCTAssertEqual(speaker.spoken, ["Slightly right", "Slightly right"])
+    // Well past the edge, the wording changes.
+    channel.play(.direction(offsetDegrees: 45))
+    XCTAssertEqual(speaker.spoken.last, "To your right")
+  }
+
   func testFeedbackKitSendsEventsToEveryChannel() {
     let first = RecordingSpeaker()
     let second = RecordingSpeaker()
