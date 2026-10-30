@@ -67,6 +67,40 @@ final class EntranceClientTests: XCTestCase {
     XCTAssertEqual(brief.automaticDoor, "button")
   }
 
+  // MARK: Pilot sites (D1)
+
+  /// Fails if the lookup stops loading the real pilot bundle for a pilot address, or if
+  /// abbreviations and the ZIP code stop being normalised away.
+  func testAPilotAddressResolvesToItsRealBundle() async throws {
+    let client = PilotSiteEntranceClient()
+    XCTAssertEqual(try client.siteId(for: address), "mit-building-7")
+    XCTAssertEqual(
+      try client.siteId(for: "77 Massachusetts Avenue, Cambridge"), "mit-building-7")
+    XCTAssertEqual(try client.siteId(for: "40 Brattle Street, Cambridge MA 02138"), "brattle-theatre")
+    let result = try await client.resolve(address: address)
+    XCTAssertEqual(result.destinationId, "dst_mit-building-7")
+  }
+
+  /// Fails if the town is dropped from the match: 77 Massachusetts Ave in Boston is a
+  /// different building from building 7, and guiding to the wrong one is worse than
+  /// saying the address wasn't found.
+  func testTheSameStreetAddressInAnotherTownIsNotThePilotSite() throws {
+    XCTAssertNil(try PilotSiteEntranceClient().siteId(for: "77 Massachusetts Ave, Boston, MA"))
+  }
+
+  /// Fails if an unknown address falls back to the fictional example bundle, which would
+  /// guide the rider to a door that doesn't exist.
+  func testAnAddressThatIsNotAPilotSiteIsNotFound() async {
+    do {
+      let result = try await PilotSiteEntranceClient().resolve(address: "1 Nowhere St, Cambridge, MA")
+      XCTFail("resolved to \(result.destinationId)")
+    } catch {
+      XCTAssertEqual(LookupFailure(error), .addressNotFound)
+    }
+    // No town at all can't be told apart from a same-numbered street elsewhere.
+    XCTAssertNil(PilotSiteEntranceClient.key("77 Example Avenue"))
+  }
+
   // MARK: Caching (FE-11)
 
   func testFreshResultIsSavedForLater() async throws {
