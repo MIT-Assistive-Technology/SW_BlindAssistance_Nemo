@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from app import bundle, resolver, scoring
+from app import bundle, doors, overpass, resolver, scoring
 from app.bundle import Facade, PilotSite, Stages
-from app.models import DataVersion, ResolveRequest, ResolveResult
+from app.models import Candidate, DataVersion, ResolveRequest, ResolveResult
 from app.resolver import GeocodedPoint, RateLimiter
 
 SERVER = Path(__file__).resolve().parents[1]
@@ -43,16 +43,16 @@ STREET_SIDE = {
 CHECKS = {"crosses_road": False, "nearest_crossing": None, "footway_to_entrance": True}
 
 
-def door(confidence, ref, band="door"):
+def door(confidence, ref, band="door", lon=-71.0930, tags=None):
     """A candidate as a stage might return it; the band is deliberately not trusted."""
     return {
         "id": "x",
         "lat": 42.3592,
-        "lon": -71.0930,
+        "lon": lon,
         "confidence": confidence,
         "band": band,
         "label": "Door",
-        "provenance": [{"source": "osm_tag", "ref": ref}],
+        "provenance": [{"source": "osm_tag", "ref": ref, "tags": tags}],
     }
 
 
@@ -69,7 +69,9 @@ def fake_stages(doors, facade=(FACADE,), **overrides) -> Stages:
         facade_fallback=lambda building, point: Facade(
             candidates=list(facade), street_side=STREET_SIDE
         ),
+        street_side=lambda building, top, point: STREET_SIDE,
         path_checks=lambda building, top, street_side: CHECKS,
+        path_warnings=lambda building, top, street_side: [],
     )
     return dataclasses.replace(stages, **overrides)
 
@@ -101,6 +103,86 @@ def test_candidates_are_sorted_capped_and_at_most_five():
     assert confidences == sorted(confidences, reverse=True)
     assert max(confidences) == scoring.CAP
     assert result.candidates[0].provenance[0].ref == "node/1"  # the 1.0 door, capped to 0.95
+
+
+def top_refs(result):
+    return [c.provenance[0].ref for c in result.candidates]
+
+
+def test_tied_main_doors_prefer_the_house_number_then_the_street():
+    """E2E I-5: several main doors tie at the 0.95 cap. STREET_SIDE runs at lon -71.0928."""
+    far = -71.0933  # ~40 m from the centerline
+    near = -71.0929  # ~8 m
+    doors = [
+        door(0.95, "node/far", lon=far),
+        door(0.95, "node/near", lon=near),
+        door(1.0, "node/77", lon=far, tags={"addr:housenumber": "77", "entrance": "main"}),
+        door(0.95, "node/79", lon=near, tags={"addr:housenumber": "79"}),
+    ]
+    result = bundle.run_site(SITE, fake_stages(doors), VERSION).bundle
+    assert top_refs(result)[:4] == ["node/77", "node/near", "node/79", "node/far"]
+    assert {c.confidence for c in result.candidates[:4]} == {scoring.CAP}
+
+
+def test_ties_keep_the_original_order_without_a_street_side():
+    doors = [door(0.95, "node/a", lon=-71.0933), door(0.95, "node/b", lon=-71.0929)]
+    ranked = bundle.rank([Candidate.model_validate(d) for d in doors])
+    assert [c.provenance[0].ref for c in ranked] == ["node/a", "node/b"]
+
+
+def test_a_tie_break_never_beats_a_higher_score():
+    doors = [door(0.85, "node/77", tags={"addr:housenumber": "77"}), door(0.90, "node/9")]
+    result = bundle.run_site(SITE, fake_stages(doors), VERSION).bundle
+    assert top_refs(result)[:2] == ["node/9", "node/77"]
+
+
+@pytest.mark.parametrize(
+    ("name", "site_name", "text"),
+    [
+        ("Brattle Theatre", "Brattle Theatre", ["77", "Brattle Theatre"]),
+        (
+            "Ray and Maria Stata Center",
+            "MIT Building 7",
+            ["77", "Ray and Maria Stata Center", "MIT Building 7"],
+        ),
+        (None, None, ["77"]),
+    ],
+)
+def test_recognize_text_has_number_building_and_site_names(name, site_name, text):
+    """E2E I-10: the mapped name and the site name both go in, without repeats."""
+    site = SITE.model_copy(update={"name": site_name})
+    stages = fake_stages([door(0.9, "node/1")], find_building=lambda p: BUILDING | {"name": name})
+    assert bundle.run_site(site, stages, VERSION).bundle.recognize.text == text
+
+
+# Fix R12: the destination's number always; the building's numbers only when they include it.
+@pytest.mark.parametrize(
+    ("tagged", "text"),
+    [
+        ("75", ["77", "MIT Building 7"]),  # a fallback outline that is the neighbour
+        ("77;79", ["77", "79", "MIT Building 7"]),
+        (None, ["77", "MIT Building 7"]),
+    ],
+)
+def test_r12_recognize_text_keeps_the_destination_number(tagged, text):
+    stages = fake_stages(
+        [door(0.9, "node/1")], find_building=lambda p: BUILDING | {"housenumber": tagged}
+    )
+    assert bundle.run_site(SITE, stages, VERSION).bundle.recognize.text == text
+
+
+# Fix R10: street_side comes from the street_side stage for candidates[0], not the facade's.
+def test_r10_street_side_and_path_checks_get_the_top_candidate():
+    seen = []
+    other = STREET_SIDE | {"entrance_street": "Side Street", "road_way": "way/3"}
+    stages = fake_stages(
+        [door(0.80, "node/2"), door(0.90, "node/9")],
+        street_side=lambda b, top, p: seen.append(top.provenance[0].ref) or other,
+        path_checks=lambda b, top, side: seen.append(side.road_way) or CHECKS,
+    )
+    result = bundle.run_site(SITE, stages, VERSION).bundle
+    assert seen == ["node/9", "way/3"]
+    assert result.street_side.entrance_street == "Side Street"
 
 
 def test_band_comes_from_scoring_band_not_the_stage(monkeypatch):
@@ -161,18 +243,41 @@ def test_one_blocked_site_does_not_stop_the_others():
     assert [r.ok for r in reports] == [False, True]
 
 
-def test_offline_replay_runs_the_real_geocoder(monkeypatch):
-    """Default stages, real geocoder over saved responses: geocode succeeds, and the run gets
-    as far as the teammates' stages allow (today: blocked on BE-3)."""
+def replay_site(monkeypatch, overpass_dir: Path) -> bundle.SiteReport:
+    """Default stages, real geocoder over saved Nominatim responses, Overpass offline."""
     monkeypatch.setenv("USER_AGENT", "MIT-AT-CarToCurb/test")
+    monkeypatch.setattr(doors, "CLIENT", overpass.Client(cache_dir=overpass_dir, offline=True))
     monkeypatch.setattr(resolver, "_nominatim_limiter", RateLimiter(0))
+    doors._area.cache_clear()
     resolver.clear_geocode_cache()
-    with bundle.replay_client(FIXTURES) as client:
-        stages = Stages(geocode=functools.partial(resolver.geocode, client=client))
-        report = bundle.run_site(SITE, stages, VERSION)
-    resolver.clear_geocode_cache()
+    try:
+        with bundle.replay_client(FIXTURES) as client:
+            stages = Stages(geocode=functools.partial(resolver.geocode, client=client))
+            return bundle.run_site(SITE, stages, VERSION)
+    finally:
+        resolver.clear_geocode_cache()
+        doors._area.cache_clear()
 
-    assert report.ok or report.error.stage != "geocode", report.describe()
+
+# Fix R15: the replay must really run BE-3/5/7 on saved Overpass data, not pass when blocked.
+def test_offline_replay_runs_the_whole_ladder_on_saved_overpass_data(monkeypatch):
+    report = replay_site(monkeypatch, SERVER / "tests" / "fixtures" / "overpass")
+    if not report.ok and isinstance(report.error.cause, overpass.OverpassUnavailable):
+        pytest.skip(
+            f"no saved Overpass responses for {SITE.id} ({report.error.stage}); "
+            "run scripts/build_bundles.py online and commit tests/fixtures/overpass"
+        )
+    assert report.ok, report.describe()
+    result = report.bundle
+    assert result.building.osm_id.split("/")[0] in {"way", "relation"}
+    assert result.candidates and result.street_side is not None
+    assert result.street_side.road_way.startswith("way/")
+
+
+def test_offline_replay_without_overpass_data_is_blocked_after_geocode(monkeypatch, tmp_path):
+    report = replay_site(monkeypatch, tmp_path)
+    assert not report.ok and report.error.stage == "find_building"
+    assert isinstance(report.error.cause, overpass.OverpassUnavailable)
 
 
 def test_offline_replay_refuses_unsaved_queries(monkeypatch):

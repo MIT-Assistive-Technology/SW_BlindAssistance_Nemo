@@ -1,15 +1,138 @@
 {
-  "about": "Pilot sites for scripts/build_bundles.py. Each becomes bundles/<id>.json. These are the same 10 sites as golden/locations.json (same ids and addresses), so every bundle can be scored against surveyed ground truth. Addresses are reused verbatim from tests/fixtures/nominatim/addresses.json so --offline can replay the saved Nominatim responses. 'scenario' is one of same_side, driveway, opposite, campus; golden/locations.json is the source of truth for scenarios (it spells opposite as opposite_side).",
+  "about": "Pilot sites for scripts/build_bundles.py. Each becomes bundles/<id>.json. These are the same 10 sites as golden/locations.json (same ids and addresses), so every bundle can be scored against surveyed ground truth. Addresses are reused verbatim from tests/fixtures/nominatim/addresses.json so --offline can replay the saved Nominatim responses. 'scenario' is one of same_side, driveway, opposite, campus; golden/locations.json is the source of truth for scenarios (it spells opposite as opposite_side). 'label' is for people (testing, logs); 'name' is the building's real name and goes into recognize.text. The first 10 match golden/locations.json by address; ids mit-stratton-center and mit-building-7 are golden's mit-84-mass-ave and mit-77-mass-ave.",
   "sites": [
-    {"id": "cambridge-city-hall", "address": "795 Massachusetts Ave, Cambridge, MA 02139", "name": "Cambridge City Hall", "scenario": "same_side"},
-    {"id": "cambridge-public-library", "address": "449 Broadway, Cambridge, MA 02138", "name": "Cambridge Public Library", "scenario": "same_side"},
-    {"id": "brattle-theatre", "address": "40 Brattle St, Cambridge MA 02138", "name": "Brattle Theatre", "scenario": "same_side"},
-    {"id": "harvard-smith-center", "address": "1350 Massachusetts Ave, Cambridge, MA 02138", "name": "Smith Campus Center", "scenario": "same_side"},
-    {"id": "cambridgeside", "address": "100 Cambridgeside Pl, Cambridge, MA 02141", "name": "CambridgeSide", "scenario": "driveway"},
-    {"id": "museum-of-fine-arts", "address": "465 Huntington Ave, Boston, MA 02115", "name": "Museum of Fine Arts", "scenario": "driveway"},
-    {"id": "mit-84-mass-ave", "address": "84 Massachusetts Ave, Cambridge, MA 02139", "name": "Stratton Student Center", "scenario": "opposite"},
-    {"id": "boston-public-library", "address": "700 Boylston St, Boston, MA 02116", "name": "Boston Public Library", "scenario": "opposite"},
-    {"id": "mit-77-mass-ave", "address": "77 Massachusetts Ave, Cambridge, MA 02139", "name": "MIT Building 7", "scenario": "campus"},
-    {"id": "mit-stata", "address": "32 Vassar St, Cambridge, MA 02139", "name": "Stata Center", "scenario": "campus"}
+    {
+      "id": "cambridge-city-hall",
+      "label": "Cambridge City Hall",
+      "address": "795 Massachusetts Ave, Cambridge, MA 02139",
+      "name": "Cambridge City Hall",
+      "scenario": "same_side"
+    },
+    {
+      "id": "cambridge-public-library",
+      "label": "Cambridge Public Library",
+      "address": "449 Broadway, Cambridge, MA 02138",
+      "name": "Cambridge Public Library",
+      "scenario": "same_side"
+    },
+    {
+      "id": "brattle-theatre",
+      "label": "Brattle Theatre",
+      "address": "40 Brattle St, Cambridge MA 02138",
+      "name": "Brattle Theatre",
+      "scenario": "same_side"
+    },
+    {
+      "id": "harvard-smith-center",
+      "label": "Smith Campus Center",
+      "address": "1350 Massachusetts Ave, Cambridge, MA 02138",
+      "name": "Smith Campus Center",
+      "scenario": "same_side"
+    },
+    {
+      "id": "cambridgeside",
+      "label": "CambridgeSide",
+      "address": "100 Cambridgeside Pl, Cambridge, MA 02141",
+      "name": "CambridgeSide",
+      "scenario": "driveway"
+    },
+    {
+      "id": "museum-of-fine-arts",
+      "label": "Museum of Fine Arts",
+      "address": "465 Huntington Ave, Boston, MA 02115",
+      "name": "Museum of Fine Arts",
+      "scenario": "driveway"
+    },
+    {
+      "id": "mit-stratton-center",
+      "label": "MIT W20: Stratton Student Center",
+      "address": "84 Massachusetts Ave, Cambridge, MA 02139",
+      "name": "Stratton Student Center",
+      "scenario": "opposite"
+    },
+    {
+      "id": "boston-public-library",
+      "label": "Boston Public Library",
+      "address": "700 Boylston St, Boston, MA 02116",
+      "name": "Boston Public Library",
+      "scenario": "opposite"
+    },
+    {
+      "id": "mit-building-7",
+      "label": "MIT 7: 77 Mass Ave lobby",
+      "address": "77 Massachusetts Ave, Cambridge, MA 02139",
+      "name": "MIT Building 7",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-stata",
+      "label": "MIT 32: Stata Center",
+      "address": "32 Vassar St, Cambridge, MA 02139",
+      "name": "Stata Center",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-kresge-auditorium",
+      "label": "MIT W16: Kresge Auditorium",
+      "address": "48 Massachusetts Ave, Cambridge, MA 02139",
+      "name": "Kresge Auditorium",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-museum",
+      "label": "MIT Museum (Gambrill Center)",
+      "address": "314 Main St, Cambridge, MA 02142",
+      "name": "MIT Museum",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-media-lab",
+      "label": "MIT E14/E15: Media Lab",
+      "address": "75 Amherst St, Cambridge, MA 02139",
+      "name": "MIT Media Lab",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-sloan",
+      "label": "MIT E62: Sloan School",
+      "address": "100 Main St, Cambridge, MA 02142",
+      "name": "MIT Sloan School of Management",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-zesiger-center",
+      "label": "MIT W35: Zesiger Center",
+      "address": "120 Vassar St, Cambridge, MA 02139",
+      "name": "Zesiger Center",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-medical",
+      "label": "MIT E23: MIT Medical",
+      "address": "25 Carleton St, Cambridge, MA 02142",
+      "name": "MIT Medical",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-hayden-library",
+      "label": "MIT 14: Hayden Library",
+      "address": "160 Memorial Dr, Cambridge, MA 02142",
+      "name": "Hayden Library",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-walker-memorial",
+      "label": "MIT 50: Walker Memorial",
+      "address": "142 Memorial Dr, Cambridge, MA 02142",
+      "name": "Walker Memorial",
+      "scenario": "campus"
+    },
+    {
+      "id": "mit-simmons-hall",
+      "label": "MIT W79: Simmons Hall",
+      "address": "229 Vassar St, Cambridge, MA 02139",
+      "name": "Simmons Hall",
+      "scenario": "campus"
+    }
   ]
 }

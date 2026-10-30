@@ -1,7 +1,8 @@
 """The lookup ladder: address in, ranked doors out. Stops at the first good answer.
 
 See docs/car-to-curb-plan.md section 8. Each step is its own function so it can be tested
-with saved responses (no live network in tests).
+with saved responses (no live network in tests). Steps 2, 3 and 5 and the path checks live in
+app/doors.py; app/bundle.py runs the ladder for the pilot bundles.
 """
 
 import math
@@ -94,6 +95,7 @@ class GeocodedPoint:
     category: str | None = None
     type: str | None = None
     entrances: tuple[Entrance, ...] = ()
+    street: str | None = None  # "Massachusetts Avenue", or "77 Massachusetts Avenue" as typed
 
 
 @dataclass(frozen=True)
@@ -273,6 +275,7 @@ def point_from_results(results: list[dict], parsed: ParsedAddress) -> GeocodedPo
         category=best.get("category") or best.get("class"),
         type=best.get("type"),
         entrances=_usable_entrances(best.get("entrances")),
+        street=address.get("road") or parsed.street or None,
     )
 
 
@@ -288,7 +291,11 @@ def geocode(request: ResolveRequest, *, client: httpx.Client | None = None) -> G
         if not (-90 <= request.lat <= 90 and -180 <= request.lon <= 180):
             raise ValueError("lat must be in [-90, 90] and lon in [-180, 180].")
         return GeocodedPoint(
-            lat=request.lat, lon=request.lon, source="request", housenumber=parsed.housenumber
+            lat=request.lat,
+            lon=request.lon,
+            source="request",
+            housenumber=parsed.housenumber,
+            street=parsed.street or None,
         )
     if not parsed.street:
         raise GeocodeNotFound("Send an address, or lat and lon.")
@@ -389,23 +396,6 @@ def _meters_between(a: tuple[float, float], b: tuple[float, float]) -> float:
     return 2 * 6_371_000 * math.asin(math.sqrt(h))
 
 
-def find_building(point):
-    """Step 2 (BE-3). Overpass: outline containing the point, else matching house number
-    within 30 m, else nearest. Include multipolygon members and building:part ways.
-    Cache Overpass responses 7 days; public Overpass allows apps only ~100 queries/day.
-    TODO (BE-3)
-    """
-    raise NotImplementedError("BE-3")
-
-
-def read_entrances(building, dest_housenumber):
-    """Step 3 (BE-4). Entrance nodes that are part of the outline (node(w)), scored with
-    scoring.score_door. If any candidate is >= 0.75, the ladder stops here.
-    TODO (BE-4)
-    """
-    raise NotImplementedError("BE-4")
-
-
 def doors_from_photos(building):
     """Step 4 (CV-2, CV-5, CV-6). Only when step 3 is weak. Mapillary photos within 50 m
     facing the wall -> door detector -> rays (geo.photo_ray_bearing, geo.ray_hits_outline)
@@ -413,14 +403,6 @@ def doors_from_photos(building):
     TODO
     """
     raise NotImplementedError("CV-6")
-
-
-def facade_fallback(building, point):
-    """Step 5 (BE-5). Middle of the street-facing side (0.30), then the address point (0.20).
-    Also builds the street_side block (entrance street, centerline, door side, oneway).
-    TODO (BE-5)
-    """
-    raise NotImplementedError("BE-5")
 
 
 def resolve(request: ResolveRequest) -> ResolveResult:

@@ -1,0 +1,157 @@
+{
+  "id": "mit-hayden-library",
+  "address": "160 Memorial Dr, Cambridge, MA 02142",
+  "recorded_at": "2026-10-25T21:14:42+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "160 Memorial Dr",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 363307018,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "relation",
+      "osm_id": 5268202,
+      "lat": "42.3591821",
+      "lon": "-71.0889777",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "14",
+      "display_name": "14, 160, Memorial Drive, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "building": "14",
+        "house_number": "160",
+        "road": "Memorial Drive",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3588344",
+        "42.3595255",
+        "-71.0900621",
+        "-71.0887490"
+      ]
+    },
+    {
+      "place_id": 363211018,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 4329266297,
+      "lat": "42.3594110",
+      "lon": "-71.0891117",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Lewis Music Library",
+      "display_name": "Lewis Music Library, 160, Memorial Drive, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "Lewis Music Library",
+        "house_number": "160",
+        "road": "Memorial Drive",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3593610",
+        "42.3594610",
+        "-71.0891617",
+        "-71.0890617"
+      ]
+    },
+    {
+      "place_id": 406704566,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 822621173,
+      "lat": "42.3646300",
+      "lon": "-71.0779252",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "160, Memorial Drive, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "160",
+        "road": "Memorial Drive",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3645800",
+        "42.3646800",
+        "-71.0779752",
+        "-71.0778752"
+      ]
+    },
+    {
+      "place_id": 406744387,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 149924232,
+      "lat": "42.3595881",
+      "lon": "-71.0863814",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "160, Memorial Drive, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "160",
+        "road": "Memorial Drive",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3595381",
+        "42.3596381",
+        "-71.0864314",
+        "-71.0863314"
+      ]
+    }
+  ]
+}

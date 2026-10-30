@@ -5,11 +5,13 @@ and 8); each bundle has exactly the shape of contract/resolve.example.json (sect
 scripts/build_bundles.py is the command-line wrapper.
 
 Each ladder step is a stage with a typed input and output (see `Stages`). The default stages are
-the resolver functions; tests and the offline mode swap them out. A stage that still raises
+resolver.geocode and the app/doors.py functions; tests and the offline mode swap them out. A stage that still raises
 NotImplementedError("BE-3") is reported as "blocked on BE-3", and the other sites still build.
 """
 
 import json
+import logging
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -18,7 +20,9 @@ from typing import Literal, TypeVar
 import httpx
 from pydantic import BaseModel, Field
 
-from . import resolver, scoring
+from . import doors, resolver, scoring
+from .geo import Frame, closest_on_line
+from .merge import merge_candidates
 from .models import (
     Building,
     Candidate,
@@ -37,11 +41,16 @@ MAPILLARY_ATTRIBUTION = "Street-level imagery © Mapillary contributors, CC BY-S
 MODEL_VERSION = "none"  # no CV model in the MVP bundles
 
 T = TypeVar("T")
+log = logging.getLogger(__name__)
+COMBINE_FALLBACK_NOTE = (
+    "scoring.combine blocked on BE-4: merged doors use the best score, no agreement step"
+)
 
 
 class PilotSite(BaseModel):
     # The id becomes the file name bundles/<id>.json, so keep it to a safe slug.
     id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
+    label: str | None = None  # for people (test runs, logs); never sent to the app
     address: str
     name: str | None = None
     scenario: Literal["same_side", "driveway", "opposite", "campus"]
@@ -54,20 +63,23 @@ class Facade(BaseModel):
     street_side: StreetSide | None = None
 
 
-def path_checks_todo(building: Building, door: Candidate, street_side: StreetSide | None):
-    """Path checks from the drop-off to `door` (plan section 8). TODO (BE-7)."""
-    raise NotImplementedError("BE-7")
-
-
 @dataclass(frozen=True)
 class Stages:
     """The ladder, one typed callable per step. Outputs may be models or plain dicts."""
 
     geocode: Callable[[ResolveRequest], GeocodedPoint] = resolver.geocode
-    find_building: Callable[[GeocodedPoint], Building] = resolver.find_building
-    read_entrances: Callable[[Building, str | None], list[Candidate]] = resolver.read_entrances
-    facade_fallback: Callable[[Building, GeocodedPoint], Facade] = resolver.facade_fallback
-    path_checks: Callable[[Building, Candidate, StreetSide | None], PathChecks] = path_checks_todo
+    find_building: Callable[[GeocodedPoint], Building] = doors.find_building
+    read_entrances: Callable[[Building, str | None], list[Candidate]] = doors.read_entrances
+    facade_fallback: Callable[[Building, GeocodedPoint], Facade] = doors.facade_fallback
+    # Fix R10: street_side for the door the bundle guides to (candidates[0] after ranking).
+    street_side: Callable[[Building, Candidate, GeocodedPoint], StreetSide | None] = (
+        doors.street_side_for
+    )
+    path_checks: Callable[[Building, Candidate, StreetSide | None], PathChecks] = doors.path_checks
+    # Fix R14: BE-7 warnings with no contract field yet, reported as build notes.
+    path_warnings: Callable[[Building, Candidate, StreetSide | None], list[str]] = (
+        doors.path_warnings
+    )
 
 
 class StageError(Exception):
@@ -88,6 +100,7 @@ class SiteReport:
     site_id: str
     bundle: ResolveResult | None = None
     error: StageError | None = None
+    notes: tuple[str, ...] = ()
 
     @property
     def ok(self) -> bool:
@@ -96,7 +109,8 @@ class SiteReport:
     def describe(self) -> str:
         if self.bundle is not None:
             top = self.bundle.candidates[0]
-            return f"ok ({self.bundle.status}, top door: {top.band} {top.confidence:.2f})"
+            ok = f"ok ({self.bundle.status}, top door: {top.band} {top.confidence:.2f})"
+            return "; ".join([ok, *self.notes])
         assert self.error is not None
         if self.error.blocked_on:
             return f"blocked on {self.error.blocked_on} ({self.error.stage})"
@@ -112,9 +126,36 @@ def _stage(name: str, run: Callable[[], T]) -> T:
         raise StageError(name, exc) from exc
 
 
-def rank(candidates: list[Candidate]) -> list[Candidate]:
+def has_housenumber(c: Candidate, housenumber: str | None) -> bool:
+    """True if one of the candidate's OSM tags says addr:housenumber=<the destination's>."""
+    if not housenumber:
+        return False
+    want = housenumber.strip().lower()
+    return any(
+        want in {n.strip().lower() for n in p.tags.get("addr:housenumber", "").split(";")}
+        for p in c.provenance
+        if p.tags
+    )
+
+
+def meters_to_street(c: Candidate, street_side: StreetSide | None) -> float:
+    """Distance from the candidate to the entrance street's centerline (0 when unknown)."""
+    if street_side is None or not street_side.centerline:
+        return 0.0
+    f = Frame(c.lat, c.lon)
+    return closest_on_line((0.0, 0.0), [f.xy(lon, lat) for lon, lat in street_side.centerline])[0]
+
+
+def rank(
+    candidates: list[Candidate],
+    street_side: StreetSide | None = None,
+    housenumber: str | None = None,
+) -> list[Candidate]:
     """Cap confidence, set the band from scoring.band, sort best first, keep the top 5.
 
+    Equal confidence (e.g. several main doors capped at 0.95, E2E I-5) is broken by: the door
+    tagged with the destination's house number, then the door nearest the entrance street (plan
+    section 8: walking distance from the expected drop-off), then the original order.
     Ids are reassigned c1..cN in rank order so they stay unique across stages.
     """
     capped = []
@@ -123,7 +164,15 @@ def rank(candidates: list[Candidate]) -> list[Candidate]:
         capped.append(
             c.model_copy(update={"confidence": confidence, "band": scoring.band(confidence)})
         )
-    best = sorted(capped, key=lambda c: c.confidence, reverse=True)[:MAX_CANDIDATES]
+    # sorted() is stable, so the original order is the last tie-break.
+    best = sorted(
+        capped,
+        key=lambda c: (
+            -round(c.confidence, 6),
+            not has_housenumber(c, housenumber),
+            meters_to_street(c, street_side),
+        ),
+    )[:MAX_CANDIDATES]
     return [c.model_copy(update={"id": f"c{i}"}) for i, c in enumerate(best, start=1)]
 
 
@@ -149,13 +198,16 @@ def assemble(
     """
     if not ranked:
         raise ValueError("no candidates, not even a facade fallback")
-    text = [
-        t
-        for t in dict.fromkeys(
-            [building.housenumber or point.housenumber, building.name or site.name]
-        )
-        if t
-    ]
+    # The number, the mapped name and the pilot site's name, which often differ (E2E I-10).
+    # Fix R12: always the destination's number; the building's numbers only when they include
+    # it (a fallback outline may be the neighbour, "75"), split so "77;79" gives "77", "79".
+    numbers = [point.housenumber]
+    if point.housenumber:
+        tagged = [n.strip() for n in (building.housenumber or "").split(";") if n.strip()]
+        if point.housenumber.strip().lower() in {n.lower() for n in tagged}:
+            numbers += tagged
+    names = [*numbers, building.name, site.name]
+    text = list(dict.fromkeys(t for t in names if t))
     result = ResolveResult(
         destination_id=f"dst_{site.id}",
         # Facade only is a weak answer: the app should treat it as partial.
@@ -174,12 +226,96 @@ def assemble(
     return ResolveResult.model_validate(result.model_dump(mode="json"))
 
 
-def build_bundle(site: PilotSite, stages: Stages, data_version: DataVersion) -> ResolveResult:
-    """Run the ladder for one site. Raises StageError naming the stage that failed."""
+CORNER_M = 1.5  # two candidates this close to a shared corner count as the same face
+
+
+def same_face_on(
+    footprint: list[list[float]], other_rings: list[list[list[float]]] = ()
+) -> Callable[[Candidate, Candidate], bool] | None:
+    """A building-face predicate for merge_candidates, from a [lon, lat] footprint (plus a
+    multipolygon's other outer rings, Fix R5).
+
+    Each candidate snaps to its nearest wall: consecutive edges within 15 degrees are one wall
+    (doors._walls), so a door node splitting a straight wall does not split the face (Fix R3).
+    Same face = same wall, or adjacent walls with both candidates within CORNER_M of their
+    shared corner (a door right at a corner). Works in local meters around the footprint's
+    first point; buildings are small enough for an equirectangular projection. None when the
+    footprint has no usable edge.
+    """
+    lon0, lat0 = footprint[0] if footprint else (0.0, 0.0)
+    kx = math.radians(1) * 6_371_008.8 * math.cos(math.radians(lat0))
+    ky = math.radians(1) * 6_371_008.8
+
+    def local(lon: float, lat: float) -> tuple[float, float]:
+        return ((lon - lon0) * kx, (lat - lat0) * ky)
+
+    edges = []
+    for ring in [footprint, *other_rings]:
+        pts = [local(lon, lat) for lon, lat in ring]
+        pts = [p for k, p in enumerate(pts) if k == 0 or p != pts[k - 1]]
+        if len(pts) >= 2:
+            edges += doors._walls(pts)
+    if not edges:
+        return None
+
+    def snap(c: Candidate) -> tuple[int, tuple[float, float]]:
+        px, py = local(c.lon, c.lat)
+        best = None
+        for i, ((ax, ay), (bx, by)) in enumerate(edges):
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+            q = (ax + t * dx, ay + t * dy)
+            d = math.dist((px, py), q)
+            if best is None or d < best[0]:
+                best = (d, i, q)
+        return best[1], best[2]
+
+    def same_face(a: Candidate, b: Candidate) -> bool:
+        (ea, qa), (eb, qb) = snap(a), snap(b)
+        if ea == eb:
+            return True
+        shared = set(edges[ea]) & set(edges[eb])
+        return any(math.dist(qa, v) <= CORNER_M and math.dist(qb, v) <= CORNER_M for v in shared)
+
+    return same_face
+
+
+def merge(
+    candidates: list[Candidate],
+    notes: list[str] | None = None,
+    same_face: Callable[[Candidate, Candidate], bool] | None = None,
+) -> list[Candidate]:
+    """Merge duplicate doors within ~4 m (app/merge.py) using scoring.combine.
+
+    Until BE-4 implements scoring.combine, fall back to the best score (no agreement step) and
+    add COMBINE_FALLBACK_NOTE to `notes` instead of failing the site.
+    """
+
+    seen = notes if notes is not None else []
+
+    def combine(best_by_class: dict[str, float]) -> float:
+        try:
+            return scoring.combine(best_by_class)
+        except NotImplementedError:
+            if COMBINE_FALLBACK_NOTE not in seen:
+                log.warning(COMBINE_FALLBACK_NOTE)
+                seen.append(COMBINE_FALLBACK_NOTE)
+            return max(best_by_class.values())
+
+    return merge_candidates(candidates, combine=combine, same_face=same_face)
+
+
+def build_bundle(
+    site: PilotSite, stages: Stages, data_version: DataVersion, notes: list[str] | None = None
+) -> ResolveResult:
+    """Run the ladder for one site. Raises StageError naming the stage that failed.
+
+    Non-fatal remarks (e.g. a teammate's step still stubbed) are appended to `notes`.
+    """
     request = ResolveRequest(address=site.address, name=site.name)
     point = _stage("geocode", lambda: stages.geocode(request))
     building = _stage("find_building", lambda: Building.model_validate(stages.find_building(point)))
-    doors = _stage(
+    found = _stage(
         "read_entrances",
         lambda: [
             Candidate.model_validate(c) for c in stages.read_entrances(building, point.housenumber)
@@ -190,27 +326,42 @@ def build_bundle(site: PilotSite, stages: Stages, data_version: DataVersion) -> 
     facade = _stage(
         "facade_fallback", lambda: Facade.model_validate(stages.facade_fallback(building, point))
     )
-    candidates = rank(doors + facade.candidates)
-    if not candidates:
-        raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
-    checks = _stage(
-        "path_checks",
-        lambda: PathChecks.model_validate(
-            stages.path_checks(building, candidates[0], facade.street_side)
+    merged = _stage(
+        "merge",
+        lambda: merge(
+            found + facade.candidates,
+            notes,
+            same_face_on(building.footprint, doors.rings_of(building)[1:]),
         ),
     )
+    candidates = rank(merged, facade.street_side, point.housenumber)
+    if not candidates:
+        raise StageError("facade_fallback", ValueError("no candidates, not even a facade fallback"))
+    # Fix R10: the anchor facade_fallback used for street_side may be another tied door; the
+    # street side and path checks must describe the door the rider is guided to.
+    raw_side = _stage("street_side", lambda: stages.street_side(building, candidates[0], point))
+    side = _stage(
+        "street_side", lambda: None if raw_side is None else StreetSide.model_validate(raw_side)
+    )
+    checks = _stage(
+        "path_checks",
+        lambda: PathChecks.model_validate(stages.path_checks(building, candidates[0], side)),
+    )
+    warnings = _stage("path_checks", lambda: stages.path_warnings(building, candidates[0], side))
+    if notes is not None:
+        notes += [f"path warning: {w}" for w in warnings]
     return _stage(
         "assemble",
-        lambda: assemble(
-            site, point, building, candidates, checks, facade.street_side, data_version
-        ),
+        lambda: assemble(site, point, building, candidates, checks, side, data_version),
     )
 
 
 def run_site(site: PilotSite, stages: Stages, data_version: DataVersion) -> SiteReport:
     """Like build_bundle, but a failure becomes a report instead of stopping the run."""
+    notes: list[str] = []
     try:
-        return SiteReport(site.id, bundle=build_bundle(site, stages, data_version))
+        result = build_bundle(site, stages, data_version, notes)
+        return SiteReport(site.id, bundle=result, notes=tuple(notes))
     except StageError as exc:
         return SiteReport(site.id, error=exc)
 
