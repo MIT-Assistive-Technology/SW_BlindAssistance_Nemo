@@ -264,6 +264,44 @@ nonisolated public enum Phrases {
   public static let arrivedAtDoor =
     "The door should be right in front of you. Feel for the handle."
 
+  /// Within a few meters by GPS, but the fix is too rough to put the door in front of
+  /// the rider, or the map only has the street-facing side. Said instead of
+  /// `arrivedAtDoor` so the app never sounds surer than it is.
+  public static let arrivedNearDoor =
+    "You should be close to the entrance, but I can't pinpoint the door from here. Feel along the building for it."
+
+  /// SAFE-9 and SAFE-10: GPS is too rough or too old to guide by.
+  public static let positionUncertain =
+    "I'm not sure where you are right now. Guidance paused. Stand still for a moment."
+
+  public static let guidanceResumed = "Guidance resumed."
+
+  /// Back from off route, now facing roughly the right way again.
+  public static let reorienting = "Now turn slowly until I tell you that's the direction."
+
+  /// SAFE-4, in the plan's words: no footway reaches the door.
+  public static let noSafePath = "I don't have a safe path. Follow the sidewalk."
+
+  /// The way to the door crosses a road and there's no marked crossing (SAFE-3), so
+  /// guidance waits rather than pointing across it.
+  public static let noSafePathAcrossRoad =
+    "\(noSafePath) The way to your entrance crosses a road, and I don't know of a marked crossing. Tell me when you're across."
+
+  /// The straight line to the door crosses a road, so the rider is guided to the
+  /// nearest marked crossing first (SAFE-3).
+  public static func roadToCross(metersToCrossing: Double?, units: Units = .feet) -> String {
+    let howFar = metersToCrossing.map { ", \(distance(meters: $0, units: units)) away" } ?? ""
+    return
+      "The way to your entrance crosses a road. I'll guide you to the nearest marked crossing first\(howFar)."
+  }
+
+  /// At the crossing. The app never says when it's safe to cross (SAFE-3).
+  public static let atCrossing =
+    "You should be near the marked crossing. I can't tell you when it's safe to cross. Tell me when you're across."
+
+  public static let readyToStartGuidance =
+    "Thanks. Start guiding from the Walk screen when you're ready."
+
   // MARK: - The camera building check (CV-9)
 
   /// The camera read the building's number or name where the map said it would be.
@@ -422,6 +460,16 @@ nonisolated public enum Phrases {
         brief: DestinationBrief(band: "main", automaticDoor: "button", stepCount: 3)),
       finalApproach(metersToDoor: nil, brief: DestinationBrief(band: "facade")),
       arrivedAtDoor,
+      arrivedNearDoor,
+      positionUncertain,
+      guidanceResumed,
+      reorienting,
+      noSafePath,
+      noSafePathAcrossRoad,
+      roadToCross(metersToCrossing: 40),
+      roadToCross(metersToCrossing: nil),
+      atCrossing,
+      readyToStartGuidance,
       buildingConfirmed(text: "77", offsetDegrees: 20),
       buildingConfirmed(text: "77", offsetDegrees: nil),
       buildingUncertain(text: "77"),

@@ -47,10 +47,15 @@ public final class BeaconChannel: FeedbackChannel {
     case .direction(let offset), .doorDetected(let offset, _):
       updateTarget(relativeAngleDegrees: offset)  // aim the tone at the angle
       startTone()  // make sure it's playing
+    case .beaconAim(let offset?):
+      // Sent on every update while walking, so the tone stays where the target is in the
+      // world as the rider turns (a head-relative angle goes stale with the first turn).
+      updateTarget(relativeAngleDegrees: offset)
+      startTone()
+    case .beaconAim(nil), .arrival, .arrivalUncertain:
+      stop()  // nothing safe to point at → silence
     case .bearingLock:
       startTone()  // locked on — keep ticking
-    case .arrival, .lost:
-      stop()  // no valid target → silence
     default:
       break  // speech/haptics own the rest
     }

@@ -76,6 +76,30 @@ nonisolated public enum FeedbackEvent: Sendable {
   case directionUncertain
   /// The last few meters, with the door facts from the bundle.
   case finalApproach(metersToDoor: Double?, DestinationBrief)
+  /// Where the beacon should sound, relative to the way the rider faces, sent on every
+  /// position or heading update while walking so the tone stays fixed in the world.
+  /// nil means there is nothing safe to point at, and the beacon goes quiet. Not spoken.
+  case beaconAim(offsetDegrees: Double?)
+  /// GPS is too rough (worse than ~15 m) or too old to guide by (SAFE-9). Guidance
+  /// holds and says so rather than steering from a guess.
+  case positionUncertain
+  /// ...and the position is good again.
+  case guidanceResumed
+  /// Back from off route: turn towards the door again.
+  case reorienting
+  /// No known safe path (SAFE-4). `roadCrossing` when the way to the door crosses a
+  /// road and there's no marked crossing, so guidance waits for the rider (SAFE-3).
+  case noSafePath(roadCrossing: Bool)
+  /// The way to the door crosses a road (`crosses_road`) and the bundle has a marked
+  /// crossing: the rider is guided there first.
+  case roadToCross(metersToCrossing: Double?)
+  /// At the marked crossing. The app never says when it's safe to cross.
+  case atCrossing
+  /// Within a few meters, but GPS is too rough to say the door is right there, or the
+  /// map only knows the street-facing side.
+  case arrivalUncertain
+  /// The rider said they're across; guidance can start from the Walk screen.
+  case readyToStartGuidance
 }
 
 /// One output: speech, spatial beacon, haptics, earcons, Apple Watch.
@@ -171,7 +195,8 @@ public final class SpeechChannel: FeedbackChannel {
   /// Events the rider must hear even if the same words were just spoken.
   public static func isCritical(_ event: FeedbackEvent) -> Bool {
     switch event {
-    case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied:
+    case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied,
+      .positionUncertain, .noSafePath, .roadToCross, .atCrossing, .arrivalUncertain:
       return true
     default:
       return false
@@ -243,6 +268,25 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.finalApproach(metersToDoor: metersToDoor, brief: brief, units: units)
     case .arrival:
       return Phrases.arrivedAtDoor
+    case .arrivalUncertain:
+      return Phrases.arrivedNearDoor
+    case .positionUncertain:
+      return Phrases.positionUncertain
+    case .guidanceResumed:
+      return Phrases.guidanceResumed
+    case .reorienting:
+      return Phrases.reorienting
+    case .noSafePath(let roadCrossing):
+      return roadCrossing ? Phrases.noSafePathAcrossRoad : Phrases.noSafePath
+    case .roadToCross(let metersToCrossing):
+      return Phrases.roadToCross(metersToCrossing: metersToCrossing, units: units)
+    case .atCrossing:
+      return Phrases.atCrossing
+    case .readyToStartGuidance:
+      return Phrases.readyToStartGuidance
+    case .beaconAim:
+      // The tone carries this; speaking it on every update would drown everything else.
+      return nil
 
     case .buildingConfirmed(let text, let offsetDegrees):
       return Phrases.buildingConfirmed(text: text, offsetDegrees: offsetDegrees)
