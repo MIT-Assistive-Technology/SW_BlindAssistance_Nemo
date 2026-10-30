@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ContentView: View {
   @StateObject private var services = AppServices()
-  @StateObject private var cameraViewModel = makeCameraViewModel()
+  #if DEBUG
+    @StateObject private var cameraViewModel = makeCameraViewModel()
+  #endif
 
   var body: some View {
     NavigationStack {
@@ -33,6 +35,8 @@ struct ContentView: View {
           Text("Entrance data © OpenStreetMap contributors.")
         }
 
+        // Developer tools stay out of the rider's build.
+        #if DEBUG
         Section {
           NavigationLink("Camera (debug)") {
             CameraView(viewModel: cameraViewModel)
@@ -41,10 +45,13 @@ struct ContentView: View {
         } footer: {
           Text("The camera preview is for developers; riders are guided by sound.")
         }
+        #endif
       }
       .navigationTitle("Nemo")
       #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+      #endif
+      #if os(iOS) && DEBUG
         .toolbar {
           // TEMPORARY (FE-4 ear test): fires a beacon tone at a fixed angle.
           ToolbarItem(placement: .topBarTrailing) {
@@ -65,6 +72,7 @@ struct ContentView: View {
 
 // MARK: - Composition root
 
+#if DEBUG
 private func makeCameraViewModel() -> CameraViewModel {
   // The Simulator has no camera, so it gets blank frames to exercise the pipeline.
   #if targetEnvironment(simulator)
@@ -75,8 +83,7 @@ private func makeCameraViewModel() -> CameraViewModel {
   let detector: ObjectDetector = VisionObjectDetector()
   let pipeline = PerceptionPipeline(
     detector: detector,
-    locationProvider: LocationService.shared,
-    speaker: Speaker()
+    locationProvider: LocationService.shared
   )
   return CameraViewModel(frameProvider: frameProvider, pipeline: pipeline)
 }
@@ -93,6 +100,7 @@ private let testHaptics = HapticsChannel()
 private func hapticTest() {
   testHaptics.play(.warning("test"))
 }
+#endif
 
 #Preview {
   ContentView()

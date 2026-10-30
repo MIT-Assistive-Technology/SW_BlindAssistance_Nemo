@@ -1,13 +1,13 @@
 //  PerceptionPipeline.swift
 //  nemo-software
 //
-//  Wires the camera, detector, location, and speaker together. Receives every
-//  frame from the active FrameProvider, runs object detection, speaks what was
-//  seen, and publishes a simple presentation for the UI.
+//  Wires the camera, detector and location together. Receives every frame from the
+//  active FrameProvider, runs object detection, and publishes a simple presentation for
+//  the UI. It speaks nothing: anything said to the rider goes through FeedbackKit.
 //
 //  Threading: frames arrive on the provider's queue. At most one frame at a time is
 //  processed on `perceptionQueue`; frames that arrive while it's busy, or faster than
-//  `maxFramesPerSecond`, are dropped. Only the presentation (and speech) hop to the
+//  `maxFramesPerSecond`, are dropped. Only the presentation hops to the
 //  main actor. Pixel buffers are released as soon as the frame is processed.
 //
 
@@ -56,7 +56,6 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
   private let detector: ObjectDetector
   private let locationProvider: LocationProvider
-  private let speaker: Speaker
 
   private let perceptionQueue = DispatchQueue(label: "nemo.perception", qos: .userInitiated)
 
@@ -70,12 +69,10 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   public init(
     detector: ObjectDetector,
     locationProvider: LocationProvider,
-    speaker: Speaker,
     maxFramesPerSecond: Double = 10
   ) {
     self.detector = detector
     self.locationProvider = locationProvider
-    self.speaker = speaker
     self.maxFramesPerSecond = maxFramesPerSecond
   }
 
@@ -145,13 +142,6 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
     // `buffer` is not captured below, so the camera gets it back now.
     Task { @MainActor [self] in
-      // Speak the most interesting detection(s) so the user gets audio feedback.
-      // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
-      // announcements to FeedbackKit events.
-      if let top = detections.first {
-        speaker.speak(top.labels.first?.identifier ?? "something")
-      }
-
       // LocationService is main-actor, so the snapshot is read here, a few ms after capture.
       // TODO: attach location at capture time once LocationService is thread-safe (FE-3).
       onPresentation?(
