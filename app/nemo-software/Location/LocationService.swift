@@ -168,7 +168,9 @@ public protocol LocationProvider: AnyObject {
         coordinate: currentSnapshot.coordinate,
         horizontalAccuracy: currentSnapshot.horizontalAccuracy,
         heading: newHeading,
-        timestamp: newHeading.timestamp,
+        // The snapshot's timestamp is the position's. A heading update must not make an
+        // old fix look fresh; the heading carries its own time in `readout`.
+        timestamp: currentSnapshot.timestamp,
         headingReadout: readout,
         courseDegrees: currentSnapshot.courseDegrees,
         courseAccuracyDegrees: currentSnapshot.courseAccuracyDegrees,

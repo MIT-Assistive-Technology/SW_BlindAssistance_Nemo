@@ -19,7 +19,9 @@ nonisolated public struct LocationSnapshot {
   /// Raw CoreLocation heading, when one has arrived.
   public let heading: CLHeading?
 
-  /// When the snapshot was taken.
+  /// When the position (`coordinate`) was measured. Heading updates keep it unchanged,
+  /// so guidance can tell a stale fix from a fresh one; the heading's own time is
+  /// `headingReadout.timestamp`.
   public let timestamp: Date
 
   /// True heading plus its accuracy as a value type, so guidance and tests don't need a
