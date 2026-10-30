@@ -418,5 +418,7 @@ final class NavigationSessionTests: XCTestCase {
     XCTAssertEqual(session.state, .orient)
     XCTAssertNil(session.offsetDegrees)
     XCTAssertNotNil(session.metersToDoor)
+    // ...but not in silence: after a few seconds it asks for the compass (SAFE-10).
+    XCTAssertTrue(speaker.spoken.contains(Phrases.compassCalibration), "said: \(speaker.spoken)")
   }
 }

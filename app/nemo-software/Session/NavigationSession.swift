@@ -128,6 +128,10 @@ nonisolated public struct SessionSnapshot: Codable, Equatable, Sendable {
   public var riderIsOnDoorSide: Bool?
   public var breadcrumbs: [GuidancePosition]
   public var updatedAt: Date
+  /// Without these, a relaunch after "I'm across" aims back at the crossing behind the
+  /// rider. Optional so snapshots saved before they existed still load.
+  public var hasCrossedRoad: Bool? = nil
+  public var isWaitingAtRoad: Bool? = nil
 }
 
 @MainActor
@@ -357,8 +361,15 @@ public final class NavigationSession: ObservableObject {
         feedback.emit(.startingGuidance, force: true)
       }
     case .guide:
-      // On the way to a crossing, "the door is X ahead" would point the wrong way.
-      feedback.emit(.bearingLock(metersToDoor: isCrossingLeg ? nil : metersToDoor), force: true)
+      // "That's the direction" only when the rider is facing it right now.
+      if let offset = offsetDegrees, abs(offset) > thresholds.lockWithinDegrees {
+        feedback.emit(.direction(offsetDegrees: offset), force: true)
+      } else if offsetDegrees == nil {
+        feedback.emit(.compassCalibration, force: true)
+      } else {
+        // On the way to a crossing, "the door is X ahead" would point the wrong way.
+        feedback.emit(.bearingLock(metersToDoor: isCrossingLeg ? nil : metersToDoor), force: true)
+      }
     case .confirm:
       feedback.emit(.finalApproach(metersToDoor: metersToDoor, brief()), force: true)
     case .lost:
@@ -440,9 +451,14 @@ public final class NavigationSession: ObservableObject {
   public func update(position: GuidancePosition, heading: HeadingReadout?) {
     guard let target else { return }
     let now = max(position.timestamp, heading?.timestamp ?? position.timestamp)
+    // LocationService keeps the last good heading when the compass goes bad, so an old
+    // one counts as no heading rather than steering from where the rider used to face.
+    let heading: HeadingReadout? = heading.flatMap { reading in
+      now.timeIntervalSince(reading.timestamp) <= thresholds.maxPositionAgeSeconds
+        ? reading : nil
+    }
     let distance = Geo.distanceMeters(
       lat1: position.latitude, lon1: position.longitude, lat2: target.lat, lon2: target.lon)
-    metersToDoor = distance
 
     let walking = Self.walkingStates.contains(state)
     // SAFE-9: GPS too rough or too old to guide by. Hold, say so once, and silence the
@@ -452,6 +468,8 @@ public final class NavigationSession: ObservableObject {
       holdForPosition()
       return
     }
+    // After the SAFE-9 check, so the screen never shows a distance from a rejected fix.
+    metersToDoor = distance
     if walking && positionIsUncertain {
       positionIsUncertain = false
       feedback.emit(.guidanceResumed)
@@ -493,7 +511,12 @@ public final class NavigationSession: ObservableObject {
   private func updateOrient(
     position: GuidancePosition, heading: HeadingReadout?, at now: Date, aimDistance: Double
   ) {
-    guard let offset = offsetDegrees, let heading else { return }
+    guard let offset = offsetDegrees, let heading else {
+      lockedSince = nil
+      noteHeadingMissing(at: now)
+      return
+    }
+    headingMissingSince = nil
     // A rough compass can't support a 15° lock or a spoken turn. Ask for calibration
     // once, and keep waiting.
     guard heading.accuracyDegrees <= thresholds.lockMaxHeadingAccuracyDegrees else {
@@ -520,6 +543,9 @@ public final class NavigationSession: ObservableObject {
     breadcrumbs = [position]
     offRouteSince = nil
     firstStepsChecked = false
+    // The compass prompt is per leg: a dropout while walking gets its own.
+    compassPromptSpoken = false
+    headingMissingSince = nil
     state = .guide
     // On the way to a crossing, the distance to the door would point the wrong way.
     feedback.emit(.bearingLock(metersToDoor: isCrossingLeg ? nil : aimDistance))
@@ -584,16 +610,13 @@ public final class NavigationSession: ObservableObject {
       feedback.emit(.distance(meters: aimDistance))
     }
 
-    // No compass, so being off course can't be judged. Say so (SAFE-10) rather than
-    // skipping the lost check in silence.
-    guard heading != nil, let offset = offsetDegrees else {
+    // No compass, or one too rough to judge 60°, so being off course can't be judged.
+    // Say so (SAFE-10) rather than skipping the lost check in silence.
+    let compassIsUsable =
+      heading.map { $0.accuracyDegrees <= thresholds.lockMaxHeadingAccuracyDegrees } ?? false
+    guard compassIsUsable, let offset = offsetDegrees else {
       offRouteSince = nil
-      let since = headingMissingSince ?? now
-      headingMissingSince = since
-      if !compassPromptSpoken, now.timeIntervalSince(since) >= thresholds.lostAfterSeconds {
-        compassPromptSpoken = true
-        feedback.emit(.compassCalibration)
-      }
+      noteHeadingMissing(at: now)
       return
     }
     headingMissingSince = nil
@@ -671,12 +694,23 @@ public final class NavigationSession: ObservableObject {
     persist()
   }
 
+  /// No usable heading: after a few seconds, ask for calibration once (SAFE-10).
+  private func noteHeadingMissing(at now: Date) {
+    let since = headingMissingSince ?? now
+    headingMissingSince = since
+    if !compassPromptSpoken, now.timeIntervalSince(since) >= thresholds.lostAfterSeconds {
+      compassPromptSpoken = true
+      feedback.emit(.compassCalibration)
+    }
+  }
+
   /// SAFE-9: the fix is too rough or too old. Holds and timers restart once it's good.
   private func holdForPosition() {
     lockedSince = nil
     offRouteSince = nil
     recoveringSince = nil
     offsetDegrees = nil
+    metersToDoor = nil
     feedback.emit(.beaconAim(offsetDegrees: nil))
     guard !positionIsUncertain else { return }
     positionIsUncertain = true
@@ -736,7 +770,8 @@ public final class NavigationSession: ObservableObject {
     guard let bundle else { return nil }
     return SessionSnapshot(
       state: state, address: address, destinationId: bundle.destinationId,
-      riderIsOnDoorSide: riderIsOnDoorSide, breadcrumbs: breadcrumbs, updatedAt: Date())
+      riderIsOnDoorSide: riderIsOnDoorSide, breadcrumbs: breadcrumbs, updatedAt: Date(),
+      hasCrossedRoad: hasCrossedRoad, isWaitingAtRoad: isWaitingAtRoad)
   }
 
   /// Pick up where a killed app left off.
@@ -756,8 +791,8 @@ public final class NavigationSession: ObservableObject {
     firstStepsChecked = false
     calloutsSpoken = []
     anchor = nil
-    hasCrossedRoad = false
-    isWaitingAtRoad = false
+    hasCrossedRoad = snapshot.hasCrossedRoad ?? false
+    isWaitingAtRoad = snapshot.isWaitingAtRoad ?? false
     resetWalkChecks()
 
     switch snapshot.state {
@@ -767,8 +802,12 @@ public final class NavigationSession: ObservableObject {
       state = snapshot.state
       feedback.emit(.askSideOfStreet(sideContext()))
     case .orient, .guide, .confirm, .lost:
-      state = .orient
-      feedback.emit(.startingGuidance)
+      // Through startGuidance, so the road checks run again: never aim at a crossing
+      // that isn't there (SAFE-3, SAFE-4). If it can't start, the rider is back at the
+      // drop-off and has been told why.
+      state = .arrival
+      startGuidance()
+      breadcrumbs = snapshot.breadcrumbs
     case .setup, .arrived:
       state = snapshot.state
     }
