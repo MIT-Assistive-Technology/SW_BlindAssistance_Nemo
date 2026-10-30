@@ -155,6 +155,8 @@ public final class SpeechChannel: FeedbackChannel {
   private let now: () -> Date
   private var lastPhrase: String?
   private var lastSpokenAt: Date?
+  /// The last turn offset spoken, for the hysteresis in `steadied(_:)`.
+  private var lastTurnOffset: Double?
 
   public init(
     speaker: any SpeechOutput,
@@ -171,7 +173,7 @@ public final class SpeechChannel: FeedbackChannel {
   }
 
   public func play(_ event: FeedbackEvent, force: Bool) {
-    guard let phrase = Self.phrase(for: event, units: units) else { return }
+    guard let phrase = Self.phrase(for: steadied(event), units: units) else { return }
     let moment = now()
     // Critical events are never suppressed, even if they were just said (Trish's rule
     // from FE-6). A `.lost` swallowed because the same words played three seconds ago
@@ -183,13 +185,35 @@ public final class SpeechChannel: FeedbackChannel {
     }
     lastPhrase = phrase
     lastSpokenAt = moment
-    speaker.speak(phrase)
+    // A rider's "repeat" is never dropped behind other speech either.
+    speaker.speak(phrase, critical: force || Self.isCritical(event))
   }
 
   public func stop() {
     lastPhrase = nil
     lastSpokenAt = nil
+    lastTurnOffset = nil
     speaker.stop()
+  }
+
+  /// Degrees past a turn-band edge (10°, 35°, 120°) before the spoken turn changes, so a
+  /// rider holding the phone at 34–36° doesn't hear "slightly right", "to your right",
+  /// "slightly right".
+  public static let turnHysteresisDegrees: Double = 5
+  private static let turnBandEdges: [Double] = [10, 35, 120]
+
+  private func steadied(_ event: FeedbackEvent) -> FeedbackEvent {
+    guard case .direction(let offset) = event else { return event }
+    if let last = lastTurnOffset, (last < 0) == (offset < 0),
+      Self.turnBandEdges.contains(where: { edge in
+        min(abs(last), abs(offset)) < edge && edge <= max(abs(last), abs(offset))
+          && abs(abs(offset) - edge) < Self.turnHysteresisDegrees
+      })
+    {
+      return .direction(offsetDegrees: last)
+    }
+    lastTurnOffset = offset
+    return event
   }
 
   /// Events the rider must hear even if the same words were just spoken.
