@@ -67,8 +67,11 @@ public final class GuidanceViewModel: ObservableObject {
   public var detailText: String {
     guard let metersToDoor else { return "Waiting for a position fix." }
     let distance = Phrases.distance(meters: metersToDoor)
-    guard let offsetDegrees else { return "The door is \(distance) away." }
-    return "The door is \(distance) away, \(Phrases.turn(offsetDegrees: offsetDegrees))."
+    guard let offsetDegrees else { return "The door should be \(distance) away." }
+    // The turn is to wherever the beacon points (a crosswalk, or back along the route
+    // while lost), not necessarily to the door.
+    return
+      "The door should be \(distance) away. Next point: \(Phrases.turn(offsetDegrees: offsetDegrees))."
   }
 
   public func onAppear() { location.start() }
