@@ -110,6 +110,8 @@ public final class BeaconChannel: FeedbackChannel {
     if supported.contains(.HRTF) {
       player.renderingAlgorithm = .HRTF
     } else {
+      // Set it, so a switch from headphones to the speaker doesn't keep the old HRTF.
+      player.renderingAlgorithm = .equalPowerPanning
       print("[BeaconChannel] HRTF unavailable for this output; falling back to panning.")
     }
   }
