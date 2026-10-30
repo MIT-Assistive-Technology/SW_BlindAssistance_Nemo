@@ -8,8 +8,7 @@
 import AVFoundation
 import Foundation
 
-/// Anything that can say a phrase. Lets tests record what would have been spoken, and
-/// leaves room for a queue that sits behind VoiceOver later.
+/// Anything that can say a phrase. Lets tests record what would have been spoken.
 public protocol SpeechOutput: AnyObject {
   func speak(_ text: String)
   /// `critical` phrases (warnings, off route, arrival) must not be cut off by routine ones.
@@ -22,6 +21,7 @@ extension SpeechOutput {
 }
 
 #if os(iOS)
+  import UIKit
 
   /// Verbalizes short status messages to the user.
   public final class Speaker: NSObject, SpeechOutput {
@@ -47,6 +47,16 @@ extension SpeechOutput {
     /// off routine speech but queues behind another critical one.
     public func speak(_ text: String, critical: Bool) {
       guard !text.isEmpty else { return }
+      // With VoiceOver reading the screen, two voices would talk over each other. Hand
+      // the phrase to VoiceOver instead: routine phrases queue behind what it is saying,
+      // critical ones interrupt it. In the background (screen locked, phone in a pocket)
+      // VoiceOver is quiet, so the synthesizer speaks.
+      if UIAccessibility.isVoiceOverRunning, UIApplication.shared.applicationState == .active {
+        let announcement = NSAttributedString(
+          string: text, attributes: [.accessibilitySpeechQueueAnnouncement: !critical])
+        UIAccessibility.post(notification: .announcement, argument: announcement)
+        return
+      }
       let criticalInProgress = speakingCritical && synthesizer.isSpeaking
       if !critical && criticalInProgress { return }
       // Other audio is ducked until the phrase ends; AudioSessionManager owns the session.
