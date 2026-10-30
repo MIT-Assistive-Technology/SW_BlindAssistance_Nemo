@@ -9,7 +9,13 @@
 import SwiftUI
 
 struct GuidanceView: View {
-  @ObservedObject var viewModel: GuidanceViewModel
+  // Owned here, built once: a NavigationLink destination is rebuilt on every parent
+  // redraw, and a fresh view model each time would drop state and double-subscribe.
+  @StateObject private var viewModel: GuidanceViewModel
+
+  init(viewModel: @autoclosure @escaping () -> GuidanceViewModel) {
+    _viewModel = StateObject(wrappedValue: viewModel())
+  }
 
   var body: some View {
     List {

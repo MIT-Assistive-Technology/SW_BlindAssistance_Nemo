@@ -15,7 +15,13 @@
 import SwiftUI
 
 struct RideView: View {
-  @ObservedObject var viewModel: RideViewModel
+  // Owned here, built once: a NavigationLink destination is rebuilt on every parent
+  // redraw, and a fresh view model each time would drop state and double-subscribe.
+  @StateObject private var viewModel: RideViewModel
+
+  init(viewModel: @autoclosure @escaping () -> RideViewModel) {
+    _viewModel = StateObject(wrappedValue: viewModel())
+  }
 
   var body: some View {
     List {

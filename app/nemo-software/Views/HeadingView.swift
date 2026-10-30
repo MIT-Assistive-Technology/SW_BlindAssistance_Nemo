@@ -9,7 +9,13 @@
 import SwiftUI
 
 struct HeadingView: View {
-  @ObservedObject var viewModel: HeadingViewModel
+  // Owned here, built once: a NavigationLink destination is rebuilt on every parent
+  // redraw, and a fresh view model each time would drop state and double-subscribe.
+  @StateObject private var viewModel: HeadingViewModel
+
+  init(viewModel: @autoclosure @escaping () -> HeadingViewModel) {
+    _viewModel = StateObject(wrappedValue: viewModel())
+  }
 
   var body: some View {
     List {
