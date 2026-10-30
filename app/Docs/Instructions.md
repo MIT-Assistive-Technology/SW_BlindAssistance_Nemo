@@ -56,7 +56,7 @@ File: `LocationKit/Geo.swift`
 
 Files: `EntranceAPI/EntranceModels.swift`, `EntranceAPI/EntranceClient.swift`
 
-- [ ] Call `StubEntranceClient().resolve(address:)` and check that `Resources/resolve.example.json` decodes. If decoding fails, the Swift models and the contract disagree; fix the model, not the JSON.
+- [ ] Call `StubEntranceClient().resolve(address:)` and check that `Resources/resolve.example.json` decodes. If decoding fails, the Swift models and the contract disagree; fix the model, not the JSON. Then try a real pilot bundle: `StubEntranceClient(site: "mit-stratton-center")` (ids in `server/pilot_sites.json`; partial ones such as `mit-kresge-auditorium` have only a facade guess).
 - [ ] Later: implement `LiveEntranceClient` against the running server, with on-phone caching.
 
 ## 5. Object detection (CV-8)

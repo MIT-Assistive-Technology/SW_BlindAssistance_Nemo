@@ -41,7 +41,7 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 | `Location/` | Publishes `LocationSnapshot` (GPS + true heading) | FE-3 |
 | `LocationKit/` | Geometry math, unit-tested | FE-2, FE-13 |
 | `Perception/` | Object detection to `[Detection]`, later building text check | CV-8, CV-9 |
-| `EntranceAPI/` | Server contract types and client; stub loads `Resources/resolve.example.json` | FE-11 |
+| `EntranceAPI/` | Server contract types and client; stub loads `Resources/resolve.example.json`, or a real pilot bundle from `Resources/PilotBundles/` with `StubEntranceClient(site: "mit-stata")` | FE-11 |
 | `Feedback/` | `FeedbackKit` and its channels; the only place that makes sound or vibration | FE-4, FE-5, FE-6 |
 | `Session/` | `NavigationSession` trip state machine | FE-10 |
 | `Services/` | `PerceptionPipeline` wiring, `Speaker` (speech) | — |

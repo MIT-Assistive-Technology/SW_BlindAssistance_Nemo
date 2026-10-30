@@ -1,0 +1,198 @@
+{
+  "destination_id": "dst_mit-simmons-hall",
+  "status": "partial",
+  "building": {
+    "osm_id": "way/29585286",
+    "name": "W79 Simmons Hall",
+    "housenumber": "229",
+    "footprint": [
+      [
+        -71.102058,
+        42.3567616
+      ],
+      [
+        -71.1020827,
+        42.3567889
+      ],
+      [
+        -71.1021438,
+        42.3568565
+      ],
+      [
+        -71.102168,
+        42.3568835
+      ],
+      [
+        -71.1020465,
+        42.3569429
+      ],
+      [
+        -71.1018973,
+        42.3570163
+      ],
+      [
+        -71.1017199,
+        42.3571035
+      ],
+      [
+        -71.1014621,
+        42.3572301
+      ],
+      [
+        -71.1014027,
+        42.3572591
+      ],
+      [
+        -71.1013439,
+        42.357288
+      ],
+      [
+        -71.1012843,
+        42.3573171
+      ],
+      [
+        -71.1011204,
+        42.3573977
+      ],
+      [
+        -71.1009783,
+        42.3574681
+      ],
+      [
+        -71.1009537,
+        42.3574404
+      ],
+      [
+        -71.1008969,
+        42.3573777
+      ],
+      [
+        -71.1008931,
+        42.3573727
+      ],
+      [
+        -71.1008693,
+        42.3573472
+      ],
+      [
+        -71.1009004,
+        42.3573319
+      ],
+      [
+        -71.1010114,
+        42.3572769
+      ],
+      [
+        -71.1011757,
+        42.3571961
+      ],
+      [
+        -71.1012353,
+        42.3571669
+      ],
+      [
+        -71.1012941,
+        42.3571381
+      ],
+      [
+        -71.1013529,
+        42.3571089
+      ],
+      [
+        -71.1016106,
+        42.3569821
+      ],
+      [
+        -71.101788,
+        42.3568948
+      ],
+      [
+        -71.1019283,
+        42.3568257
+      ],
+      [
+        -71.102058,
+        42.3567616
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.357054404167165,
+      "lon": -71.1014636537549,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Vassar Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/758187788",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.35706282043668,
+      "lon": -71.10144655749131,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/29585286",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": false
+  },
+  "street_side": {
+    "entrance_street": "Vassar Street",
+    "road_way": "way/758187788",
+    "centerline": [
+      [
+        -71.10198,
+        42.3566543
+      ],
+      [
+        -71.101373,
+        42.3569542
+      ],
+      [
+        -71.100787,
+        42.3572438
+      ],
+      [
+        -71.1007659,
+        42.357254
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "229",
+      "W79 Simmons Hall",
+      "Simmons Hall"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-28",
+    "model": "none"
+  }
+}

@@ -32,6 +32,7 @@ nemo-software/
   Services/         PerceptionPipeline, Speaker
   ViewModels/ Views/
   Resources/        resolve.example.json (copy of ../contract/)
+    PilotBundles/   the 19 pilot bundles (copy of ../server/bundles/)
 Docs/
   ARCHITECTURE.md   how the code is organized
   Instructions.md   step-by-step getting started

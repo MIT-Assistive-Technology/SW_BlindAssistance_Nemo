@@ -71,7 +71,7 @@ Files: `app/overpass.py`, `app/doors.py` → `find_building`
 
 ## 6. Pilot bundles (the MVP deliverable)
 
-- [x] `scripts/build_bundles.py` (logic in `app/bundle.py`, tests in `tests/test_bundle.py`): for each site in `pilot_sites.json` it runs geocode → find_building → read_entrances → facade_fallback → path checks, validates the result with `ResolveResult`, and writes `bundles/<id>.json`. Commit the bundles; they ship with the app.
+- [x] `scripts/build_bundles.py` (logic in `app/bundle.py`, tests in `tests/test_bundle.py`): for each site in `pilot_sites.json` it runs geocode → find_building → read_entrances → facade_fallback → path checks, validates the result with `ResolveResult`, and writes `bundles/<id>.json`. Commit the bundles, and copy them to `app/nemo-software/Resources/PilotBundles/` (the app's sample data); `tests/test_contract.py` fails if the copies differ.
 
   ```bash
   python scripts/build_bundles.py --offline              # replay saved Nominatim responses, no network

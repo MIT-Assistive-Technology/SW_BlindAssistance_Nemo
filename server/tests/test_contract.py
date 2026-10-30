@@ -18,3 +18,14 @@ def test_app_bundle_copy_is_identical():
     assert json.loads(APP_COPY.read_text(encoding="utf-8")) == json.loads(
         CONTRACT.read_text(encoding="utf-8")
     ), "Copy contract/resolve.example.json to app/nemo-software/Resources/"
+
+
+def test_app_pilot_bundles_match_the_server_bundles():
+    bundles = ROOT / "server" / "bundles"
+    copies = ROOT / "app" / "nemo-software" / "Resources" / "PilotBundles"
+    names = sorted(p.name for p in bundles.glob("*.json"))
+    assert names == sorted(p.name for p in copies.glob("*.json")), "Copy server/bundles/*.json"
+    for name in names:
+        assert json.loads((copies / name).read_text("utf-8")) == json.loads(
+            (bundles / name).read_text("utf-8")
+        ), f"Copy server/bundles/{name} to app/nemo-software/Resources/PilotBundles/"
