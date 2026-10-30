@@ -151,11 +151,18 @@ final class NavigationSessionTests: XCTestCase {
     XCTAssertEqual(session.state, .lost)
     XCTAssertTrue(speaker.spoken.contains(Phrases.offRoute))
 
-    // While lost the target is the last breadcrumb, not the door: somewhere the rider
-    // has actually stood.
+    // While lost the target is a breadcrumb at least 10 m back, not the door and not the
+    // newest crumb (40 m north, 2 m away, about where the rider already is). Here that is
+    // the 55 m crumb. Fails if the aim is the door, the newest crumb, or anything closer
+    // than 10 m.
     let crumb = session.targetCoordinate
     XCTAssertNotNil(crumb)
-    XCTAssertNotEqual(crumb?.lat, doorLat)
+    XCTAssertEqual(crumb?.lat ?? 0, position(metersNorth: 55, seconds: 0).latitude, accuracy: 1e-7)
+    let lostAt = position(metersNorth: 38, seconds: 20)
+    XCTAssertGreaterThanOrEqual(
+      Geo.distanceMeters(
+        lat1: lostAt.latitude, lon1: lostAt.longitude, lat2: crumb?.lat ?? lostAt.latitude,
+        lon2: crumb?.lon ?? lostAt.longitude), 10)
 
     // Turning back towards it for 2 s re-anchors and returns to orienting.
     let bearingToCrumb = Geo.bearingDegrees(
@@ -170,6 +177,8 @@ final class NavigationSessionTests: XCTestCase {
       position: position(metersNorth: 38, seconds: 27),
       heading: heading(bearingToCrumb, seconds: 27))
     XCTAssertEqual(session.state, .orient)
+    // Never a silent change of plan (SAFE-10).
+    XCTAssertTrue(speaker.spoken.contains(Phrases.reorienting), "said: \(speaker.spoken)")
   }
 
   func testTheFirstStepsCheckCatchesAWrongStart() {

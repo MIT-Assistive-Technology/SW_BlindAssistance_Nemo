@@ -276,6 +276,35 @@ final class RideViewModelTests: XCTestCase {
     XCTAssertEqual(viewModel.riderSaysSameSide, false)
   }
 
+  /// S5: the door is across the street, so the ride screen offers "I'm across". Fails if
+  /// the screen never offers it, if the tap doesn't put the session on the door's side
+  /// (guidance would wait forever), or if it starts the walk from a screen that feeds
+  /// the session no positions.
+  func testImAcrossOnTheRideScreenHandsTheDoorSideToTheSession() async {
+    let channel = SpeechChannel(speaker: speaker)
+    channel.repeatGuard = 0
+    let feedback = FeedbackKit(channels: [channel])
+    let session = NavigationSession(feedback: feedback)
+    let ride = RideViewModel(
+      location: location, feedback: feedback,
+      client: CachingEntranceClient(upstream: StubEntranceClient(), store: store),
+      session: session)
+    ride.address = address
+    await ride.load()
+    session.startRiding()
+    ride.confirmOutOfCar()
+    ride.answerSideQuestion(sameSide: false)
+    XCTAssertTrue(ride.isWaitingToCross)
+    XCTAssertFalse(session.canStartGuidance)
+
+    ride.riderCrossedStreet()
+    XCTAssertFalse(ride.isWaitingToCross)
+    XCTAssertEqual(session.riderIsOnDoorSide, true)
+    XCTAssertTrue(session.canStartGuidance)
+    XCTAssertEqual(session.state, .arrival)
+    XCTAssertTrue(speaker.spoken.contains(Phrases.readyToStartGuidance), "said: \(speaker.spoken)")
+  }
+
   func testStartingAFreshRideClearsTheOldAnswer() async {
     await viewModel.load()
     viewModel.answerSideQuestion(sameSide: true)
