@@ -393,7 +393,10 @@ public final class HapticsChannel: FeedbackChannel {
             haptic(intensity: 0.4, sharpness: 0.3)
         case .arrival:
             haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
-        case .warning, .lost:
+        // Every stop-and-listen event gets the warning buzz, so a rider without
+        // headphones still feels guidance pause or stop at a road.
+        case .warning, .lost, .directionUncertain, .positionUncertain, .noSafePath,
+             .roadToCross, .atCrossing:
             haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
         case .arrivalUncertain:
             // Close, but not "you're there": softer and slower than the arrival pattern.
@@ -422,7 +425,11 @@ public final class HapticsChannel: FeedbackChannel {
                 relativeTime: Double(i) * spacing
             )
         }
-        try? engine.playTaps(events)
+        do {
+            try engine.playTaps(events)
+        } catch {
+            print("[HapticsChannel] taps failed to play: \(error.localizedDescription)")
+        }
     }
     
     public func stop() {
