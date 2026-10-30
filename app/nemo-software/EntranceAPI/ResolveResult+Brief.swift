@@ -46,9 +46,15 @@ nonisolated extension ResolveResult {
 
   /// What the rider hears at setup, built from the top candidate (plan section 3, step 1).
   /// `metersToDoor` is left out until there's a location to measure from.
+  /// The band to speak. A `partial` bundle is the server saying the result is weak, so it
+  /// is never spoken as more than the street-facing side, whatever the top candidate says.
+  public var spokenBand: String {
+    status == "partial" ? "facade" : (target?.band ?? "facade")
+  }
+
   public func destinationBrief(metersToDoor: Double? = nil) -> DestinationBrief {
     DestinationBrief(
-      band: target?.band ?? "facade",
+      band: spokenBand,
       entranceStreet: streetSide?.entranceStreet,
       streetSideDescription: streetSide.flatMap(StreetSideDescription.compassSide),
       housenumber: building.housenumber,
