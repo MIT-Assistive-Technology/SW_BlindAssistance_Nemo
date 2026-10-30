@@ -343,27 +343,38 @@ public final class HapticsChannel: FeedbackChannel {
     /// becomes one long buzz.
     public var directionInterval: TimeInterval = 1
     
-    private var engine: CHHapticEngine?
+    private let engine: HapticEngine?
     private var lastDirectionAt: Date?
     
-    public init() { //Pre iphone-8 hardware can't do custom haptics
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+    public convenience init() {
+        self.init(engine: HapticsChannel.makeEngine())
+    }
+    
+    /// Tests pass a fake engine; nil means no haptics (the pattern calls do nothing).
+    init(engine: HapticEngine?) {
+        self.engine = engine
+    }
+    
+    private static func makeEngine() -> HapticEngine? { //Pre iphone-8 hardware can't do custom haptics
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return nil }
+        let engine: CHHapticEngine
         do {
             engine = try CHHapticEngine()
         } catch {
             print("[HapticsChannel] engine unavailable: \(error.localizedDescription)")
-            return
+            return nil
         }
         // The engine is started before every pattern (`haptic`), so it can shut itself
         // down when idle, and recovers after stop(), a reset or an interruption.
         // Both handlers run on a framework queue, hence @Sendable and log only.
-        engine?.isAutoShutdownEnabled = true
-        engine?.stoppedHandler = { @Sendable reason in
+        engine.isAutoShutdownEnabled = true
+        engine.stoppedHandler = { @Sendable reason in
             print("[HapticsChannel] engine stopped: \(reason.rawValue)")
         }
-        engine?.resetHandler = { @Sendable in
+        engine.resetHandler = { @Sendable in
             print("[HapticsChannel] engine reset; restarts on the next pattern")
         }
+        return engine
     }
     
     public func play(_ event: FeedbackEvent) {
@@ -393,7 +404,7 @@ public final class HapticsChannel: FeedbackChannel {
     private func haptic(intensity: Float, sharpness:Float, repeats: Int = 1, spacing: TimeInterval = 0.12){
         guard let engine else { return }
         do {
-            try engine.start()
+            try engine.startEngine()
         } catch {
             print("[HapticsChannel] engine failed to start: \(error.localizedDescription)")
             return
@@ -408,13 +419,34 @@ public final class HapticsChannel: FeedbackChannel {
                 relativeTime: Double(i) * spacing
             )
         }
-        // pattern = rhythm of taps; player = the thing that runs it
-        guard let pattern = try? CHHapticPattern(events: events, parameters: []),
-              let player = try? engine.makePlayer(with: pattern) else { return }
-        try? player.start(atTime: CHHapticTimeImmediate)
+        try? engine.playTaps(events)
     }
     
     public func stop() {
-        engine?.stop()
+        engine?.stopEngine()
+    }
+}
+
+/// What HapticsChannel needs from Core Haptics, so a test can count engine starts and
+/// patterns without hardware.
+protocol HapticEngine: AnyObject {
+    func startEngine() throws
+    func stopEngine()
+    func playTaps(_ events: [CHHapticEvent]) throws
+}
+
+extension CHHapticEngine: HapticEngine {
+    func startEngine() throws {
+        try start()
+    }
+    
+    func stopEngine() {
+        stop()
+    }
+    
+    func playTaps(_ events: [CHHapticEvent]) throws {
+        // pattern = rhythm of taps; player = the thing that runs it
+        let pattern = try CHHapticPattern(events: events, parameters: [])
+        try makePlayer(with: pattern).start(atTime: CHHapticTimeImmediate)
     }
 }
