@@ -29,3 +29,10 @@ def test_app_pilot_bundles_match_the_server_bundles():
         assert json.loads((copies / name).read_text("utf-8")) == json.loads(
             (bundles / name).read_text("utf-8")
         ), f"Copy server/bundles/{name} to app/nemo-software/Resources/PilotBundles/"
+
+
+def test_app_pilot_sites_copy_is_identical():
+    copy = ROOT / "app" / "nemo-software" / "Resources" / "pilot_sites.json"
+    assert json.loads(copy.read_text("utf-8")) == json.loads(
+        (ROOT / "server" / "pilot_sites.json").read_text("utf-8")
+    ), "Copy server/pilot_sites.json to app/nemo-software/Resources/"

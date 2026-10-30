@@ -48,6 +48,62 @@ nonisolated public final class StubEntranceClient: EntranceClient {
   }
 }
 
+/// The app's client until the server is up: an address typed by the rider is matched
+/// against `pilot_sites.json` (a copy of `server/pilot_sites.json`) and answered with that
+/// site's real bundle. An address that isn't a pilot site fails as "not found" rather
+/// than falling back to the fictional example, which would guide the rider to a door
+/// that doesn't exist.
+nonisolated public final class PilotSiteEntranceClient: EntranceClient {
+  private let bundle: Bundle
+
+  public init(bundle: Bundle = .main) {
+    self.bundle = bundle
+  }
+
+  public func resolve(address: String) async throws -> ResolveResult {
+    guard let site = try siteId(for: address) else {
+      throw EntranceError.service(
+        code: "GEOCODE_NOT_FOUND", message: "Not a pilot site", requestId: nil, httpStatus: 404)
+    }
+    return try await StubEntranceClient(site: site, bundle: bundle).resolve(address: address)
+  }
+
+  /// The pilot site id for an address, or nil. Both the street line and the town have
+  /// to match: "77 Massachusetts Ave" exists in Boston and in Cambridge, and they are
+  /// different buildings.
+  public func siteId(for address: String) throws -> String? {
+    struct Sites: Decodable {
+      struct Site: Decodable {
+        let id: String
+        let address: String
+      }
+      let sites: [Site]
+    }
+    guard let url = bundle.url(forResource: "pilot_sites", withExtension: "json") else {
+      throw URLError(.fileDoesNotExist)
+    }
+    let sites = try JSONDecoder().decode(Sites.self, from: Data(contentsOf: url)).sites
+    guard let wanted = Self.key(address) else { return nil }
+    return sites.first { Self.key($0.address) == wanted }?.id
+  }
+
+  /// "77 Massachusetts Avenue, Cambridge, MA" -> "77 massachusetts ave|cambridge".
+  static func key(_ address: String) -> String? {
+    let parts = address.lowercased().split(separator: ",")
+    guard parts.count >= 2 else { return nil }
+    let abbreviations = [
+      "avenue": "ave", "street": "st", "place": "pl", "drive": "dr", "road": "rd",
+    ]
+    let words: (Substring) -> [String] = { part in
+      part.split { !$0.isLetter && !$0.isNumber }.map { abbreviations[String($0)] ?? String($0) }
+    }
+    let street = words(parts[0])
+    // "Cambridge MA 02138" and "Cambridge" both name the town by their first word.
+    guard !street.isEmpty, let town = words(parts[1]).first else { return nil }
+    return street.joined(separator: " ") + "|" + town
+  }
+}
+
 /// Real client (FE-11).
 ///
 /// There is no `202` and no polling: plan section 10 settled on `200` with

@@ -27,16 +27,17 @@ public final class AppServices: ObservableObject {
   public init(
     location: LocationService? = nil,
     bundleStore: BundleStore = BundleStore(),
-    // The stub reads the bundled resolve.example.json. Swap in
-    // `LiveEntranceClient(baseURL: ...)` once the server is up; the cache in front of
-    // it means the walk still works with no signal (FE-11).
+    // Until the server is up, addresses resolve to the 19 real pilot bundles in
+    // Resources/PilotBundles; anything else is "not found", never the fictional example.
+    // Swap in `LiveEntranceClient(baseURL: ...)` once the server is up; the cache in
+    // front of it means the walk still works with no signal (FE-11).
     upstream: EntranceClient? = nil,
     channels: [FeedbackChannel]? = nil
   ) {
     self.location = location ?? .shared
     self.bundleStore = bundleStore
     self.entranceClient = CachingEntranceClient(
-      upstream: upstream ?? StubEntranceClient(), store: bundleStore)
+      upstream: upstream ?? PilotSiteEntranceClient(), store: bundleStore)
     // One owner for the audio session, set up front rather than on first speak. The
     // default category is `soloAmbient`, which iOS silences on screen lock and with the
     // Ring/Silent switch, and which interrupts other audio — all three are wrong for a
