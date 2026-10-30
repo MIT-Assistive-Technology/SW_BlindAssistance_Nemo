@@ -10,8 +10,8 @@
 //      encodes the left–right axis: a door 45° ahead-right and one 135° behind-right
 //      pan identically, so "turn until it centres" would have a second solution 180°
 //      out. HRTF filters for front/back as well.
-//    - The audio session is NOT configured here. `AppServices` owns it, so the beacon
-//      and the speech channel can't fight over the category.
+//    - The audio session is NOT configured here. `AudioSessionManager` owns it, so the
+//      beacon and the speech channel can't fight over the category.
 //
 
 import AVFoundation
@@ -26,9 +26,33 @@ public final class BeaconChannel: FeedbackChannel {
   private let player = AVAudioPlayerNode()  // plays looping tone
   private var buffer: AVAudioPCMBuffer?
   private var hasChosenAlgorithm = false
+  /// The tone should be sounding, so it is restarted when the output changes under it.
+  private var wantsTone = false
+  /// Kept for the life of the channel, which lives as long as the app.
+  private var observers: [NSObjectProtocol] = []
 
   public init() {
     setupGraph()
+    // The engine stops itself when its output format changes (headphones in or out, a
+    // call). Start it again, and choose the rendering algorithm again for the new output.
+    observers.append(
+      NotificationCenter.default.addObserver(
+        forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
+      ) { [weak self] _ in
+        MainActor.assumeIsolated { self?.restartForNewOutput() }
+      })
+    #if os(iOS)
+      // A new route doesn't always change the format, but HRTF may no longer apply.
+      observers.append(
+        NotificationCenter.default.addObserver(
+          forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { [weak self] note in
+          let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+          // Our own category changes (ducking for speech) are not a new output.
+          guard raw != AVAudioSession.RouteChangeReason.categoryChange.rawValue else { return }
+          MainActor.assumeIsolated { self?.restartForNewOutput() }
+        })
+    #endif
   }
 
   //Point the tone at the door
@@ -90,14 +114,31 @@ public final class BeaconChannel: FeedbackChannel {
     }
   }
 
+  private func restartForNewOutput() {
+    hasChosenAlgorithm = false
+    guard wantsTone else { return }
+    player.stop()
+    startTone()
+  }
+
   // Start engine, loop tone
   private func startTone() {
     guard let buffer else { return }  // do nothing if setup failed
+    wantsTone = true
+    #if os(iOS)
+      AudioSessionManager.shared.setBeaconPlaying(true)
+    #endif
     if !engine.isRunning {
       engine.prepare()
-      try? engine.start()
-      applyHRTFIfPossible()
+      do {
+        try engine.start()
+      } catch {
+        // Tried again on the next aim update.
+        print("[BeaconChannel] engine failed to start: \(error.localizedDescription)")
+        return
+      }
     }
+    applyHRTFIfPossible()
     if !player.isPlaying {
       player.scheduleBuffer(buffer, at: nil, options: .loops)  // loop tick
       player.play()
@@ -124,7 +165,13 @@ public final class BeaconChannel: FeedbackChannel {
   }
 
   public func stop() {
+    // Sent on every update with nothing safe to aim at, so make the repeat cheap.
+    guard wantsTone else { return }
+    wantsTone = false
     player.stop()
     engine.stop()
+    #if os(iOS)
+      AudioSessionManager.shared.setBeaconPlaying(false)
+    #endif
   }
 }
