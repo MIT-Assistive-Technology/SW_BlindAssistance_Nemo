@@ -1,0 +1,122 @@
+{
+  "id": "berklee-150-mass-ave",
+  "address": "150 Massachusetts Ave, Boston, MA 02115",
+  "recorded_at": "2026-10-15T05:59:08+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "150 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Boston"
+  },
+  "response": [
+    {
+      "place_id": 361742089,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29650751,
+      "lat": "42.3467226",
+      "lon": "-71.0869755",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 8.102616922250732e-05,
+      "addresstype": "amenity",
+      "name": "Stan Getz Media Center And Library",
+      "display_name": "Stan Getz Media Center And Library, 138;150, Massachusetts Avenue, Back Bay, Boston, Suffolk County, Massachusetts, 02115, United States",
+      "address": {
+        "amenity": "Stan Getz Media Center And Library",
+        "house_number": "138;150",
+        "road": "Massachusetts Avenue",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02115",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3464805",
+        "42.3471069",
+        "-71.0873734",
+        "-71.0865815"
+      ]
+    },
+    {
+      "place_id": 412243588,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 43100852,
+      "lat": "42.3467160",
+      "lon": "-71.0876096",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "150, Massachusetts Avenue, Fenway-Kenmore, Boston, Suffolk County, Massachusetts, 02115, United States",
+      "address": {
+        "house_number": "150",
+        "road": "Massachusetts Avenue",
+        "suburb": "Fenway-Kenmore",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02115",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3466660",
+        "42.3467660",
+        "-71.0876596",
+        "-71.0875596"
+      ]
+    },
+    {
+      "place_id": 412254643,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 43100852,
+      "lat": "42.3465786",
+      "lon": "-71.0873033",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "150, Massachusetts Avenue, Back Bay, Boston, Suffolk County, Massachusetts, 02115, United States",
+      "address": {
+        "house_number": "150",
+        "road": "Massachusetts Avenue",
+        "suburb": "Back Bay",
+        "city": "Boston",
+        "county": "Suffolk County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02115",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3465286",
+        "42.3466286",
+        "-71.0873533",
+        "-71.0872533"
+      ]
+    }
+  ]
+}

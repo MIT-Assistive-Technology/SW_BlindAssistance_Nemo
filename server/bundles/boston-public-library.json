@@ -1,0 +1,307 @@
+{
+  "destination_id": "dst_boston-public-library",
+  "status": "complete",
+  "building": {
+    "osm_id": "relation/63755",
+    "name": "Boston Public Library",
+    "housenumber": "700",
+    "footprint": [
+      [
+        -71.0789804,
+        42.3488003
+      ],
+      [
+        -71.0791586,
+        42.34917
+      ],
+      [
+        -71.0792003,
+        42.3492538
+      ],
+      [
+        -71.0792116,
+        42.3492773
+      ],
+      [
+        -71.0792691,
+        42.349394
+      ],
+      [
+        -71.0788719,
+        42.3495027
+      ],
+      [
+        -71.0784743,
+        42.3496115
+      ],
+      [
+        -71.0784537,
+        42.3495704
+      ],
+      [
+        -71.0783773,
+        42.3495913
+      ],
+      [
+        -71.0783974,
+        42.3496314
+      ],
+      [
+        -71.0781371,
+        42.3497033
+      ],
+      [
+        -71.0779058,
+        42.3497664
+      ],
+      [
+        -71.0775944,
+        42.3498471
+      ],
+      [
+        -71.0775289,
+        42.3497116
+      ],
+      [
+        -71.0774777,
+        42.3496057
+      ],
+      [
+        -71.0774702,
+        42.3495903
+      ],
+      [
+        -71.0774663,
+        42.3495822
+      ],
+      [
+        -71.0774611,
+        42.3495714
+      ],
+      [
+        -71.0774564,
+        42.3495617
+      ],
+      [
+        -71.0774506,
+        42.3495497
+      ],
+      [
+        -71.0774427,
+        42.3495333
+      ],
+      [
+        -71.0774336,
+        42.3495144
+      ],
+      [
+        -71.0774272,
+        42.3495012
+      ],
+      [
+        -71.0774215,
+        42.3494894
+      ],
+      [
+        -71.0773722,
+        42.3493874
+      ],
+      [
+        -71.0773093,
+        42.3492575
+      ],
+      [
+        -71.0780873,
+        42.3490399
+      ],
+      [
+        -71.0781122,
+        42.3490876
+      ],
+      [
+        -71.0781662,
+        42.3490723
+      ],
+      [
+        -71.0782193,
+        42.3490572
+      ],
+      [
+        -71.0781965,
+        42.3490134
+      ],
+      [
+        -71.0789804,
+        42.3488003
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3495027,
+      "lon": -71.0788719,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": {
+        "door": "automatic",
+        "automatic_door": null,
+        "step_count": null
+      },
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/7644779176",
+          "tags": {
+            "access": "yes",
+            "addr:city": "Boston",
+            "addr:housenumber": "700",
+            "addr:postcode": "02116",
+            "addr:state": "MA",
+            "addr:street": "Boylston Street",
+            "door": "automatic",
+            "entrance": "main",
+            "level": "0",
+            "wheelchair": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3495822,
+      "lon": -71.0774663,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": {
+        "door": "hinged",
+        "automatic_door": null,
+        "step_count": null
+      },
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/7761545638",
+          "tags": {
+            "access": "yes",
+            "door": "hinged",
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.3495497,
+      "lon": -71.0774506,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/2494962252",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "lat": 42.3495144,
+      "lon": -71.0774336,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": {
+        "door": "hinged",
+        "automatic_door": null,
+        "step_count": null
+      },
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/7618721688",
+          "tags": {
+            "access": "yes",
+            "door": "hinged",
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c5",
+      "lat": 42.3492773,
+      "lon": -71.0792116,
+      "confidence": 0.9,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": {
+        "door": "hinged",
+        "automatic_door": null,
+        "step_count": null
+      },
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/7644779182",
+          "tags": {
+            "access": "yes",
+            "door": "hinged",
+            "entrance": "main",
+            "level": "0"
+          }
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Boylston Street",
+    "road_way": "way/815774828",
+    "centerline": [
+      [
+        -71.0795006,
+        42.3495151
+      ],
+      [
+        -71.0793949,
+        42.3495436
+      ],
+      [
+        -71.0789499,
+        42.3496624
+      ],
+      [
+        -71.0786162,
+        42.3497514
+      ]
+    ],
+    "door_side_of_road": "right",
+    "oneway": true
+  },
+  "recognize": {
+    "text": [
+      "700",
+      "Boston Public Library"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-27",
+    "model": "none"
+  }
+}

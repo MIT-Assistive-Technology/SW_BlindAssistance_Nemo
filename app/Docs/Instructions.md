@@ -15,19 +15,21 @@ A step-by-step path from an empty scaffold to the first working guidance. Each s
 
 File: `FramePublishers/CameraFrameProvider.swift`
 
-- [ ] Request permission with `AVCaptureDevice.requestAccess(for: .video)` before configuring.
-- [ ] Implement `setupSession()`:
+- [x] Request permission with `AVCaptureDevice.requestAccess(for: .video)` before configuring.
+- [x] Implement `setupSession()`:
   - Return early if `captureDevice` is nil (Simulator, CI).
   - `captureSession.beginConfiguration()`.
   - Add `AVCaptureDeviceInput` for `captureDevice`.
   - Add `videoOutput` with `alwaysDiscardsLateVideoFrames = true`.
   - `commitConfiguration()`.
   - Set `self` as the sample-buffer delegate on `cameraQueue`.
-- [ ] Implement `captureOutput(_:didOutput:from:)`: take `sampleBuffer.imageBuffer` and pass it to `delegate?.processFrame(_:buffer:)`.
+- [x] Implement `captureOutput(_:didOutput:from:)`: take `sampleBuffer.imageBuffer` and pass it to `delegate?.processFrame(_:buffer:)`.
+- [x] Run perception off the main thread (`Services/PerceptionPipeline.swift`), dropping frames while busy.
+- [ ] Check on a real iPhone: the preview shows, and the overlay reads about 10 frames/s processed at 1920×1080.
 
 File: `Views/CameraView.swift`
 
-- [ ] Replace the black background with an `AVCaptureVideoPreviewLayer` in a `UIViewRepresentable`. This is a debug screen; riders won't rely on it.
+- [x] Replace the black background with an `AVCaptureVideoPreviewLayer` in a `UIViewRepresentable`. This is a debug screen; riders won't rely on it.
 
 ## 2. GPS and heading (FE-3)
 
@@ -54,7 +56,7 @@ File: `LocationKit/Geo.swift`
 
 Files: `EntranceAPI/EntranceModels.swift`, `EntranceAPI/EntranceClient.swift`
 
-- [ ] Call `StubEntranceClient().resolve(address:)` and check that `Resources/resolve.example.json` decodes. If decoding fails, the Swift models and the contract disagree; fix the model, not the JSON.
+- [ ] Call `StubEntranceClient().resolve(address:)` and check that `Resources/resolve.example.json` decodes. If decoding fails, the Swift models and the contract disagree; fix the model, not the JSON. Then try a real pilot bundle: `StubEntranceClient(site: "mit-stratton-center")` (ids in `server/pilot_sites.json`; partial ones such as `mit-kresge-auditorium` have only a facade guess).
 - [ ] Later: implement `LiveEntranceClient` against the running server, with on-phone caching.
 
 ## 5. Object detection (CV-8)

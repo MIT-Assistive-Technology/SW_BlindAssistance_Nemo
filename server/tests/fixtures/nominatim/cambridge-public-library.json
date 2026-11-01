@@ -1,0 +1,129 @@
+{
+  "id": "cambridge-public-library",
+  "address": "449 Broadway, Cambridge, MA 02138",
+  "recorded_at": "2026-10-15T05:58:59+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "449 Broadway",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 361916720,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 29685756,
+      "lat": "42.3739871",
+      "lon": "-71.1104696",
+      "category": "amenity",
+      "type": "library",
+      "place_rank": 30,
+      "importance": 0.2647815871063118,
+      "addresstype": "amenity",
+      "name": "Cambridge Public Library",
+      "display_name": "Cambridge Public Library, 449, Broadway, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Cambridge Public Library",
+        "house_number": "449",
+        "road": "Broadway",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 542909153,
+          "type": "main",
+          "lat": "42.3738086",
+          "lon": "-71.1103983"
+        }
+      ],
+      "boundingbox": [
+        "42.3736469",
+        "42.3743406",
+        "-71.1111227",
+        "-71.1099254"
+      ]
+    },
+    {
+      "place_id": 361623689,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 934497072,
+      "lat": "42.3745759",
+      "lon": "-71.1107866",
+      "category": "building",
+      "type": "school",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "",
+      "display_name": "445;449, Broadway, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02318, United States",
+      "address": {
+        "house_number": "445;449",
+        "road": "Broadway",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02318",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3745451",
+        "42.3746080",
+        "-71.1109245",
+        "-71.1106542"
+      ]
+    },
+    {
+      "place_id": 404384925,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 33720646,
+      "lat": "42.3730884",
+      "lon": "-71.1103307",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "449, Broadway, Mid-Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "house_number": "449",
+        "road": "Broadway",
+        "suburb": "Mid-Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3730384",
+        "42.3731384",
+        "-71.1103807",
+        "-71.1102807"
+      ]
+    }
+  ]
+}

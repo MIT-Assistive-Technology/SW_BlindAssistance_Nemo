@@ -1,0 +1,204 @@
+{
+  "id": "kresge-auditorium",
+  "address": "48 Massachusetts Ave, Cambridge, MA 02139",
+  "recorded_at": "2026-10-25T21:14:38+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "48 Massachusetts Ave",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 360558411,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 24494029,
+      "lat": "42.3581722",
+      "lon": "-71.0950620",
+      "category": "amenity",
+      "type": "auditorium",
+      "place_rank": 30,
+      "importance": 0.3819330985084628,
+      "addresstype": "amenity",
+      "name": "W16 Kresge Auditorium",
+      "display_name": "W16 Kresge Auditorium, 48, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "amenity": "W16 Kresge Auditorium",
+        "house_number": "48",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3579621",
+        "42.3583942",
+        "-71.0953644",
+        "-71.0947711"
+      ]
+    },
+    {
+      "place_id": 361263633,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 24562763,
+      "lat": "42.3583355",
+      "lon": "-71.0941528",
+      "category": "amenity",
+      "type": "place_of_worship",
+      "place_rank": 30,
+      "importance": 0.33861775862348764,
+      "addresstype": "amenity",
+      "name": "W15 MIT Chapel",
+      "display_name": "W15 MIT Chapel, 48, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "amenity": "W15 MIT Chapel",
+        "house_number": "48",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 2446018283,
+          "type": "yes",
+          "lat": "42.3583725",
+          "lon": "-71.0939605"
+        },
+        {
+          "osm_id": 2446018287,
+          "type": "yes",
+          "lat": "42.3583973",
+          "lon": "-71.0939728"
+        }
+      ],
+      "boundingbox": [
+        "42.3582474",
+        "42.3584150",
+        "-71.0942545",
+        "-71.0939067"
+      ]
+    },
+    {
+      "place_id": 396205499,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 8615816,
+      "lat": "42.3595168",
+      "lon": "-71.0946966",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "48, Massachusetts Avenue, MIT, Cambridge, Middlesex County, Massachusetts, 02139, United States",
+      "address": {
+        "house_number": "48",
+        "road": "Massachusetts Avenue",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02139",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3594668",
+        "42.3595668",
+        "-71.0947466",
+        "-71.0946466"
+      ]
+    },
+    {
+      "place_id": 396181483,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 533433330,
+      "lat": "42.3863970",
+      "lon": "-71.1188887",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "48, Massachusetts Avenue, Baldwin, Cambridge, Middlesex County, Massachusetts, 02140, United States",
+      "address": {
+        "house_number": "48",
+        "road": "Massachusetts Avenue",
+        "suburb": "Baldwin",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02140",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3863470",
+        "42.3864470",
+        "-71.1189387",
+        "-71.1188387"
+      ]
+    },
+    {
+      "place_id": 396178889,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 507868287,
+      "lat": "42.3788387",
+      "lon": "-71.1193234",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "48, Massachusetts Avenue, Baldwin, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "house_number": "48",
+        "road": "Massachusetts Avenue",
+        "suburb": "Baldwin",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3787887",
+        "42.3788887",
+        "-71.1193734",
+        "-71.1192734"
+      ]
+    }
+  ]
+}

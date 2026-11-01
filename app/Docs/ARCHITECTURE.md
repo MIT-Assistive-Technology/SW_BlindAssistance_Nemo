@@ -41,7 +41,7 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 | `Location/` | Publishes `LocationSnapshot` (GPS + true heading) | FE-3 |
 | `LocationKit/` | Geometry math, unit-tested | FE-2, FE-13 |
 | `Perception/` | Object detection to `[Detection]`, later building text check | CV-8, CV-9 |
-| `EntranceAPI/` | Server contract types and client; stub loads `Resources/resolve.example.json` | FE-11 |
+| `EntranceAPI/` | Server contract types and client; stub loads `Resources/resolve.example.json`, or a real pilot bundle from `Resources/PilotBundles/` with `StubEntranceClient(site: "mit-stata")` | FE-11 |
 | `Feedback/` | `FeedbackKit` and its channels; the only place that makes sound or vibration | FE-4, FE-5, FE-6 |
 | `Session/` | `NavigationSession` trip state machine | FE-10 |
 | `Services/` | `PerceptionPipeline` wiring, `Speaker` (speech) | — |
@@ -49,12 +49,11 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 
 ## Data flow (perception)
 
-1. `CameraFrameProvider` captures a frame on a background queue.
-2. It calls `delegate?.processFrame(_:buffer:)`.
-3. `PerceptionPipeline` runs `VisionObjectDetector` to get `[Detection]`.
-4. It reads the latest `LocationSnapshot` from `LocationService`.
-5. It emits a feedback event (today it speaks via `Speaker`; move this to `FeedbackKit`).
-6. It publishes a `FramePresentation` on the main actor for the debug overlay.
+1. `CameraFrameProvider` captures a 1080p, 30 fps, 420YpCbCr frame (the same format as ARKit) on its `nemo.camera` queue. In the Simulator, `SyntheticFrameProvider` sends blank frames instead.
+2. It calls `delegate?.processFrame(_:buffer:)` on that queue.
+3. `PerceptionPipeline` takes the frame only if it's idle and under `maxFramesPerSecond` (10 by default); otherwise it drops it. Taken frames go to its `nemo.perception` queue.
+4. It runs `VisionObjectDetector` there to get `[Detection]`, then releases the buffer.
+5. On the main actor, it reads the latest `LocationSnapshot` from `LocationService`, emits a feedback event (today it speaks via `Speaker`; move this to `FeedbackKit`), and calls `onPresentation` with a `FramePresentation`, including `FrameStats` (processed, dropped, rate, frame size) for the debug overlay.
 
 ## Rules
 
@@ -65,12 +64,14 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 
 ## Concurrency
 
-- Frame handling is currently dispatched to the main actor so SwiftUI updates stay safe.
-- **TODO:** move detection and interpretation off the main thread, keeping only the final `presentation` update on `@MainActor`.
+- The project's default actor isolation is `MainActor`. Frame providers, `PerceptionPipeline`, detectors and the `Core/` types are marked `nonisolated` so they can run on background queues. Mark new types in those folders `nonisolated` too.
+- Camera work runs on the provider's queue; detection runs on one serial perception queue, one frame at a time, dropping frames while busy. Only the presentation update and speech run on `@MainActor`.
+- Never keep a pixel buffer after processing it. The camera has a small buffer pool and stalls when it runs out.
+- **TODO:** `LocationService` is main-actor, so location is read when the result is published, a few ms after capture. Attach it at capture time once `LocationService` is thread-safe (FE-3).
 
 ## Extending
 
-- `VideoFileFrameProvider` for Simulator runs and tests.
+- `VideoFileFrameProvider` to replay recorded walks (`SyntheticFrameProvider` covers the Simulator for now).
 - `MockObjectDetector` that returns canned detections.
 - `ReplayLocationProvider` that plays back a recorded GPS/heading trace (QA-4).
 - `BeaconChannel` and `HapticsChannel` in `Feedback/`.

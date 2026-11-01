@@ -227,3 +227,6 @@ DerivedData/
 
 # Server local data
 server/data/
+
+# Local notes and scratch work (never committed)
+local/

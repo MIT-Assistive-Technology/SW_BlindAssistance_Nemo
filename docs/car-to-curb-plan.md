@@ -362,8 +362,8 @@ An ordered rule list produces a number used **only for ranking**, and three spok
 | Rule (in order) | Score | Band |
 |---|---|---|
 | Excluded value or access ([section 9](#9-reading-osm-entrance-tags)) | never used | — |
-| Entrance node's `addr:housenumber` = destination number | 0.95 (ranked first) | `main` |
-| `routing:entrance=*` or site-relation role `entrance` | 0.90 | `main` |
+| Entrance node's `addr:housenumber` = destination number | top of the door's own band (0.95 for `main`, 0.80 for `door`); never lifts it into a higher band, so a service door with the number stays a door | its own |
+| `routing:entrance=*` or site-relation role `entrance` (on or within 5 m of the outline; never lifts `service`/`secondary`) | 0.90 | `main` |
 | `entrance=main` | 0.90 | `main` |
 | `staircase` / `home` for a residential address · `shop` when it's the destination | 0.85 | `main` |
 | `entrance=yes` / `entrance` / `door=*` only | 0.75 | `door` |

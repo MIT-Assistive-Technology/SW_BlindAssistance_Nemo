@@ -13,13 +13,19 @@ public protocol EntranceClient: AnyObject {
   func resolve(address: String) async throws -> ResolveResult
 }
 
-/// Returns the bundled `resolve.example.json`. Use it to build app features before
-/// the server is running, and in previews and tests.
+/// Returns bundled sample data. Use it to build app features before the server is
+/// running, and in previews and tests.
+/// `site` is a pilot site id from `server/pilot_sites.json` (e.g. "mit-stata"): its real
+/// bundle in `Resources/PilotBundles/`. Without one, `resolve.example.json`.
 public final class StubEntranceClient: EntranceClient {
-  public init() {}
+  private let site: String?
+
+  public init(site: String? = nil) {
+    self.site = site
+  }
 
   public func resolve(address: String) async throws -> ResolveResult {
-    guard let url = Bundle.main.url(forResource: "resolve.example", withExtension: "json") else {
+    guard let url = Bundle.main.url(forResource: site ?? "resolve.example", withExtension: "json") else {
       throw URLError(.fileDoesNotExist)
     }
     let data = try Data(contentsOf: url)

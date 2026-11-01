@@ -1,0 +1,163 @@
+{
+  "id": "brattle-theatre",
+  "address": "40 Brattle St, Cambridge MA 02138",
+  "recorded_at": "2026-10-15T05:59:02+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "40 Brattle St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 361690597,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 4731133945,
+      "lat": "42.3735328",
+      "lon": "-71.1214761",
+      "category": "amenity",
+      "type": "cinema",
+      "place_rank": 30,
+      "importance": 0.244781979759108,
+      "addresstype": "amenity",
+      "name": "Brattle Theatre",
+      "display_name": "Brattle Theatre, 40, Brattle Street, Old Cambridge, West Cambridge, Cambridge, Middlesex County, Massachusetts, 02163, United States",
+      "address": {
+        "amenity": "Brattle Theatre",
+        "house_number": "40",
+        "road": "Brattle Street",
+        "neighbourhood": "Old Cambridge",
+        "suburb": "West Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02163",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3734828",
+        "42.3735828",
+        "-71.1215261",
+        "-71.1214261"
+      ]
+    },
+    {
+      "place_id": 361935948,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 427505300,
+      "lat": "42.3735434",
+      "lon": "-71.1215383",
+      "category": "historic",
+      "type": "heritage",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "historic",
+      "name": "Brattle Hall",
+      "display_name": "Brattle Hall, 40, Brattle Street, Old Cambridge, West Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "historic": "Brattle Hall",
+        "house_number": "40",
+        "road": "Brattle Street",
+        "neighbourhood": "Old Cambridge",
+        "suburb": "West Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3733938",
+        "42.3736869",
+        "-71.1217584",
+        "-71.1213181"
+      ]
+    },
+    {
+      "place_id": 361786394,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 7100193737,
+      "lat": "42.3736028",
+      "lon": "-71.1214022",
+      "category": "amenity",
+      "type": "bar",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Longfellow Bar",
+      "display_name": "Longfellow Bar, 40, Brattle Street, Old Cambridge, West Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Longfellow Bar",
+        "house_number": "40",
+        "road": "Brattle Street",
+        "neighbourhood": "Old Cambridge",
+        "suburb": "West Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3735528",
+        "42.3736528",
+        "-71.1214522",
+        "-71.1213522"
+      ]
+    },
+    {
+      "place_id": 361942203,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 4731133947,
+      "lat": "42.3735585",
+      "lon": "-71.1213903",
+      "category": "amenity",
+      "type": "restaurant",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "Alden & Harlow",
+      "display_name": "Alden & Harlow, 40, Brattle Street, Old Cambridge, West Cambridge, Cambridge, Middlesex County, Massachusetts, 02138, United States",
+      "address": {
+        "amenity": "Alden & Harlow",
+        "house_number": "40",
+        "road": "Brattle Street",
+        "neighbourhood": "Old Cambridge",
+        "suburb": "West Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02138",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3735085",
+        "42.3736085",
+        "-71.1214403",
+        "-71.1213403"
+      ]
+    }
+  ]
+}

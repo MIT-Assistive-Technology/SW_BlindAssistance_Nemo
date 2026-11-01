@@ -1,0 +1,157 @@
+{
+  "id": "mit-sloan",
+  "address": "100 Main St, Cambridge, MA 02142",
+  "recorded_at": "2026-10-25T21:14:39+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "100 Main St",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 363299456,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 9634756224,
+      "lat": "42.3614524",
+      "lon": "-71.0826296",
+      "category": "office",
+      "type": "educational_institution",
+      "place_rank": 30,
+      "importance": 0.4773110188024878,
+      "addresstype": "office",
+      "name": "Sloan School of Management",
+      "display_name": "Sloan School of Management, 100, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "office": "Sloan School of Management",
+        "house_number": "100",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3614024",
+        "42.3615024",
+        "-71.0826796",
+        "-71.0825796"
+      ]
+    },
+    {
+      "place_id": 359638667,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 1047765109,
+      "lat": "42.3613832",
+      "lon": "-71.0825815",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "E62",
+      "display_name": "E62, 100, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "building": "E62",
+        "house_number": "100",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3608504",
+        "42.3619115",
+        "-71.0833222",
+        "-71.0822280"
+      ]
+    },
+    {
+      "place_id": 362608755,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "node",
+      "osm_id": 12797653974,
+      "lat": "42.3610710",
+      "lon": "-71.0825941",
+      "category": "amenity",
+      "type": "waste_basket",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "amenity",
+      "name": "",
+      "display_name": "100, Main Street, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "100",
+        "road": "Main Street",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3610210",
+        "42.3611210",
+        "-71.0826441",
+        "-71.0825441"
+      ]
+    },
+    {
+      "place_id": 396503219,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 356678546,
+      "lat": "42.3620960",
+      "lon": "-71.0808995",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "100, Main Street, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "100",
+        "road": "Main Street",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3620460",
+        "42.3621460",
+        "-71.0809495",
+        "-71.0808495"
+      ]
+    }
+  ]
+}

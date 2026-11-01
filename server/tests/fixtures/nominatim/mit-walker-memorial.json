@@ -1,0 +1,141 @@
+{
+  "id": "mit-walker-memorial",
+  "address": "142 Memorial Dr, Cambridge, MA 02142",
+  "recorded_at": "2026-10-25T21:14:43+00:00",
+  "url": "https://nominatim.openstreetmap.org/search",
+  "params": {
+    "street": "142 Memorial Dr",
+    "state": "Massachusetts",
+    "countrycodes": "us",
+    "layer": "address",
+    "entrances": "1",
+    "addressdetails": "1",
+    "format": "jsonv2",
+    "limit": "5",
+    "city": "Cambridge"
+  },
+  "response": [
+    {
+      "place_id": 363234029,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 24494050,
+      "lat": "42.3593602",
+      "lon": "-71.0882984",
+      "category": "building",
+      "type": "university",
+      "place_rank": 30,
+      "importance": 7.142824444948528e-05,
+      "addresstype": "building",
+      "name": "50 Walker Memorial",
+      "display_name": "50 Walker Memorial, 142, Memorial Drive, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "building": "50 Walker Memorial",
+        "house_number": "142",
+        "road": "Memorial Drive",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": [
+        {
+          "osm_id": 7865559324,
+          "type": "main",
+          "lat": "42.3591293",
+          "lon": "-71.0881747"
+        },
+        {
+          "osm_id": 11591860903,
+          "type": "yes",
+          "lat": "42.3595382",
+          "lon": "-71.0886238"
+        },
+        {
+          "osm_id": 11591860908,
+          "type": "yes",
+          "lat": "42.3596498",
+          "lon": "-71.0882921"
+        }
+      ],
+      "boundingbox": [
+        "42.3590648",
+        "42.3596672",
+        "-71.0886501",
+        "-71.0879524"
+      ]
+    },
+    {
+      "place_id": 406704566,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 822621173,
+      "lat": "42.3647771",
+      "lon": "-71.0777808",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "142, Memorial Drive, East Cambridge, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "142",
+        "road": "Memorial Drive",
+        "suburb": "East Cambridge",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3647271",
+        "42.3648271",
+        "-71.0778308",
+        "-71.0777308"
+      ]
+    },
+    {
+      "place_id": 406744387,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 149924232,
+      "lat": "42.3596897",
+      "lon": "-71.0860719",
+      "category": "place",
+      "type": "house",
+      "place_rank": 30,
+      "importance": 9.99999999995449e-06,
+      "addresstype": "place",
+      "name": "",
+      "display_name": "142, Memorial Drive, MIT, Cambridge, Middlesex County, Massachusetts, 02142, United States",
+      "address": {
+        "house_number": "142",
+        "road": "Memorial Drive",
+        "suburb": "MIT",
+        "city": "Cambridge",
+        "county": "Middlesex County",
+        "state": "Massachusetts",
+        "ISO3166-2-lvl4": "US-MA",
+        "postcode": "02142",
+        "country": "United States",
+        "country_code": "us"
+      },
+      "entrances": null,
+      "boundingbox": [
+        "42.3596397",
+        "42.3597397",
+        "-71.0861219",
+        "-71.0860219"
+      ]
+    }
+  ]
+}
