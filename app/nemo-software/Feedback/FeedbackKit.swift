@@ -222,11 +222,13 @@ public final class HapticsChannel: FeedbackChannel {
     
     private var engine: CHHapticEngine?
     
-    public init() { //Pre iphone-8 hardware can't do custom haptics
+    public init() {
+        // Pre-iPhone-8 hardware can't do custom haptics — engine stays nil,
+        // and haptic() below just no-ops.
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         engine = try? CHHapticEngine()
         try? engine?.start()
-        // engine dies on interruption (calls, audio changes), autorestart
+        // The engine dies on interruptions (calls, audio changes) — auto-restart it.
         engine?.resetHandler = { [weak self] in try? self?.engine?.start() }
     }
     
@@ -261,6 +263,7 @@ public final class HapticsChannel: FeedbackChannel {
             )
         }
         // pattern = rhythm of taps; player = the thing that runs it
+        try? engine.start()   // re-assert: engine dies on interruptions
         guard let pattern = try? CHHapticPattern(events: events, parameters: []),
               let player = try? engine.makePlayer(with: pattern) else { return }
         try? player.start(atTime: CHHapticTimeImmediate)
