@@ -213,7 +213,10 @@ public final class RideViewModel: ObservableObject {
   }
 
   public func onDisappear() {
-    if !location.isTrackingRide { location.stop() }
+    // The trip screen keeps the sensors on for the rest of the trip, so leaving this
+    // screen mid-trip mustn't switch them off.
+    let tripInProgress = session.map { $0.state != .setup && $0.state != .arrived } ?? false
+    if !location.isTrackingRide && !tripInProgress { location.stop() }
   }
 
   public func startRide() {
@@ -364,13 +367,20 @@ public final class RideViewModel: ObservableObject {
   }
 
   private func metersToDoor() -> Double? {
-    guard let coordinate = location.currentSnapshot.coordinate, let bundle else { return nil }
+    // No distance at all beats a wrong one ("750 feet" from a bad indoor fix).
+    let snapshot = location.currentSnapshot
+    guard snapshot.hasUsableFix, let coordinate = snapshot.coordinate, let bundle else {
+      return nil
+    }
     return bundle.metersToTarget(
       fromLat: coordinate.latitude, fromLon: coordinate.longitude)
   }
 
   private func metersToCrossing() -> Double? {
-    guard let coordinate = location.currentSnapshot.coordinate, let bundle else { return nil }
+    let snapshot = location.currentSnapshot
+    guard snapshot.hasUsableFix, let coordinate = snapshot.coordinate, let bundle else {
+      return nil
+    }
     return bundle.metersToNearestCrossing(
       fromLat: coordinate.latitude, fromLon: coordinate.longitude)
   }

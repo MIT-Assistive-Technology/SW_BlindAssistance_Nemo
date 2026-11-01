@@ -130,12 +130,23 @@ public protocol LocationProvider: AnyObject {
       locationManager.startUpdatingHeading()
     }
 
+    /// Older location fixes are ignored (cached from before the app asked).
+    static let maxFixAgeSeconds: TimeInterval = 15
+
     // MARK: - CLLocationManagerDelegate
 
     public func locationManager(
       _ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]
     ) {
-      guard let location = locations.last else { return }
+      guard let location = locations.last, location.horizontalAccuracy >= 0 else { return }
+      // The car's direction history keeps every valid fix: side of street reads the
+      // recent course out of it, and judges each sample's age itself.
+      if isTrackingRide {
+        carTrack.record(CourseSample(location))
+      }
+      // But "where am I now" only takes a fresh one. iOS hands over its last known
+      // location first, which can be minutes old and hundreds of meters away.
+      guard -location.timestamp.timeIntervalSinceNow <= Self.maxFixAgeSeconds else { return }
       lastFailure = nil
       currentSnapshot = LocationSnapshot(
         coordinate: location.coordinate,
@@ -147,9 +158,6 @@ public protocol LocationProvider: AnyObject {
         courseAccuracyDegrees: location.courseAccuracy,
         speedMetersPerSecond: location.speed
       )
-      if isTrackingRide {
-        carTrack.record(CourseSample(location))
-      }
     }
 
     public func locationManager(

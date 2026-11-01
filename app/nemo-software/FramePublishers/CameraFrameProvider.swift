@@ -45,6 +45,18 @@ import os
     /// The session, for an `AVCaptureVideoPreviewLayer` on the debug screen only.
     var previewSession: AVCaptureSession { captureSession }
 
+    /// Horizontal field of view of a portrait frame, in degrees. The sensor's field of
+    /// view is across its long (landscape) side, so the portrait width covers the short
+    /// side. Used with `Geo.photoRayBearing` for the building check (CV-9).
+    var portraitFieldOfViewDegrees: Double? {
+      guard let format = captureDevice?.activeFormat else { return nil }
+      let dims = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+      guard dims.width > 0, dims.height > 0 else { return nil }
+      let landscape = Double(format.videoFieldOfView) * .pi / 180
+      let aspect = Double(min(dims.width, dims.height)) / Double(max(dims.width, dims.height))
+      return 2 * atan(tan(landscape / 2) * aspect) * 180 / .pi
+    }
+
     private let captureDevice: AVCaptureDevice?
     private let captureSession: AVCaptureSession
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -182,6 +194,7 @@ import os
   nonisolated final class CameraFrameProvider: NSObject, FrameProvider {
     var isRunning: Bool { false }
     weak var delegate: FrameProviderDelegate?
+    var portraitFieldOfViewDegrees: Double? { nil }
 
     func setupSession() async throws(FrameProviderError) {
       throw .noCamera

@@ -1,0 +1,114 @@
+{
+  "destination_id": "dst_mit-museum",
+  "status": "partial",
+  "building": {
+    "osm_id": "way/1254628669",
+    "name": "E28",
+    "housenumber": "314",
+    "footprint": [
+      [
+        -71.0863336,
+        42.3618743
+      ],
+      [
+        -71.086385,
+        42.3618715
+      ],
+      [
+        -71.0870543,
+        42.3619262
+      ],
+      [
+        -71.0869968,
+        42.3623616
+      ],
+      [
+        -71.086278,
+        42.3623098
+      ],
+      [
+        -71.0863336,
+        42.3618743
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3623357,
+      "lon": -71.0866374,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Main Street (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/927210079",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.362315465805665,
+      "lon": -71.086356621257,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "node/11173231405",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": false
+  },
+  "street_side": {
+    "entrance_street": "Main Street",
+    "road_way": "way/927210079",
+    "centerline": [
+      [
+        -71.0863429,
+        42.3624465
+      ],
+      [
+        -71.0866181,
+        42.3624684
+      ],
+      [
+        -71.0870803,
+        42.3625051
+      ],
+      [
+        -71.0873447,
+        42.3625223
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "314",
+      "E28",
+      "MIT Museum"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-10-28",
+    "model": "none"
+  }
+}

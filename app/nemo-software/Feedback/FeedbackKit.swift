@@ -24,7 +24,17 @@ nonisolated public enum FeedbackEvent: Sendable {
   case buildingUncertain(text: String)
   /// The camera check couldn't run, and says so rather than failing silently.
   case cameraCheckUnavailable(CameraCheckProblem)
+  /// LiDAR saw a door (door finder). Spoken once per new sighting; `meters` is
+  /// horizontal distance from the phone.
   case doorDetected(offsetDegrees: Double, meters: Double)
+  /// The same sighting, updated: re-aims the beacon, says nothing.
+  case doorAim(offsetDegrees: Double)
+  /// Text that marks the door, in the camera's view (door finder).
+  case doorClueSeen(DoorClue, offsetDegrees: Double)
+  /// The rider turned to face what the camera found.
+  case facingDoor(meters: Double?)
+  /// GPS puts the door about here; the camera or the rider has to find it.
+  case doorShouldBeClose
   case warning(String)
   case lost
   case arrival
@@ -70,6 +80,8 @@ nonisolated public enum FeedbackEvent: Sendable {
   case startingGuidance
   /// Guidance ended, by the rider or by the trip finishing. It never ends silently.
   case guidanceStopped
+  /// The location fix is too rough to guide from (indoors, cached, beside tall buildings).
+  case waitingForLocation
   /// The door is across the road, so guidance waits for the rider to cross.
   case waitingToCrossStreet
   /// The first-steps check failed: say so before giving any more guidance.
@@ -110,10 +122,15 @@ public final class FeedbackKit {
   /// - Parameter force: set when the rider explicitly asked to hear it again. Without
   ///   it a "repeat" tap can land inside the chatter guard and do nothing at all, which
   ///   to someone who can't see the screen is indistinguishable from a broken app.
+  /// Called with every event emitted. Testing aid: the Walk screen's debug panel shows
+  /// the last thing said.
+  public var onEmit: ((FeedbackEvent) -> Void)?
+
   public func emit(_ event: FeedbackEvent, force: Bool = false) {
     // TODO (FE-6/FE-7): route by the rider's FeedbackProfile (which channels are on,
     // per-event overrides, verbosity). Critical events (.warning, .lost, .arrival) go
     // to at least 2 channels by default.
+    onEmit?(event)
     channels.forEach { $0.play(event, force: force) }
   }
 
@@ -134,6 +151,11 @@ public final class SpeechChannel: FeedbackChannel {
   private let now: () -> Date
   private var lastPhrase: String?
   private var lastSpokenAt: Date?
+  /// Turn cues ("slightly left", "behind you") are spoken at most this often. The
+  /// compass updates several times a second and wobbles, so without this the speech
+  /// never stops while the rider turns. The beacon carries the live direction.
+  public var directionInterval: TimeInterval = 3
+  private var lastDirectionAt: Date?
 
   public init(
     speaker: any SpeechOutput,
@@ -152,6 +174,13 @@ public final class SpeechChannel: FeedbackChannel {
   public func play(_ event: FeedbackEvent, force: Bool) {
     guard let phrase = Self.phrase(for: event, units: units) else { return }
     let moment = now()
+    if case .direction = event, !force {
+      if let last = lastDirectionAt, moment.timeIntervalSince(last) < directionInterval { return }
+      // A turn cue never cuts off an announcement (the side of street, "Starting"); the
+      // beacon carries the direction meanwhile, and the next update speaks it.
+      if speaker.isSpeaking { return }
+      lastDirectionAt = moment
+    }
     // Critical events are never suppressed, even if they were just said (Trish's rule
     // from FE-6). A `.lost` swallowed because the same words played three seconds ago
     // is the one repeat that actually matters.
@@ -162,7 +191,19 @@ public final class SpeechChannel: FeedbackChannel {
     }
     lastPhrase = phrase
     lastSpokenAt = moment
-    speaker.speak(phrase)
+    if Self.waitsForCurrentSpeech(event) {
+      speaker.speakAfterCurrent(phrase)
+    } else {
+      speaker.speak(phrase)
+    }
+  }
+
+  /// Said straight after another announcement, so it must not cut it off: the trip
+  /// screen starts guidance the moment the rider is out of the car, right after the
+  /// side-of-street answer.
+  public static func waitsForCurrentSpeech(_ event: FeedbackEvent) -> Bool {
+    if case .startingGuidance = event { return true }
+    return false
   }
 
   public func stop() {
@@ -234,6 +275,8 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.startingGuidance
     case .guidanceStopped:
       return Phrases.guidanceStopped
+    case .waitingForLocation:
+      return Phrases.waitingForLocation
     case .waitingToCrossStreet:
       return Phrases.waitingToCrossStreet
     case .bearingLock(let metersToDoor):
@@ -246,6 +289,17 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.finalApproach(metersToDoor: metersToDoor, brief: brief, units: units)
     case .arrival:
       return Phrases.arrivedAtDoor
+    case .doorShouldBeClose:
+      return Phrases.doorShouldBeClose
+
+    case .doorDetected(let offset, let meters):
+      return Phrases.doorDetected(offsetDegrees: offset, meters: meters, units: units)
+    case .doorAim:
+      return nil
+    case .doorClueSeen(let clue, let offset):
+      return Phrases.doorClueSeen(clue, offsetDegrees: offset)
+    case .facingDoor(let meters):
+      return Phrases.facingDoor(meters: meters, units: units)
 
     case .buildingConfirmed(let text, let offsetDegrees):
       return Phrases.buildingConfirmed(text: text, offsetDegrees: offsetDegrees)
@@ -254,10 +308,10 @@ public final class SpeechChannel: FeedbackChannel {
     case .cameraCheckUnavailable(let problem):
       return Phrases.cameraCheckUnavailable(problem)
 
-    // TODO (FE-6): these need reviewed phrases once the landmark and door-detector work
-    // lands, written here and listed in Phrases.all so SAFE-1 checks them. `.warning`
-    // carries free text and should be replaced by specific cases.
-    case .landmark, .doorDetected, .warning:
+    // TODO (FE-6): these need reviewed phrases once the landmark work lands, written
+    // here and listed in Phrases.all so SAFE-1 checks them. `.warning` carries free text
+    // and should be replaced by specific cases.
+    case .landmark, .warning:
       return nil
     }
   }
@@ -275,6 +329,7 @@ public final class HapticsChannel: FeedbackChannel {
     public let name = "haptics"
     
     private var engine: CHHapticEngine?
+    private var lastDirectionTickAt: Date?
     
     public init() { //Pre iphone-8 hardware can't do custom haptics
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
@@ -286,9 +341,13 @@ public final class HapticsChannel: FeedbackChannel {
     
     public func play(_ event: FeedbackEvent) {
         switch event{
-        case .direction, .doorDetected:
+        case .direction, .doorDetected, .doorAim, .doorClueSeen:
+            // A tick per compass update is a constant buzz; one a second is a cue.
+            let now = Date()
+            if let last = lastDirectionTickAt, now.timeIntervalSince(last) < 1 { return }
+            lastDirectionTickAt = now
             haptic(intensity: 0.7, sharpness: 0.9)
-        case .bearingLock:
+        case .bearingLock, .facingDoor:
             haptic(intensity: 1.0, sharpness: 1.0, repeats: 2)
         case .distance:
             haptic(intensity: 0.4, sharpness: 0.3)

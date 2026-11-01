@@ -200,14 +200,14 @@ nonisolated public enum Phrases {
       "Your entrance is across the street. The nearest marked crossing is \(distance(meters: metersToCrossing, units: units)) away. I'll stop guiding until you're across."
   }
 
-  /// Asked whenever the side of street can't be decided: one-way street, a turn before
+  /// Said whenever the side of street can't be decided: one-way street, a turn before
   /// the stop, no tracked ride, and the rest of plan section 6's unknown cases.
   ///
-  /// "The building side to your right" is phrased so it can be answered by cane and ear
-  /// rather than by looking. Naming the street and compass side first gives the rider
-  /// something to match against what the driver said.
+  /// Not a question: a blind rider shouldn't have to work out where they are. The app
+  /// checks as they walk, and never points across a road meanwhile. Naming the street and
+  /// compass side first gives the rider something to match against what the driver said.
   public static let askSideOfStreet =
-    "I'm not sure which side of the street you're on. Are you on the sidewalk, with the building side to your right?"
+    "I'm not sure yet which side of the street you're on. Stay on the sidewalk, and I'll tell you when I know."
 
   public static func askSideOfStreet(
     entranceStreet: String?, streetSideDescription: String?
@@ -224,6 +224,11 @@ nonisolated public enum Phrases {
   public static let startingGuidance = "Starting. Stand still for a moment."
 
   public static let guidanceStopped = "Guidance stopped."
+
+  /// Said once when the fix is too rough to guide from. Better than a confident wrong
+  /// distance.
+  public static let waitingForLocation =
+    "Waiting for a better location signal. Guidance will continue when it improves."
 
   /// The door is across the road, so guidance waits. The beacon must never point across
   /// a roadway (plan section 6).
@@ -249,20 +254,61 @@ nonisolated public enum Phrases {
 
   /// Entering the last few meters. The door facts come from the bundle, which is the
   /// most useful thing the app knows at this point.
+  /// It also starts the door finder, so it says how to hold the phone: the camera can
+  /// only look where it's pointed.
   public static func finalApproach(
     metersToDoor: Double?, brief: DestinationBrief, units: Units = .feet
   ) -> String {
     let howFar =
       metersToDoor.map { "The door should be \(distance(meters: $0, units: units)) ahead." }
       ?? "You're close to the door."
-    guard let facts = doorFacts(brief) else { return howFar }
-    return "\(howFar) \(facts)"
+    let facts = doorFacts(brief).map { " \($0)" } ?? ""
+    return "\(howFar)\(facts) \(holdPhoneUp)"
   }
+
+  public static let holdPhoneUp =
+    "Hold the phone up at chest height, camera facing forward, and I'll look for the door."
+
+  /// GPS says the door is about here, but GPS can't place a door to the metre. Never
+  /// "you're at the door"; the camera or the rider's hand decides.
+  public static let doorShouldBeClose =
+    "The door should be close. Turn slowly with the phone up. When you find it, tap I'm at the door."
 
   /// At the door. Never "you've arrived": only the rider's hand on the handle confirms
   /// a door (SAFE-1).
   public static let arrivedAtDoor =
     "The door should be right in front of you. Feel for the handle."
+
+  // MARK: - The door finder (camera, last stretch)
+
+  /// LiDAR saw a door. Distance only when it's close enough to be useful.
+  public static func doorDetected(offsetDegrees: Double, meters: Double?, units: Units = .feet)
+    -> String
+  {
+    let howFar = meters.map { ", \(distance(meters: $0, units: units))" } ?? ""
+    return "Door, \(turn(offsetDegrees: offsetDegrees))\(howFar)."
+  }
+
+  /// The rider turned to face the door the camera found.
+  public static func facingDoor(meters: Double?, units: Units = .feet) -> String {
+    guard let meters else { return "Door straight ahead." }
+    return "Door straight ahead, \(distance(meters: meters, units: units))."
+  }
+
+  /// Text that marks the door. "I can see", never "that's the entrance".
+  public static func doorClueSeen(_ clue: DoorClue, offsetDegrees: Double) -> String {
+    "I can see \(doorClueName(clue)) \(turn(offsetDegrees: offsetDegrees))."
+  }
+
+  public static func doorClueName(_ clue: DoorClue) -> String {
+    switch clue {
+    case .buildingText(let text): return text
+    case .entranceSign(.entrance): return "an entrance sign"
+    case .entranceSign(.push): return "a push sign"
+    case .entranceSign(.pull): return "a pull sign"
+    case .entranceSign(.automaticDoor): return "an automatic door sign"
+    }
+  }
 
   // MARK: - The camera building check (CV-9)
 
@@ -412,6 +458,7 @@ nonisolated public enum Phrases {
       rideTrackingStopped,
       startingGuidance,
       guidanceStopped,
+      waitingForLocation,
       waitingToCrossStreet,
       bearingLock(metersToDoor: 33.5),
       bearingLock(metersToDoor: nil),
@@ -421,12 +468,20 @@ nonisolated public enum Phrases {
         metersToDoor: 9,
         brief: DestinationBrief(band: "main", automaticDoor: "button", stepCount: 3)),
       finalApproach(metersToDoor: nil, brief: DestinationBrief(band: "facade")),
+      holdPhoneUp,
+      doorShouldBeClose,
       arrivedAtDoor,
+      doorDetected(offsetDegrees: 20, meters: 3),
+      doorDetected(offsetDegrees: -60, meters: nil),
+      facingDoor(meters: 2),
+      facingDoor(meters: nil),
+      doorClueSeen(.buildingText("77"), offsetDegrees: 20),
       buildingConfirmed(text: "77", offsetDegrees: 20),
       buildingConfirmed(text: "77", offsetDegrees: nil),
       buildingUncertain(text: "77"),
     ] + LookupFailure.allCases.map(lookupFailed)
       + CameraCheckProblem.allCases.map(cameraCheckUnavailable)
+      + EntranceWord.allCases.map { doorClueSeen(.entranceSign($0), offsetDegrees: 0) }
   }
 
   /// Words that promise more than the app can know (SAFE-1). A door is only confirmed

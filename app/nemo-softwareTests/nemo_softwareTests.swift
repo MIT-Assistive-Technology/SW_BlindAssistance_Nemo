@@ -69,8 +69,9 @@ final class PhraseSafetyTests: XCTestCase {
   /// Golden check: the table produces the exact phrases the design doc specifies.
   func testPhrasesMatchDesignDoc() {
     XCTAssertEqual(SpeechChannel.phrase(for: .distance(meters: 18)), "About 60 feet")
-    // `.doorDetected` has no reviewed wording yet — it waits for the door detector, and
-    // staying silent beats inventing a phrase SAFE-1 hasn't seen.
-    XCTAssertNil(SpeechChannel.phrase(for: .doorDetected(offsetDegrees: 10, meters: 3)))
+    // The door finder: direction first, distance when LiDAR measured it.
+    XCTAssertEqual(
+      SpeechChannel.phrase(for: .doorDetected(offsetDegrees: 20, meters: 3)),
+      "Door, slightly right, about 10 feet.")
   }
 }

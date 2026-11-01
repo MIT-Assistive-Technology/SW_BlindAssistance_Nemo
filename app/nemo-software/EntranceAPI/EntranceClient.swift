@@ -141,6 +141,9 @@ nonisolated public final class CachingEntranceClient: EntranceClient {
       return ResolvedBundle(
         result: result, fromCache: false, fetchedAt: nil, savedForOffline: saved)
     } catch {
+      // A definite "not found" is an answer, not a failure: don't paper over it with an
+      // old copy (which could be the made-up example from before pilot bundles shipped).
+      if case EntranceError.service(_, _, _, 404) = error { throw error }
       // No signal at the curb is the normal case, not an edge case.
       if let cached = store.cached(for: address) {
         return ResolvedBundle(

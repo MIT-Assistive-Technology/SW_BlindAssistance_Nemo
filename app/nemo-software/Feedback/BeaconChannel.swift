@@ -44,7 +44,8 @@ public final class BeaconChannel: FeedbackChannel {
 
   public func play(_ event: FeedbackEvent) {
     switch event {
-    case .direction(let offset), .doorDetected(let offset, _):
+    case .direction(let offset), .doorDetected(let offset, _), .doorAim(let offset),
+      .doorClueSeen(_, let offset):
       updateTarget(relativeAngleDegrees: offset)  // aim the tone at the angle
       startTone()  // make sure it's playing
     case .bearingLock:

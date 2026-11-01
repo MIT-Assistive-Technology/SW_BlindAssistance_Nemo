@@ -51,6 +51,7 @@ nonisolated final class VisionNumberRecognizer: NumberRecognizer, @unchecked Sen
 
     var bestNumbers: [String: RecognizedNumber] = [:]
     var bestSigns: [String: RecognizedStreetSign] = [:]
+    var bestEntrance: [EntranceWord: RecognizedEntranceSign] = [:]
     for observation in observations {
       guard
         let candidate = observation.topCandidates(3).first(where: {
@@ -70,6 +71,16 @@ nonisolated final class VisionNumberRecognizer: NumberRecognizer, @unchecked Sen
           continue
         }
         bestNumbers[value] = number
+        continue
+      }
+
+      if let word = EntranceSignParser.entranceWord(in: candidate.string) {
+        if let existing = bestEntrance[word], existing.confidence >= candidate.confidence {
+          continue
+        }
+        bestEntrance[word] = RecognizedEntranceSign(
+          word: word, confidence: candidate.confidence, boundingBox: observation.boundingBox,
+          id: observation.uuid)
         continue
       }
 
@@ -98,7 +109,8 @@ nonisolated final class VisionNumberRecognizer: NumberRecognizer, @unchecked Sen
 
     return CameraTextRead(
       numbers: bestNumbers.values.sorted { $0.confidence > $1.confidence },
-      streetSigns: bestSigns.values.sorted { $0.confidence > $1.confidence }
+      streetSigns: bestSigns.values.sorted { $0.confidence > $1.confidence },
+      entranceSigns: bestEntrance.values.sorted { $0.confidence > $1.confidence }
     )
   }
 }

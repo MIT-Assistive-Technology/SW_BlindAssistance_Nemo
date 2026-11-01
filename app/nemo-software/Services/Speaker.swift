@@ -12,7 +12,16 @@ import Foundation
 /// leaves room for a queue that sits behind VoiceOver later.
 public protocol SpeechOutput: AnyObject {
   func speak(_ text: String)
+  /// Speak once whatever is being said now has finished, instead of cutting it off.
+  func speakAfterCurrent(_ text: String)
+  /// Something is being said right now.
+  var isSpeaking: Bool { get }
   func stop()
+}
+
+extension SpeechOutput {
+  public func speakAfterCurrent(_ text: String) { speak(text) }
+  public var isSpeaking: Bool { false }
 }
 
 #if os(iOS)
@@ -39,6 +48,17 @@ public protocol SpeechOutput: AnyObject {
       synthesizer.stopSpeaking(at: .immediate)
       synthesizer.speak(utterance)
     }
+
+    /// Queue a phrase behind the one being spoken. AVSpeechSynthesizer queues on its own
+    /// as long as nothing stops it.
+    public func speakAfterCurrent(_ text: String) {
+      guard !text.isEmpty else { return }
+      let utterance = AVSpeechUtterance(string: text)
+      utterance.prefersAssistiveTechnologySettings = true
+      synthesizer.speak(utterance)
+    }
+
+    public var isSpeaking: Bool { synthesizer.isSpeaking }
 
     /// Stop any speech in progress (magic tap / Back Tap "stop").
     public func stop() {

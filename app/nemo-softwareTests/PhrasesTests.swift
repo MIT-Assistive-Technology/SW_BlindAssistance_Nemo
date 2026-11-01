@@ -301,11 +301,22 @@ final class SpeechChannelTests: XCTestCase {
     XCTAssertFalse(confirmed.lowercased().contains("that's your building"))
   }
 
-  func testTheLandmarkAndDoorEventsStillHaveNoWords() {
-    // These wait for the landmark and door-detector work; staying silent beats
-    // inventing phrasing that SAFE-1 hasn't reviewed.
-    XCTAssertNil(SpeechChannel.phrase(for: .doorDetected(offsetDegrees: 10, meters: 3)))
+  func testTheLandmarkEventStillHasNoWords() {
+    // This waits for the landmark work; staying silent beats inventing phrasing that
+    // SAFE-1 hasn't reviewed.
     XCTAssertNil(SpeechChannel.phrase(for: .landmark(phrase: "bench on your left")))
+  }
+
+  func testTheDoorFinderSpeaksOnlyReviewedPhrases() {
+    XCTAssertEqual(
+      SpeechChannel.phrase(for: .doorClueSeen(.entranceSign(.entrance), offsetDegrees: -20)),
+      "I can see an entrance sign slightly left.")
+    XCTAssertEqual(
+      SpeechChannel.phrase(for: .doorClueSeen(.buildingText("77"), offsetDegrees: 0)),
+      "I can see 77 straight ahead.")
+    XCTAssertEqual(SpeechChannel.phrase(for: .facingDoor(meters: nil)), "Door straight ahead.")
+    // Re-aiming the beacon says nothing.
+    XCTAssertNil(SpeechChannel.phrase(for: .doorAim(offsetDegrees: 5)))
   }
 
   func testNoWalkPhraseRefersToASoundTheAppCannotPlay() {

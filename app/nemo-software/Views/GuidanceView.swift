@@ -46,14 +46,37 @@ struct GuidanceView: View {
       } footer: {
         if !viewModel.canStartGuidance && !viewModel.isGuiding {
           Text(
-            "Guidance starts once a destination is loaded and you've told me which side of the street you're on. If your entrance is across the road, it waits until you say you're across."
+            "Guidance starts once a destination is loaded. If I'm not sure which side of the street you're on, I'll work it out as you walk and won't point you across the road. If your entrance is across the road, it waits until you're across."
           )
+        }
+      }
+
+      Section {
+        DisclosureGroup("Debug (testing only)") {
+          debugRow("Stage", viewModel.stateText)
+          debugRow("GPS accuracy", viewModel.debugGPS)
+          debugRow("Heading", viewModel.debugHeading)
+          debugRow("Bearing to door", viewModel.debugBearing)
+          debugRow("Turn needed", viewModel.offsetDegrees.map { "\(Int($0))°" } ?? "–")
+          debugRow("Distance", viewModel.metersToDoor.map { "\(Int($0)) m" } ?? "–")
+          debugRow("Side of street", viewModel.debugSide)
+          debugRow("Last lost because", viewModel.debugLostReason)
+          debugRow("Last said", viewModel.debugLastSaid)
         }
       }
     }
     .navigationTitle("Walk")
     .onAppear(perform: viewModel.onAppear)
     .onDisappear(perform: viewModel.onDisappear)
+  }
+}
+
+extension GuidanceView {
+  fileprivate func debugRow(_ label: String, _ value: String) -> some View {
+    LabeledContent(label) {
+      Text(value).multilineTextAlignment(.trailing)
+    }
+    .font(.caption)
   }
 }
 

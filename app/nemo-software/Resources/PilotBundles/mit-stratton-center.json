@@ -1,0 +1,218 @@
+{
+  "destination_id": "dst_mit-stratton-center",
+  "status": "complete",
+  "building": {
+    "osm_id": "way/24494019",
+    "name": "W20 Stratton Student Center",
+    "housenumber": "84",
+    "footprint": [
+      [
+        -71.09533,
+        42.3590828
+      ],
+      [
+        -71.0944374,
+        42.3593812
+      ],
+      [
+        -71.0942122,
+        42.3590132
+      ],
+      [
+        -71.0944671,
+        42.3589278
+      ],
+      [
+        -71.0945361,
+        42.3589047
+      ],
+      [
+        -71.0945091,
+        42.3588602
+      ],
+      [
+        -71.0945591,
+        42.3588436
+      ],
+      [
+        -71.0945683,
+        42.3588587
+      ],
+      [
+        -71.0945743,
+        42.3588686
+      ],
+      [
+        -71.094725,
+        42.3588186
+      ],
+      [
+        -71.0947192,
+        42.3588091
+      ],
+      [
+        -71.0947092,
+        42.3587927
+      ],
+      [
+        -71.0947615,
+        42.3587754
+      ],
+      [
+        -71.0947886,
+        42.3588201
+      ],
+      [
+        -71.0948371,
+        42.3588037
+      ],
+      [
+        -71.0951044,
+        42.3587143
+      ],
+      [
+        -71.0951432,
+        42.3587777
+      ],
+      [
+        -71.09533,
+        42.3590828
+      ]
+    ]
+  },
+  "candidates": [
+    {
+      "id": "c1",
+      "lat": 42.3589278,
+      "lon": -71.0944671,
+      "confidence": 0.95,
+      "band": "main",
+      "label": "Main entrance",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/1830061705",
+          "tags": {
+            "entrance": "main"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "lat": 42.3588037,
+      "lon": -71.0948371,
+      "confidence": 0.8,
+      "band": "door",
+      "label": "Door",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "osm_tag",
+          "ref": "node/1830066668",
+          "tags": {
+            "entrance": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "lat": 42.359197200000004,
+      "lon": -71.09432480000001,
+      "confidence": 0.3,
+      "band": "facade",
+      "label": "Street-facing side on Massachusetts Avenue (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/1321779881",
+          "tags": null
+        }
+      ]
+    },
+    {
+      "id": "c4",
+      "lat": 42.35919714100231,
+      "lon": -71.09432476389598,
+      "confidence": 0.2,
+      "band": "facade",
+      "label": "Address point (approximate)",
+      "speak": null,
+      "provenance": [
+        {
+          "source": "geometry_fallback",
+          "ref": "way/24494019",
+          "tags": null
+        }
+      ]
+    }
+  ],
+  "path_checks": {
+    "crosses_road": false,
+    "nearest_crossing": null,
+    "footway_to_entrance": true
+  },
+  "street_side": {
+    "entrance_street": "Amherst Street",
+    "road_way": "way/254299041",
+    "centerline": [
+      [
+        -71.094526,
+        42.3577109
+      ],
+      [
+        -71.0940915,
+        42.3578556
+      ],
+      [
+        -71.0940075,
+        42.3578836
+      ],
+      [
+        -71.0939862,
+        42.3578907
+      ],
+      [
+        -71.0938603,
+        42.3579326
+      ],
+      [
+        -71.0936624,
+        42.3579985
+      ],
+      [
+        -71.0936308,
+        42.358009
+      ],
+      [
+        -71.0932284,
+        42.358143
+      ],
+      [
+        -71.0931945,
+        42.3581542
+      ]
+    ],
+    "door_side_of_road": "left",
+    "oneway": false
+  },
+  "recognize": {
+    "text": [
+      "84",
+      "W20 Stratton Student Center",
+      "Stratton Student Center"
+    ]
+  },
+  "landmarks": null,
+  "route": null,
+  "attribution": [
+    "© OpenStreetMap contributors"
+  ],
+  "data_version": {
+    "osm": "2026-05-31",
+    "model": "none"
+  }
+}

@@ -60,6 +60,14 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   /// 2–3 for the text building check.
   public let maxFramesPerSecond: Double
 
+  /// Called on the main actor with each fresh text read, so navigation can turn a
+  /// building number into a `BuildingSighting` (CV-9 → FE-10). Wired in `AppServices`.
+  @MainActor public var onTextRead: ((CameraTextRead) -> Void)?
+
+  /// Speak raw reads ("Number 77", "Sign …") for the debug screen. Off during a walk,
+  /// where `NavigationSession` speaks the reviewed phrases instead.
+  @MainActor public var announcesReads = true
+
   private let detector: ObjectDetector
   private let numberRecognizer: any NumberRecognizer
   private let locationProvider: LocationProvider
@@ -166,12 +174,10 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       return stats
     }
 
-    // TODO (CV-9): when Vision text recognition lands, match each result against the
-    // bundle's `recognize.text`, turn the box's centre column into a bearing with
-    // `BuildingSighting(text:headingDegrees:xPixels:widthPixels:fovDegrees:confidence:)`
-    // and pass it to `NavigationSession.observe(_:)`. The session checks the direction
-    // against the building outline before it believes it, and corrects the heading bias.
-    // In low light, call `cameraCheckUnavailable(.lowLight)` instead of failing quietly.
+    // CV-9 → FE-10: `onTextRead` gets this frame's reads; AppServices turns a matching
+    // building number into a `BuildingSighting` for `NavigationSession.observe(_:)`.
+    // TODO (CV-9): in low light, call `cameraCheckUnavailable(.lowLight)` instead of
+    // failing quietly.
 
     // `buffer` is not captured below, so the camera gets it back now.
     let visibleNumbers = heldNumbers
@@ -185,11 +191,14 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       if let top = detections.first {
         speaker.speak(top.labels.first?.identifier ?? "something")
       }
-      if let phrase {
+      if announcesReads, let phrase {
         speaker.speak(phrase)
       }
-      if let signPhrase {
+      if announcesReads, let signPhrase {
         speaker.speak(signPhrase)
+      }
+      if !fresh.isEmpty {
+        onTextRead?(fresh)
       }
 
       // LocationService is main-actor, so the snapshot is read here, a few ms after capture.

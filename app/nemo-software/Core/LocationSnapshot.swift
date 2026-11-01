@@ -56,3 +56,15 @@ nonisolated public struct LocationSnapshot {
     self.speedMetersPerSecond = speedMetersPerSecond
   }
 }
+
+extension LocationSnapshot {
+  /// Worse than this, a distance or direction to the door would mislead more than help
+  /// (indoors and beside tall buildings GPS is often 30–100 m off).
+  public static let usableAccuracyMeters = 30.0
+
+  /// A fix the app is willing to give distances and directions from.
+  public var hasUsableFix: Bool {
+    guard coordinate != nil, let accuracy = horizontalAccuracy else { return false }
+    return accuracy >= 0 && accuracy <= Self.usableAccuracyMeters
+  }
+}

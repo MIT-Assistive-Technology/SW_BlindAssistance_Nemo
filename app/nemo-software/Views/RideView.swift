@@ -110,10 +110,10 @@ struct RideView: View {
             .accessibilityLabel("Side of street")
             .accessibilityValue(sideText)
           if viewModel.needsSideAnswerFromRider {
-            Button("Yes, the building side is to my right") {
+            Button("Optional: I know I'm on the building side") {
               viewModel.answerSideQuestion(sameSide: true)
             }
-            Button("No, the building is across the street") {
+            Button("Optional: I know the building is across the street") {
               viewModel.answerSideQuestion(sameSide: false)
             }
           }

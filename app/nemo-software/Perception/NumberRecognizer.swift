@@ -12,11 +12,19 @@ import ImageIO
 nonisolated public struct CameraTextRead: Sendable {
   public var numbers: [RecognizedNumber]
   public var streetSigns: [RecognizedStreetSign]
+  /// ENTRANCE, PUSH, PULL, AUTOMATIC DOOR, for the door finder.
+  public var entranceSigns: [RecognizedEntranceSign]
 
-  public init(numbers: [RecognizedNumber] = [], streetSigns: [RecognizedStreetSign] = []) {
+  public init(
+    numbers: [RecognizedNumber] = [], streetSigns: [RecognizedStreetSign] = [],
+    entranceSigns: [RecognizedEntranceSign] = []
+  ) {
     self.numbers = numbers
     self.streetSigns = streetSigns
+    self.entranceSigns = entranceSigns
   }
+
+  public var isEmpty: Bool { numbers.isEmpty && streetSigns.isEmpty && entranceSigns.isEmpty }
 }
 
 nonisolated public protocol NumberRecognizer: AnyObject, Sendable {

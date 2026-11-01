@@ -21,6 +21,10 @@ public final class HeadingViewModel: ObservableObject {
   private let location: LocationService
   private let feedback: FeedbackKit
   private var announcer = HeadingAnnouncer()
+  /// SwiftUI builds this view model as soon as the home menu shows its link, long before
+  /// the Heading screen opens. Only speak while the screen is actually up, or the Ride
+  /// and Walk screens (which turn the compass on) hear calibration prompts every 8 s.
+  private var isOnScreen = false
   private var cancellables = Set<AnyCancellable>()
 
   public init(location: LocationService, feedback: FeedbackKit) {
@@ -67,6 +71,7 @@ public final class HeadingViewModel: ObservableObject {
   public var needsCalibration: Bool { readout?.needsCalibration ?? false }
 
   public func onAppear() {
+    isOnScreen = true
     guard location.isHeadingAvailable else {
       problem = Phrases.headingUnavailable
       feedback.emit(.headingUnavailable)
@@ -76,6 +81,7 @@ public final class HeadingViewModel: ObservableObject {
   }
 
   public func onDisappear() {
+    isOnScreen = false
     // Keep the ride's tracking alive if it's running; only this screen's updates stop.
     if !location.isTrackingRide { location.stop() }
     feedback.stopAll()
@@ -102,7 +108,7 @@ public final class HeadingViewModel: ObservableObject {
 
   private func apply(_ readout: HeadingReadout?) {
     self.readout = readout
-    guard speaksChanges, let readout else { return }
+    guard isOnScreen, speaksChanges, let readout else { return }
     if let phrase = announcer.announcement(for: readout), !phrase.isEmpty {
       emit(readout, calibration: phrase == Phrases.compassCalibration)
     }
