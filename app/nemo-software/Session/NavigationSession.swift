@@ -764,7 +764,7 @@ public final class NavigationSession: ObservableObject {
       guard pair.count >= 2 else { return nil }
       return frame.toLocal(lat: pair[1], lon: pair[0])
     }
-    return points.count >= 2 ? (frame, points) : nil
+    return points.count >= 2 ? (frame: frame, points: points) : nil
   }
 
   /// Does the straight line from the rider to the door cross the street centerline?
