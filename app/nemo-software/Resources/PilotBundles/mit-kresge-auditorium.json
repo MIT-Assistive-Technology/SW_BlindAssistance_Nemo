@@ -165,13 +165,18 @@
       ]
     ],
     "door_side_of_road": "left",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.094663,
+      42.3575952
+    ]
   },
   "recognize": {
     "text": [
       "48",
       "W16 Kresge Auditorium",
-      "Kresge Auditorium"
+      "Kresge Auditorium",
+      "W16"
     ]
   },
   "landmarks": null,
