@@ -38,6 +38,12 @@ nonisolated public struct FramePresentation {
   /// Raw detections from the object detector.
   public let detections: [Detection]
 
+  /// Building numbers read from the camera. Held briefly so one missed frame does not clear them.
+  public let numbers: [RecognizedNumber]
+
+  /// Green street-name signs. When a destination is loaded, `text` is the bundle's spelling.
+  public let streetSigns: [RecognizedStreetSign]
+
   /// Most recent device location/heading.
   public let location: LocationSnapshot?
 
@@ -54,9 +60,27 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   /// 2–3 for the text building check.
   public let maxFramesPerSecond: Double
 
+  /// Called on the main actor with each fresh text read, so navigation can turn a
+  /// building number into a `BuildingSighting` (CV-9 → FE-10). Wired in `AppServices`.
+  @MainActor public var onTextRead: ((CameraTextRead) -> Void)?
+
+  /// Speak raw reads ("Number 77", "Sign …") for the debug screen. Off during a walk,
+  /// where `NavigationSession` speaks the reviewed phrases instead.
+  @MainActor public var announcesReads = true
+
   private let detector: ObjectDetector
+  private let numberRecognizer: any NumberRecognizer
   private let locationProvider: LocationProvider
   private let speaker: Speaker
+  private let spokenNumbers = SpokenNumbers()
+
+  /// Only touched on `perceptionQueue`, except `expectedBundleTexts`, which uses `lock`.
+  private var lastNumberRecognition: CFTimeInterval = 0
+  private var heldNumbers: [RecognizedNumber] = []
+  private var heldNumbersAt: CFTimeInterval = 0
+  private var heldSigns: [RecognizedStreetSign] = []
+  private var heldSignsAt: CFTimeInterval = 0
+  private var expectedBundleTexts: [String] = []
 
   private let perceptionQueue = DispatchQueue(label: "nemo.perception", qos: .userInitiated)
 
@@ -69,14 +93,24 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
   public init(
     detector: ObjectDetector,
+    numberRecognizer: any NumberRecognizer,
     locationProvider: LocationProvider,
     speaker: Speaker,
     maxFramesPerSecond: Double = 10
   ) {
     self.detector = detector
+    self.numberRecognizer = numberRecognizer
     self.locationProvider = locationProvider
     self.speaker = speaker
     self.maxFramesPerSecond = maxFramesPerSecond
+  }
+
+  /// Strings the building check is allowed to repeat: `recognize.text`, the entrance
+  /// street, and the building name. Empty until a destination bundle is loaded.
+  /// A green street sign is kept either way, but it is renamed to the bundle spelling
+  /// when one of these matches. That matched string is what Jing's `BuildingSighting` takes.
+  public func setExpectedBundleTexts(_ texts: [String]) {
+    lock.withLock { expectedBundleTexts = texts }
   }
 
   // MARK: - FrameProviderDelegate
@@ -129,6 +163,10 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       orientation: orientation
     )
 
+    // Building-number check is 2–3 times a second. The buffer stays on this queue and is
+    // released when `process` returns, which is what the camera provider requires.
+    let fresh = recognizeText(in: buffer, orientation: orientation, now: started)
+
     let snapshot: FrameStats = lock.withLock {
       stats.processed += 1
       stats.lastProcessingMs = (CACurrentMediaTime() - started) * 1000
@@ -136,7 +174,16 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       return stats
     }
 
+    // CV-9 → FE-10: `onTextRead` gets this frame's reads; AppServices turns a matching
+    // building number into a `BuildingSighting` for `NavigationSession.observe(_:)`.
+    // TODO (CV-9): in low light, call `cameraCheckUnavailable(.lowLight)` instead of
+    // failing quietly.
+
     // `buffer` is not captured below, so the camera gets it back now.
+    let visibleNumbers = heldNumbers
+    let visibleSigns = heldSigns
+    let phrase = spokenNumbers.phrase(for: fresh.numbers)
+    let signPhrase = spokenNumbers.phrase(forSign: fresh.streetSigns.first?.text)
     Task { @MainActor [self] in
       // Speak the most interesting detection(s) so the user gets audio feedback.
       // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
@@ -144,15 +191,83 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       if let top = detections.first {
         speaker.speak(top.labels.first?.identifier ?? "something")
       }
+      if announcesReads, let phrase {
+        speaker.speak(phrase)
+      }
+      if announcesReads, let signPhrase {
+        speaker.speak(signPhrase)
+      }
+      if !fresh.isEmpty {
+        onTextRead?(fresh)
+      }
 
       // LocationService is main-actor, so the snapshot is read here, a few ms after capture.
       // TODO: attach location at capture time once LocationService is thread-safe (FE-3).
       onPresentation?(
         FramePresentation(
           detections: detections,
+          numbers: visibleNumbers,
+          streetSigns: visibleSigns,
           location: locationProvider.currentSnapshot,
           stats: snapshot
         ))
     }
   }
+
+  /// Runs on `perceptionQueue`. Returns this frame's reads, not the held lists.
+  private func recognizeText(
+    in buffer: CVPixelBuffer,
+    orientation: CGImagePropertyOrientation,
+    now: CFTimeInterval
+  ) -> CameraTextRead {
+    guard now - lastNumberRecognition >= 0.4 else { return CameraTextRead() }
+    lastNumberRecognition = now
+    let expected = lock.withLock { expectedBundleTexts }
+    let read = numberRecognizer.read(buffer, orientation: orientation, expectedBundleTexts: expected)
+    if read.numbers.isEmpty {
+      if now - heldNumbersAt > 1.5 { heldNumbers = [] }
+    } else {
+      heldNumbers = read.numbers
+      heldNumbersAt = now
+    }
+    if read.streetSigns.isEmpty {
+      if now - heldSignsAt > 1.5 { heldSigns = [] }
+    } else {
+      heldSigns = read.streetSigns
+      heldSignsAt = now
+    }
+    return read
+  }
+}
+
+/// Doesn't repeat the same building number on every check.
+private nonisolated final class SpokenNumbers: @unchecked Sendable {
+  private let lock = NSLock()
+  private var lastValue: String?
+  private var lastAt = Date.distantPast
+
+  func phrase(for numbers: [RecognizedNumber]) -> String? {
+    guard let top = numbers.first else { return nil }
+    let now = Date()
+    lock.lock()
+    defer { lock.unlock() }
+    if lastValue == top.value, now.timeIntervalSince(lastAt) < 6 { return nil }
+    lastValue = top.value
+    lastAt = now
+    return "Number \(top.value)"
+  }
+
+  func phrase(forSign text: String?) -> String? {
+    guard let text else { return nil }
+    let now = Date()
+    lock.lock()
+    defer { lock.unlock() }
+    if lastSign == text, now.timeIntervalSince(lastSignAt) < 6 { return nil }
+    lastSign = text
+    lastSignAt = now
+    return "Sign \(text)"
+  }
+
+  private var lastSign: String?
+  private var lastSignAt = Date.distantPast
 }

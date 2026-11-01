@@ -9,10 +9,14 @@
 //
 //  Decode with `JSONDecoder.entrance` (snake_case keys -> camelCase properties).
 //
+//  Everything here is `nonisolated`: the project's default main-actor isolation must not
+//  cover the data types, or guidance couldn't read a bundle off the main thread
+//  (plan section 11, "Concurrency").
+//
 
 import Foundation
 
-public struct ResolveResult: Codable, Sendable {
+nonisolated public struct ResolveResult: Codable, Sendable {
   public let destinationId: String
   /// "complete", or "partial" when the result is weak (fetch again later).
   public let status: String
@@ -29,7 +33,7 @@ public struct ResolveResult: Codable, Sendable {
   public let dataVersion: DataVersion
 }
 
-public struct Building: Codable, Sendable {
+nonisolated public struct Building: Codable, Sendable {
   public let osmId: String
   public let name: String?
   public let housenumber: String?
@@ -37,7 +41,7 @@ public struct Building: Codable, Sendable {
   public let footprint: [[Double]]
 }
 
-public struct Candidate: Codable, Sendable, Identifiable {
+nonisolated public struct Candidate: Codable, Sendable, Identifiable {
   public let id: String
   public let lat: Double
   public let lon: Double
@@ -52,20 +56,20 @@ public struct Candidate: Codable, Sendable, Identifiable {
 }
 
 /// Door details worth saying aloud. Every field is optional because OSM rarely has them.
-public struct Speak: Codable, Sendable {
+nonisolated public struct Speak: Codable, Sendable {
   public let door: String?
   public let automaticDoor: String?
   public let stepCount: Int?
 }
 
-public struct Provenance: Codable, Sendable {
+nonisolated public struct Provenance: Codable, Sendable {
   /// "osm_tag", "mapillary_cv", "crowd" or "geometry_fallback".
   public let source: String
   public let ref: String?
   public let tags: [String: String]?
 }
 
-public struct PathChecks: Codable, Sendable {
+nonisolated public struct PathChecks: Codable, Sendable {
   public let crossesRoad: Bool
   /// [lon, lat] of the nearest `footway=crossing`, when the path crosses a road.
   public let nearestCrossing: [Double]?
@@ -73,7 +77,7 @@ public struct PathChecks: Codable, Sendable {
 }
 
 /// Inputs for side-of-street detection when the car stops (FE-13).
-public struct StreetSide: Codable, Sendable {
+nonisolated public struct StreetSide: Codable, Sendable {
   public let entranceStreet: String
   public let roadWay: String
   /// Road centerline as [lon, lat] pairs.
@@ -84,11 +88,11 @@ public struct StreetSide: Codable, Sendable {
 }
 
 /// Text the camera building check should look for (CV-9).
-public struct Recognize: Codable, Sendable {
+nonisolated public struct Recognize: Codable, Sendable {
   public let text: [String]
 }
 
-public struct Landmark: Codable, Sendable {
+nonisolated public struct Landmark: Codable, Sendable {
   public let kind: String
   public let lat: Double
   public let lon: Double
@@ -99,16 +103,34 @@ public struct Landmark: Codable, Sendable {
   public let speak: String
 }
 
-public struct DataVersion: Codable, Sendable {
+nonisolated public struct DataVersion: Codable, Sendable {
   public let osm: String
   public let model: String
 }
 
-extension JSONDecoder {
+nonisolated extension JSONDecoder {
   /// Decoder configured for the entrance service's snake_case JSON.
+  ///
+  /// `convertFromSnakeCase` applies to property names only, not to the keys inside
+  /// `provenance[].tags`, so raw OSM tags such as `automatic_door` survive intact.
+  /// `EntranceModelsTests` pins that down.
   public static var entrance: JSONDecoder {
     let decoder = JSONDecoder()
     decoder.keyDecodingStrategy = .convertFromSnakeCase
+    // The contract has no dates, but the phone's cache wrapper does (FE-11).
+    decoder.dateDecodingStrategy = .iso8601
     return decoder
+  }
+}
+
+nonisolated extension JSONEncoder {
+  /// Mirror of `JSONDecoder.entrance`, used to write bundles to the phone's cache
+  /// (FE-11). Round-tripping through the contract's own shape means a cached bundle
+  /// decodes with exactly the same code path as a fresh one.
+  public static var entrance: JSONEncoder {
+    let encoder = JSONEncoder()
+    encoder.keyEncodingStrategy = .convertToSnakeCase
+    encoder.dateEncodingStrategy = .iso8601
+    return encoder
   }
 }

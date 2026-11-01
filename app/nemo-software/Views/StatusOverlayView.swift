@@ -13,9 +13,23 @@ struct StatusOverlayView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
-      Text(headline)
-        .font(.headline)
-        .foregroundStyle(.white)
+      if status == .ready, let numbers = presentation?.numbers, !numbers.isEmpty {
+        Text(numbers.map(\.value).joined(separator: ", "))
+          .font(.largeTitle.weight(.bold))
+          .foregroundStyle(.white)
+          .accessibilityLabel("Numbers \(numbers.map(\.value).joined(separator: ", "))")
+      } else if status != .ready || (presentation?.streetSigns.isEmpty ?? true) {
+        Text(headline)
+          .font(.headline)
+          .foregroundStyle(.white)
+      }
+
+      if status == .ready, let signs = presentation?.streetSigns, !signs.isEmpty {
+        Text(signs.map(\.text).joined(separator: ", "))
+          .font(.title2.weight(.semibold))
+          .foregroundStyle(.white)
+          .accessibilityLabel("Street signs \(signs.map(\.text).joined(separator: ", "))")
+      }
 
       if let stats = presentation?.stats {
         Text(
@@ -63,7 +77,7 @@ struct StatusOverlayView: View {
       if let detections = presentation?.detections, !detections.isEmpty {
         return "I see: \(detections.map { $0.labels.first?.identifier ?? "something" }.joined(separator: ", "))"
       }
-      return "Tap Start and point the camera"
+      return "Tap Start and point the camera at a building number or street sign"
     }
   }
 }

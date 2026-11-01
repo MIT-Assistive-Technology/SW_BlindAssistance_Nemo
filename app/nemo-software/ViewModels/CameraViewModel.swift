@@ -52,6 +52,12 @@ public final class CameraViewModel: ObservableObject {
     #endif
   }
 
+  /// Horizontal field of view of the frames the pipeline sees, in degrees; nil when the
+  /// provider isn't the live camera (Simulator).
+  var fieldOfViewDegrees: Double? {
+    (frameProvider as? CameraFrameProvider)?.portraitFieldOfViewDegrees
+  }
+
   /// One-time setup (asks for camera permission the first time); safe to call multiple times.
   public func setup() async {
     guard status == .notSetUp else { return }

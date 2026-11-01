@@ -25,12 +25,21 @@ public final class AudioSessionManager {
         )
     }
     
+    /// Spoken audio that ducks music and mixes with the Uber app, and keeps playing with
+    /// the screen locked (the `audio` background mode is in app/Info.plist). Settings from
+    /// Jing's AppServices, which now calls this instead of setting the session itself.
     public func start() {
-        try? session.setCategory(
-            .playback,
-            options: [.mixWithOthers]
-        )
-        try? session.setActive(true)
+        do {
+            try session.setCategory(
+                .playback,
+                mode: .spokenAudio,
+                options: [.duckOthers, .mixWithOthers]
+            )
+            try session.setActive(true)
+        } catch {
+            // Losing audio is bad, but it must not take the app down on launch.
+            print("[AudioSessionManager] audio session setup failed: \(error.localizedDescription)")
+        }
     }
     
     public func stop() {

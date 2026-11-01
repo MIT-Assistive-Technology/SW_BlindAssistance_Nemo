@@ -83,6 +83,7 @@ struct CameraView: View {
       frameProvider: SyntheticFrameProvider(),
       pipeline: PerceptionPipeline(
         detector: VisionObjectDetector(),
+        numberRecognizer: VisionNumberRecognizer(),
         locationProvider: LocationService.shared,
         speaker: Speaker()
       )
