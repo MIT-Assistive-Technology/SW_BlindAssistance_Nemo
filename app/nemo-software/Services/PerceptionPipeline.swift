@@ -64,6 +64,24 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   /// building number into a `BuildingSighting` (CV-9 → FE-10). Wired in `AppServices`.
   @MainActor public var onTextRead: ((CameraTextRead) -> Void)?
 
+  /// Called on the main actor with this frame's detections (already filtered), so the
+  /// hazard path can turn them into `HazardSighting`s. Wired in `AppServices`.
+  @MainActor public var onDetections: (([Detection]) -> Void)?
+
+  /// Called on the main actor with the free-space scan built from the monocular
+  /// depth estimator. Only fires when `depthEstimator` is set — on LiDAR phones the
+  /// scan comes from `ARGuide.onFreeSpace` instead.
+  @MainActor public var onFreeSpace: ((FreeSpace) -> Void)?
+
+  /// Monocular depth for phones without LiDAR (Depth Anything V2 Small). Runs on
+  /// `perceptionQueue` at most every `depthEstimateInterval` seconds; nil means no
+  /// estimator, so nothing extra runs on LiDAR phones.
+  public var depthEstimator: (any DepthEstimator)?
+
+  /// How often the estimator runs, when set. Relative depth is a second estimate on
+  /// top of the 10 fps detection cap; 2 Hz is enough for hazards and kind to battery.
+  public var depthEstimateInterval: CFTimeInterval = 0.5
+
   /// Speak raw reads ("Number 77", "Sign …") for the debug screen. Off during a walk,
   /// where `NavigationSession` speaks the reviewed phrases instead.
   @MainActor public var announcesReads = true
@@ -76,6 +94,7 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
   /// Only touched on `perceptionQueue`, except `expectedBundleTexts`, which uses `lock`.
   private var lastNumberRecognition: CFTimeInterval = 0
+  private var lastDepthEstimate: CFTimeInterval = 0
   private var heldNumbers: [RecognizedNumber] = []
   private var heldNumbersAt: CFTimeInterval = 0
   private var heldSigns: [RecognizedStreetSign] = []
@@ -153,15 +172,26 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     // TODO: derive this from the device orientation if the app ever supports landscape.
     let orientation = CGImagePropertyOrientation.right
 
-    // Run detection. Start by accepting everything above a confidence floor.
+    // Run detection, accepting everything above a confidence floor. The session's
+    // own `minSightingConfidence` gate decides what becomes a hazard.
     let detections = detector.detect(
       buffer,
-      filter: { detection in
-        // TODO: Filter by confidence threshold, e.g. detection.confidence > 0.4.
-        true
-      },
+      filter: { detection in detection.confidence > 0.4 },
       orientation: orientation
     )
+
+    // Monocular depth for phones without LiDAR: a relative scan on its own cadence.
+    // On LiDAR phones `depthEstimator` is nil and ARGuide's sceneDepth scan runs
+    // instead, so the two never duplicate.
+    let freeSpace: FreeSpace?
+    if let depthEstimator, started - lastDepthEstimate >= depthEstimateInterval,
+      let disparity = depthEstimator.disparityMap(for: buffer, orientation: orientation)
+    {
+      lastDepthEstimate = started
+      freeSpace = FreeSpaceAnalyzer.analyze(disparity)
+    } else {
+      freeSpace = nil
+    }
 
     // Building-number check is 2–3 times a second. The buffer stays on this queue and is
     // released when `process` returns, which is what the camera provider requires.
@@ -185,11 +215,13 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     let phrase = spokenNumbers.phrase(for: fresh.numbers)
     let signPhrase = spokenNumbers.phrase(forSign: fresh.streetSigns.first?.text)
     Task { @MainActor [self] in
-      // Speak the most interesting detection(s) so the user gets audio feedback.
-      // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
-      // announcements to FeedbackKit events.
-      if let top = detections.first {
-        speaker.speak(top.labels.first?.identifier ?? "something")
+      // Detections go to the hazard path, which speaks reviewed phrases through
+      // FeedbackKit — raw model labels are never spoken.
+      if !detections.isEmpty {
+        onDetections?(detections)
+      }
+      if let freeSpace {
+        onFreeSpace?(freeSpace)
       }
       if announcesReads, let phrase {
         speaker.speak(phrase)

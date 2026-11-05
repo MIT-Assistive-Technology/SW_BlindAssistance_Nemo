@@ -81,6 +81,16 @@ nonisolated enum DoorMeshDetector {
 
   /// World-space centres of the faces classified as `.door`.
   private static func doorFaceCentres(of anchor: ARMeshAnchor) -> [SIMD3<Float>] {
+    faceCentres(of: anchor, matching: UInt8(ARMeshClassification.door.rawValue))
+  }
+
+  /// World-space centres of every face in the anchor with this classification. The
+  /// door finder uses it for `.door`; the free-space scan uses it for `.floor`, which
+  /// is where the ground level comes from. Reads the mesh buffers in place and keeps
+  /// nothing.
+  static func faceCentres(of anchor: ARMeshAnchor, matching classificationValue: UInt8)
+    -> [SIMD3<Float>]
+  {
     let geometry = anchor.geometry
     guard let classification = geometry.classification else { return [] }
     let faces = geometry.faces
@@ -90,7 +100,6 @@ nonisolated enum DoorMeshDetector {
     let classBase = classification.buffer.contents().advanced(by: classification.offset)
     let faceBase = faces.buffer.contents()
     let vertexBase = vertices.buffer.contents().advanced(by: vertices.offset)
-    let doorValue = UInt8(ARMeshClassification.door.rawValue)
 
     func vertex(_ index: Int) -> SIMD3<Float> {
       let p = vertexBase.advanced(by: vertices.stride * index)
@@ -108,7 +117,7 @@ nonisolated enum DoorMeshDetector {
     for face in 0..<faces.count {
       let value = classBase.advanced(by: classification.stride * face)
         .assumingMemoryBound(to: UInt8.self).pointee
-      guard value == doorValue else { continue }
+      guard value == classificationValue else { continue }
       let local =
         (vertex(vertexIndex(face: face, corner: 0)) + vertex(vertexIndex(face: face, corner: 1))
           + vertex(vertexIndex(face: face, corner: 2))) / 3

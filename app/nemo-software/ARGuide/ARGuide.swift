@@ -36,6 +36,9 @@ final class ARGuide: NSObject, ARSessionDelegate {
   /// Door finder (LiDAR phones): the nearest door in front of the camera, about twice a
   /// second while `startDoorSearch()` runs.
   var onDoor: ((DoorMeshHit) -> Void)?
+  /// Free-space scan (LiDAR phones): the wedges ahead, a couple of times a second while
+  /// the walk runs. Feeds hazard speech now and the steering picker later.
+  var onFreeSpace: ((FreeSpace) -> Void)?
 
   /// Camera frames for the perception pipeline while ARKit owns the camera.
   let frameProvider = ARFrameProvider()
@@ -44,6 +47,10 @@ final class ARGuide: NSObject, ARSessionDelegate {
   private(set) var isTrackingOK = false
 
   static var isSupported: Bool { ARWorldTrackingConfiguration.isSupported }
+  /// Phones with LiDAR can measure depth, so the free-space scan gets real meters.
+  static var canMeasureDepth: Bool {
+    ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth)
+  }
 
   private let session = ARSession()
   private let arQueue = DispatchQueue(label: "nemo.arguide", qos: .userInitiated)
@@ -57,11 +64,15 @@ final class ARGuide: NSObject, ARSessionDelegate {
   private nonisolated struct Throttle {
     var lastPose: TimeInterval = 0
     var lastDoorScan: TimeInterval = 0
+    var lastFreeSpaceScan: TimeInterval = 0
     var searchingForDoors = false
   }
   private let throttle = OSAllocatedUnfairLock(initialState: Throttle())
   private nonisolated static let poseInterval: TimeInterval = 0.2
   private nonisolated static let doorScanInterval: TimeInterval = 0.5
+  /// The free-space scan is heavier than the pose readout; every 0.4 s is often
+  /// enough for hazards without heating the phone.
+  private nonisolated static let freeSpaceInterval: TimeInterval = 0.4
 
   // Light estimate thresholds in lumens (about 1000 is a well-lit scene).
   private static let darkLumens: CGFloat = 150
@@ -80,37 +91,61 @@ final class ARGuide: NSObject, ARSessionDelegate {
 
   // MARK: - Control
 
-  /// Starts tracking, anchoring the AR origin at this GPS fix (the rider's position now).
-  func start(originLat: Double, originLon: Double, accuracyMeters: Double) {
+  /// Starts tracking for the walk. With a GPS fix, the AR origin is anchored to it so
+  /// `onPose` can report positions (the snap-to-route step wires those in); without
+  /// one, `start()` still runs the camera and depth, just publishes no poses.
+  func start(originLat: Double? = nil, originLon: Double? = nil, accuracyMeters: Double = 10) {
     guard Self.isSupported else {
       onTracking?(false)
       return
     }
-    origin = LocalFrame(originLat: originLat, originLon: originLon)
-    originAccuracyMeters = max(accuracyMeters, 0)
+    if let originLat, let originLon {
+      origin = LocalFrame(originLat: originLat, originLon: originLon)
+      originAccuracyMeters = max(accuracyMeters, 0)
+    } else {
+      origin = nil
+    }
     lastHeading = nil
     darkSince = nil
     lowLightReported = false
     throttle.withLock { $0.lastPose = 0 }
+    session.run(Self.walkConfiguration(), options: [.resetTracking, .removeExistingAnchors])
+    isRunning = true
+  }
 
+  /// The walk configuration: world tracking aligned to gravity and heading, plus
+  /// LiDAR depth and scene reconstruction on phones that have it — `sceneDepth` feeds
+  /// the free-space scan, and the mesh feeds both its ground level and the door
+  /// finder, so the last stretch needs no session restart.
+  private static func walkConfiguration() -> ARWorldTrackingConfiguration {
     let configuration = ARWorldTrackingConfiguration()
     configuration.worldAlignment = .gravityAndHeading
     configuration.isLightEstimationEnabled = true
+    if canMeasureDepth {
+      configuration.frameSemantics.insert(.sceneDepth)
+    }
+    if DoorMeshDetector.isSupported {
+      configuration.sceneReconstruction = .meshWithClassification
+    }
     // 30 fps is plenty and saves battery.
     if let format = ARWorldTrackingConfiguration.supportedVideoFormats.first(where: {
       $0.framesPerSecond == 30
     }) {
       configuration.videoFormat = format
     }
-    session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
-    isRunning = true
+    return configuration
   }
 
-  /// The door finder's camera for the last stretch: world tracking with LiDAR scene
-  /// reconstruction, so `onDoor` reports doors, and frames still go to `frameProvider`
-  /// for the text reader. Needs no GPS anchor; poses aren't published.
+  /// The door finder's half in the last stretch. The walk configuration already
+  /// carries the mesh, so this just turns the scan on; only when the walk isn't
+  /// running (e.g. resumed straight into the last stretch) does it run its own
+  /// session. Needs no GPS anchor; poses aren't published.
   func startDoorSearch() {
     guard Self.isSupported, DoorMeshDetector.isSupported else { return }
+    if isRunning {
+      throttle.withLock { $0.searchingForDoors = true }
+      return
+    }
     origin = nil
     darkSince = nil
     lowLightReported = false
@@ -123,6 +158,9 @@ final class ARGuide: NSObject, ARSessionDelegate {
     configuration.worldAlignment = .gravity
     configuration.isLightEstimationEnabled = true
     configuration.sceneReconstruction = .meshWithClassification
+    if Self.canMeasureDepth {
+      configuration.frameSemantics.insert(.sceneDepth)
+    }
     session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     isRunning = true
   }
@@ -158,6 +196,23 @@ final class ARGuide: NSObject, ARSessionDelegate {
       }
     }
 
+    // Free-space scan: sceneDepth on LiDAR phones, with the mesh's floor faces as the
+    // ground reference when reconstruction is on. Everything is read here on the AR
+    // queue; only the value-type result hops to the main actor.
+    let freeSpaceDue = throttle.withLock { state -> Bool in
+      guard timestamp - state.lastFreeSpaceScan >= Self.freeSpaceInterval else {
+        return false
+      }
+      state.lastFreeSpaceScan = timestamp
+      return true
+    }
+    if freeSpaceDue, let freeSpace = Self.freeSpaceScan(frame) {
+      Task { @MainActor [weak self] in
+        guard let self, self.isRunning else { return }
+        self.onFreeSpace?(freeSpace)
+      }
+    }
+
     let due = throttle.withLock { state -> Bool in
       guard timestamp - state.lastPose >= Self.poseInterval else { return false }
       state.lastPose = timestamp
@@ -170,6 +225,21 @@ final class ARGuide: NSObject, ARSessionDelegate {
     Task { @MainActor [weak self] in
       self?.publish(transform: transform, lumens: lumens)
     }
+  }
+
+  /// One free-space reading from a frame, or nil without depth. Runs on the AR queue
+  /// and retains nothing from the frame.
+  private nonisolated static func freeSpaceScan(_ frame: ARFrame) -> FreeSpace? {
+    guard let depth = frame.sceneDepth,
+      let depthFrame = DepthFrame(depthData: depth, camera: frame.camera)
+    else { return nil }
+    // Scene reconstruction's floor faces pin down the ground level when the mesh is
+    // on; without them the depth map estimates it itself.
+    let floorPoints = frame.anchors.compactMap { $0 as? ARMeshAnchor }.flatMap {
+      DoorMeshDetector.faceCentres(
+        of: $0, matching: UInt8(ARMeshClassification.floor.rawValue))
+    }
+    return FreeSpaceAnalyzer.analyze(depthFrame, floorPoints: floorPoints)
   }
 
   nonisolated func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {

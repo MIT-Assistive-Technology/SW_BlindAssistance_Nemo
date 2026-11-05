@@ -310,6 +310,64 @@ nonisolated public enum Phrases {
     }
   }
 
+  // MARK: - Hazards (what's in front)
+
+  /// The spoken name for each hazard kind. A fixed table on purpose: detector labels
+  /// are never spoken raw — "traffic cone" becomes "cone", and depth's unnamed
+  /// obstacle is honestly "something", never "an obstacle" or "a hazard" (which
+  /// would promise a judgement the depth map can't make).
+  public static func hazardName(_ kind: HazardSighting.Kind) -> String {
+    switch kind {
+    case .person: return "Person"
+    case .vehicle: return "Vehicle"
+    case .bike: return "Bike"
+    case .pole: return "Pole"
+    case .cone: return "Cone"
+    case .bench: return "Bench"
+    case .construction: return "Construction"
+    case .dog: return "Dog"
+    case .animal: return "Animal"
+    case .wall: return "Wall"
+    case .object: return "Something"
+    case .stepDown: return "Step down"
+    case .stepUp: return "Step up"
+    }
+  }
+
+  /// "Person slightly right, about 6 feet." Distance only when depth knows it —
+  /// "Person slightly left." is honest for a camera-only sighting. A notice, not an
+  /// instruction: it never says which way to go, so it can't steer anyone into
+  /// something worse.
+  public static func hazardAhead(
+    kind: HazardSighting.Kind, offsetDegrees: Double, meters: Double?, units: Units = .feet
+  ) -> String {
+    let howFar = meters.map { ", \(distance(meters: $0, units: units))" } ?? ""
+    return "\(hazardName(kind)) \(turn(offsetDegrees: offsetDegrees))\(howFar)."
+  }
+
+  /// The hazard first, so the turn has a reason, then the nearest clear direction:
+  /// "Person straight ahead, about 6 feet. Go slightly left." The direction is the
+  /// scan's nearest clear slice, not a reroute — it never says the new way is safe,
+  /// only that the scan saw nothing there.
+  public static func steerAround(
+    kind: HazardSighting.Kind, hazardOffsetDegrees: Double, clearOffsetDegrees: Double,
+    meters: Double?, units: Units = .feet
+  ) -> String {
+    let howFar = meters.map { ", \(distance(meters: $0, units: units))" } ?? ""
+    return
+      "\(hazardName(kind)) \(turn(offsetDegrees: hazardOffsetDegrees))\(howFar). Go \(turn(offsetDegrees: clearOffsetDegrees))."
+  }
+
+  /// Every slice ahead is blocked or unreadable. The instruction is stop — never
+  /// "keep going carefully", which would be a guess at safety the scan can't make.
+  public static let pathBlocked = "Stop. The way ahead looks blocked."
+
+  /// Steering worked: send them back towards the door. "Looks clear" because the
+  /// scan stopped seeing anything, not because someone checked it's safe.
+  public static func pathClear(offsetDegrees: Double) -> String {
+    "The way ahead looks clear. Go \(turn(offsetDegrees: offsetDegrees))."
+  }
+
   // MARK: - The camera building check (CV-9)
 
   /// The camera read the building's number or name where the map said it would be.
@@ -479,6 +537,27 @@ nonisolated public enum Phrases {
       buildingConfirmed(text: "77", offsetDegrees: 20),
       buildingConfirmed(text: "77", offsetDegrees: nil),
       buildingUncertain(text: "77"),
+      hazardAhead(kind: .person, offsetDegrees: 20, meters: 2.1),
+      hazardAhead(kind: .vehicle, offsetDegrees: -15, meters: nil),
+      hazardAhead(kind: .bike, offsetDegrees: 0, meters: 3),
+      hazardAhead(kind: .pole, offsetDegrees: -25, meters: 1.2),
+      hazardAhead(kind: .cone, offsetDegrees: 10, meters: nil),
+      hazardAhead(kind: .object, offsetDegrees: 0, meters: 1.8),
+      hazardAhead(kind: .stepDown, offsetDegrees: -5, meters: 1.5),
+      hazardAhead(kind: .stepUp, offsetDegrees: 5, meters: 1.0),
+      hazardAhead(kind: .construction, offsetDegrees: 0, meters: 2.5),
+      hazardAhead(kind: .dog, offsetDegrees: 10, meters: nil),
+      hazardAhead(kind: .animal, offsetDegrees: -10, meters: nil),
+      hazardAhead(kind: .bench, offsetDegrees: 20, meters: nil),
+      hazardAhead(kind: .wall, offsetDegrees: 0, meters: 1.5),
+      steerAround(
+        kind: .person, hazardOffsetDegrees: 5, clearOffsetDegrees: -14, meters: 2.4),
+      steerAround(
+        kind: .object, hazardOffsetDegrees: 0, clearOffsetDegrees: 14, meters: nil),
+      steerAround(
+        kind: .stepDown, hazardOffsetDegrees: -5, clearOffsetDegrees: 14, meters: 1.5),
+      pathBlocked,
+      pathClear(offsetDegrees: -12),
     ] + LookupFailure.allCases.map(lookupFailed)
       + CameraCheckProblem.allCases.map(cameraCheckUnavailable)
       + EntranceWord.allCases.map { doorClueSeen(.entranceSign($0), offsetDegrees: 0) }

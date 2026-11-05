@@ -33,6 +33,19 @@ nonisolated public enum FeedbackEvent: Sendable {
   case doorClueSeen(DoorClue, offsetDegrees: Double)
   /// The rider turned to face what the camera found.
   case facingDoor(meters: Double?)
+  /// Something in the walking path the cane will find: a named object (person, car,
+  /// bike, pole, cone), "something" depth saw but couldn't name, or a step down.
+  /// Advisory only — it notices, it doesn't clear a path.
+  case hazardAhead(HazardSighting.Kind, offsetDegrees: Double, meters: Double?)
+  /// Something in the way, with somewhere to go instead: names the hazard, then the
+  /// nearest clear direction the depth scan can see. This is why the walk turns.
+  case steerAround(
+    HazardSighting.Kind, hazardOffsetDegrees: Double, clearOffsetDegrees: Double,
+    meters: Double?)
+  /// Every slice ahead is blocked or unreadable: the only useful instruction is stop.
+  case pathBlocked
+  /// The direction that was blocked reads clear again — said once, after steering.
+  case pathClear(offsetDegrees: Double)
   /// GPS puts the door about here; the camera or the rider has to find it.
   case doorShouldBeClose
   case warning(String)
@@ -300,6 +313,17 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.doorClueSeen(clue, offsetDegrees: offset)
     case .facingDoor(let meters):
       return Phrases.facingDoor(meters: meters, units: units)
+    case .hazardAhead(let kind, let offset, let meters):
+      return Phrases.hazardAhead(
+        kind: kind, offsetDegrees: offset, meters: meters, units: units)
+    case .steerAround(let kind, let hazardOffset, let clearOffset, let meters):
+      return Phrases.steerAround(
+        kind: kind, hazardOffsetDegrees: hazardOffset,
+        clearOffsetDegrees: clearOffset, meters: meters, units: units)
+    case .pathBlocked:
+      return Phrases.pathBlocked
+    case .pathClear(let offset):
+      return Phrases.pathClear(offsetDegrees: offset)
 
     case .buildingConfirmed(let text, let offsetDegrees):
       return Phrases.buildingConfirmed(text: text, offsetDegrees: offsetDegrees)
@@ -341,7 +365,7 @@ public final class HapticsChannel: FeedbackChannel {
     
     public func play(_ event: FeedbackEvent) {
         switch event{
-        case .direction, .doorDetected, .doorAim, .doorClueSeen:
+        case .direction, .doorDetected, .doorAim, .doorClueSeen, .steerAround, .pathClear:
             // A tick per compass update is a constant buzz; one a second is a cue.
             let now = Date()
             if let last = lastDirectionTickAt, now.timeIntervalSince(last) < 1 { return }
@@ -353,7 +377,7 @@ public final class HapticsChannel: FeedbackChannel {
             haptic(intensity: 0.4, sharpness: 0.3)
         case .arrival:
             haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
-        case .warning, .lost:
+        case .warning, .lost, .hazardAhead, .pathBlocked:
             haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
         default:
             break

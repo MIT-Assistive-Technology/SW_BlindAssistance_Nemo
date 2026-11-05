@@ -59,11 +59,12 @@ Phrases: Feedback/Phrases.swift — every spoken string, checked by SAFE-1
 
 ## Data flow (perception)
 
-1. `CameraFrameProvider` captures a 1080p, 30 fps, 420YpCbCr frame (the same format as ARKit) on its `nemo.camera` queue. In the Simulator, `SyntheticFrameProvider` sends blank frames instead.
-2. It calls `delegate?.processFrame(_:buffer:)` on that queue.
+1. A `FrameProvider` delivers 420YpCbCr frames. During the walk, ARKit owns the camera: `ARGuide` runs world tracking (plus `sceneDepth` and scene reconstruction on LiDAR phones) and `ARFrameProvider` forwards `ARFrame.capturedImage`. Outside the walk `CameraFrameProvider` (AVFoundation) does the same job; in the Simulator, `SyntheticFrameProvider` sends blank frames.
+2. It calls `delegate?.processFrame(_:buffer:)` on its queue.
 3. `PerceptionPipeline` takes the frame only if it's idle and under `maxFramesPerSecond` (10 by default); otherwise it drops it. Taken frames go to its `nemo.perception` queue.
-4. It runs `VisionObjectDetector` there to get `[Detection]`, then releases the buffer.
-5. On the main actor, it reads the latest `LocationSnapshot` from `LocationService`, emits a feedback event (today it speaks via `Speaker`; move this to `FeedbackKit`), and calls `onPresentation` with a `FramePresentation`, including `FrameStats` (processed, dropped, rate, frame size) for the debug overlay.
+4. It runs `VisionObjectDetector` there to get `[Detection]` (confidence above 0.4), runs the text read on its own cadence, and — on phones without LiDAR, if a `DepthAnythingV2Small` model is bundled — runs `MonocularDepthEstimator` about twice a second to produce a relative `FreeSpace`.
+5. On the main actor, `AppServices` turns the outputs into sightings: detections and blocked/dropping free-space slices become `HazardSighting`s (fused when both fire — the detection names it, depth gives the distance) for `NavigationSession.observeHazard`, and text reads become `BuildingSighting`/`DoorSighting` as before. The session speaks through `FeedbackKit`; raw model labels are never spoken.
+6. On LiDAR phones, `ARGuide` separately analyzes `sceneDepth` ~2.5×/s into a metric `FreeSpace` (`FreeSpaceAnalyzer`, with the reconstruction mesh's `.floor` faces pinning the ground level) and reports it through `onFreeSpace`.
 
 ## Rules
 
