@@ -269,7 +269,7 @@ final class SpeechChannelTests: XCTestCase {
       Phrases.bearingLock(metersToDoor: 33.5))
     XCTAssertEqual(SpeechChannel.phrase(for: .directionUncertain), Phrases.directionUncertain)
     XCTAssertEqual(SpeechChannel.phrase(for: .lost), Phrases.offRoute)
-    XCTAssertEqual(SpeechChannel.phrase(for: .noClearPath), Phrases.noClearPath)
+    XCTAssertEqual(SpeechChannel.phrase(for: .pathBlocked), Phrases.pathBlocked)
     XCTAssertEqual(SpeechChannel.phrase(for: .arrival), Phrases.arrivedAtDoor)
     XCTAssertEqual(SpeechChannel.phrase(for: .guidanceStopped), Phrases.guidanceStopped)
     XCTAssertEqual(

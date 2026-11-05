@@ -95,14 +95,8 @@ nonisolated public struct GuidanceThresholds: Equatable, Sendable {
   /// forward along the route rather than turning back toward it.
   public var routeRejoinLookaheadMeters = 4.0
 
-  /// A clear slice must offer at least this much room before it counts as usable.
-  public var minClearPathMeters = 2.0
-  /// Perception results older than this are ignored and the route direction is used.
-  public var freeSpaceMaxAgeSeconds = 1.0
-  /// Confidence floor for a free-space slice.
-  public var minFreeSpaceConfidence = 0.4
-  /// Don't repeat "stop" on every frame.
-  public var noClearPathRepeatSeconds = 4.0
+  /// Free-space steering is event-driven: stale scans are simply not fed to
+  /// `observeFreeSpace(_:)` by the active depth provider.
 
   public var firstStepsAfterMeters = 5.0
   public var breadcrumbEveryMeters = 5.0
@@ -136,6 +130,24 @@ nonisolated public struct GuidanceThresholds: Equatable, Sendable {
   /// A sighting after this long without one, or of a different thing, is spoken as new.
   /// Anything sooner only moves the beacon.
   public var doorSightingNewAfterSeconds = 6.0
+
+  // MARK: Hazards (what's in front)
+
+  /// The same kind of thing isn't announced again inside this window; every sighting
+  /// is still recorded. A hazard you walked past should not be re-told.
+  public var hazardNewAfterSeconds = 10.0
+  /// Depth sees every object as "something"; the detector names some of them. A
+  /// "something" sighting within this angle and time of a named one is the same
+  /// thing, so the name wins and the unnamed sighting is dropped.
+  public var hazardNameSuppressionDegrees = 25.0
+  public var hazardNameSuppressionSeconds = 6.0
+
+  // MARK: Steering (the path ahead)
+
+  /// How often a steer or stop cue repeats while the same obstruction holds.
+  public var steerRepeatSeconds = 8.0
+  /// Re-announce the steer when the chosen clear direction shifts this much.
+  public var steerChangeDegrees = 10.0
 
   /// Side of street unknown at the start: the rider counts as on the door's side once
   /// GPS puts them at least this far from the centerline on that side, and at least as
@@ -197,6 +209,21 @@ public final class NavigationSession: ObservableObject {
   /// When each kind of thing was last seen, so a door seen continuously is spoken once
   /// and the text reader flickering between "77" and ENTRANCE doesn't re-announce both.
   private var doorKindLastSeen: [DoorSighting.Kind: Date] = [:]
+  /// The same memory for hazards: each kind speaks at most once per window. Stamped
+  /// when spoken, not when seen — a persistent obstacle gets an updated distance
+  /// every window rather than never again.
+  private var hazardKindLastSpoken: [HazardSighting.Kind: Date] = [:]
+  /// What the last named hazard was and where, so depth's "something" doesn't
+  /// re-report it and the steering callout can use its name.
+  private var lastNamedHazard: (kind: HazardSighting.Kind, offsetDegrees: Double, at: Date)?
+  /// The latest free-space scan, for the debug panel and the steering picker.
+  @Published public private(set) var latestFreeSpace: FreeSpace?
+  /// While set, the walk is steering around something: what it was, which way the
+  /// rider was sent, and when that was last said. Cleared when the way ahead reads
+  /// clear again.
+  private var steeringState:
+    (kind: HazardSighting.Kind, clearOffsetDegrees: Double, announcedAt: Date)?
+  private var pathBlockedLastSaidAt: Date?
   private var doorCloseSaid = false
   private var lastBuildingConfirmed: (text: String, at: Date)?
   /// Recent distances to the door, for "is the rider getting closer?".
@@ -210,8 +237,6 @@ public final class NavigationSession: ObservableObject {
   private var bundle: ResolveResult?
   private var route: WalkRoute?
   private var routeProjection: RouteProjection?
-  private var latestFreeSpace: FreeSpaceObservation?
-  private var noClearPathSaidAt: Date?
   private var address = ""
 
   /// Where guidance started, used by the first-steps check.
@@ -223,6 +248,10 @@ public final class NavigationSession: ObservableObject {
   private var recoveringSince: Date?
   private var firstStepsChecked = false
   private var calloutsSpoken: Set<Double> = []
+
+  /// The states the rider is actually walking in: where hazards matter and where
+  /// camera work runs.
+  static let walkingStates: Set<SessionState> = [.orient, .guide, .confirm, .lost]
 
   public init(feedback: FeedbackKit, store: SessionStore? = nil) {
     self.feedback = feedback
@@ -304,7 +333,6 @@ public final class NavigationSession: ObservableObject {
       calloutsSpoken = []
       routeProjection = nil
       latestFreeSpace = nil
-      noClearPathSaidAt = nil
       // A new walk learns the compass error again; the old one was measured from a
       // different place and may not apply.
       headingBiasDegrees = 0
@@ -335,7 +363,6 @@ public final class NavigationSession: ObservableObject {
     sideUnconfirmed = false
     routeProjection = nil
     latestFreeSpace = nil
-    noClearPathSaidAt = nil
     resetDoorFinder()
     store?.clear()
   }
@@ -503,6 +530,174 @@ public final class NavigationSession: ObservableObject {
     facingDoorSaid = false
     doorCloseSaid = false
     lastBuildingConfirmed = nil
+    hazardKindLastSpoken = [:]
+    lastNamedHazard = nil
+    steeringState = nil
+    pathBlockedLastSaidAt = nil
+  }
+
+  // MARK: - Hazards (what's in front)
+
+  /// A thing in the walking path, from the object detector or the free-space scan.
+  /// Only announced during the walk — a hazard while the rider is still in the car is
+  /// noise — and each kind repeats only after `hazardNewAfterSeconds`. Depth's
+  /// unnamed "something" is dropped when a named hazard was just seen in the same
+  /// spot: the two sensors are looking at one object.
+  @discardableResult
+  public func observeHazard(_ sighting: HazardSighting) -> Bool {
+    guard Self.walkingStates.contains(state),
+      sighting.confidence >= thresholds.minSightingConfidence
+    else { return false }
+
+    if sighting.kind == .object,
+      let named = lastNamedHazard,
+      sighting.timestamp.timeIntervalSince(named.at)
+        < thresholds.hazardNameSuppressionSeconds,
+      abs(sighting.offsetDegrees - named.offsetDegrees)
+        <= thresholds.hazardNameSuppressionDegrees
+    {
+      return false
+    }
+    if sighting.kind != .object, sighting.kind != .stepDown, sighting.kind != .stepUp {
+      lastNamedHazard = (sighting.kind, sighting.offsetDegrees, sighting.timestamp)
+    }
+
+    let due =
+      hazardKindLastSpoken[sighting.kind].map {
+        sighting.timestamp.timeIntervalSince($0) >= thresholds.hazardNewAfterSeconds
+      } ?? true
+    guard due else { return true }
+    hazardKindLastSpoken[sighting.kind] = sighting.timestamp
+    feedback.emit(
+      .hazardAhead(
+        sighting.kind, offsetDegrees: sighting.offsetDegrees, meters: sighting.meters))
+    return true
+  }
+
+  // MARK: - Steering (the path ahead)
+
+  /// A free-space scan, from `ARGuide` (LiDAR) or the pipeline (monocular). Two jobs:
+  /// blocked and dropping slices become hazard notices, and the slice holding the
+  /// direction of travel drives the steering picker — when that slice is obstructed
+  /// the app names what it sees and offers the nearest clear direction instead.
+  /// The steering target is `offsetDegrees`: today's straight-line aim until Person
+  /// A's route waypoints replace it.
+  public func observeFreeSpace(_ freeSpace: FreeSpace) {
+    latestFreeSpace = freeSpace
+    guard Self.walkingStates.contains(state) else { return }
+
+    let targetSlice = offsetDegrees.flatMap {
+      freeSpace.slice(containingOffsetDegrees: $0)
+    }
+    let targetObstructed =
+      targetSlice.map {
+        switch $0.status {
+        case .blocked, .drop, .stepUp: return true
+        case .clear, .unknown: return false
+        }
+      } ?? false
+
+    // Depth-derived hazards. The slice blocking the direction of travel is the
+    // steering picker's to announce — its notice comes out as the steer callout,
+    // not a bare "something ahead".
+    for slice in freeSpace.slices
+    where !(targetObstructed && slice.offsetDegrees == targetSlice?.offsetDegrees) {
+      switch slice.status {
+      case .blocked(let meters):
+        observeHazard(
+          HazardSighting(
+            kind: .object, offsetDegrees: slice.offsetDegrees, meters: meters,
+            timestamp: freeSpace.timestamp))
+      case .drop(let meters):
+        observeHazard(
+          HazardSighting(
+            kind: .stepDown, offsetDegrees: slice.offsetDegrees, meters: meters,
+            timestamp: freeSpace.timestamp))
+      case .stepUp(let meters):
+        observeHazard(
+          HazardSighting(
+            kind: .stepUp, offsetDegrees: slice.offsetDegrees, meters: meters,
+            timestamp: freeSpace.timestamp))
+      case .clear, .unknown:
+        break
+      }
+    }
+
+    steer(freeSpace, targetSlice: targetSlice, targetObstructed: targetObstructed)
+  }
+
+  /// Choose the clear slice closest to the direction of travel and say so — with the
+  /// thing it saw first, so the turn has a reason. Runs in orient, guide and lost;
+  /// confirm stays quiet because the door finder owns the last stretch.
+  private func steer(
+    _ freeSpace: FreeSpace, targetSlice: FreeSpace.Slice?, targetObstructed: Bool
+  ) {
+    guard state != .confirm, let offset = offsetDegrees, targetObstructed,
+      let targetSlice
+    else {
+      // Back to clear (or nothing to steer by): if we were steering, send the rider
+      // on course once and go quiet.
+      if steeringState != nil, let targetSlice, case .clear = targetSlice.status {
+        feedback.emit(.pathClear(offsetDegrees: offsetDegrees ?? targetSlice.offsetDegrees))
+      }
+      steeringState = nil
+      pathBlockedLastSaidAt = nil
+      return
+    }
+
+    var kind: HazardSighting.Kind
+    var meters: Double?
+    switch targetSlice.status {
+    case .blocked(let m): (kind, meters) = (.object, m)
+    case .drop(let m): (kind, meters) = (.stepDown, m)
+    case .stepUp(let m): (kind, meters) = (.stepUp, m)
+    default: return
+    }
+    // The detector names things depth can't: prefer the name for the same spot.
+    if kind == .object, let named = lastNamedHazard,
+      freeSpace.timestamp.timeIntervalSince(named.at)
+        < thresholds.hazardNameSuppressionSeconds,
+      abs(named.offsetDegrees - targetSlice.offsetDegrees)
+        <= thresholds.hazardNameSuppressionDegrees
+    {
+      kind = named.kind
+    }
+
+    guard
+      let clear = freeSpace.clearSlices.min(by: {
+        abs($0.offsetDegrees - offset) < abs($1.offsetDegrees - offset)
+      })
+    else {
+      // Nothing ahead is clear. The stop cue is paced, not spammed.
+      let due =
+        pathBlockedLastSaidAt.map {
+          freeSpace.timestamp.timeIntervalSince($0) >= thresholds.steerRepeatSeconds
+        } ?? true
+      if due {
+        pathBlockedLastSaidAt = freeSpace.timestamp
+        feedback.emit(.pathBlocked)
+      }
+      return
+    }
+    pathBlockedLastSaidAt = nil
+
+    let changed =
+      steeringState.map {
+        $0.kind != kind
+          || abs($0.clearOffsetDegrees - clear.offsetDegrees)
+            >= thresholds.steerChangeDegrees
+      } ?? true
+    let due =
+      steeringState.map {
+        freeSpace.timestamp.timeIntervalSince($0.announcedAt)
+          >= thresholds.steerRepeatSeconds
+      } ?? true
+    guard changed || due else { return }
+    steeringState = (kind, clear.offsetDegrees, freeSpace.timestamp)
+    feedback.emit(
+      .steerAround(
+        kind, hazardOffsetDegrees: targetSlice.offsetDegrees,
+        clearOffsetDegrees: clear.offsetDegrees, meters: meters))
   }
 
   private func arrive() {
@@ -522,14 +717,7 @@ public final class NavigationSession: ObservableObject {
 
   /// Called for every position update while guiding. Heading is nil when the compass
   /// isn't usable, in which case orientation can't be judged and the state holds.
-  /// `freeSpace` is Person B's local obstacle answer; route still decides the desired
-  /// direction and this chooses the closest clear slice to it.
-  public func update(
-    position: GuidancePosition,
-    heading: HeadingReadout?,
-    freeSpace: FreeSpaceObservation? = nil
-  ) {
-    if let freeSpace { latestFreeSpace = freeSpace }
+  public func update(position: GuidancePosition, heading: HeadingReadout?) {
     guard let target else { return }
     lastPosition = position
     let projection = route?.projection(for: position)
@@ -549,11 +737,10 @@ public final class NavigationSession: ObservableObject {
     // Every direction in the app goes through the corrected heading, so a camera
     // sighting improves orienting, guiding, the lost check and the first-steps check
     // at once (plan section 7: the building check re-anchors the guidance).
-    let desiredOffset = heading.map {
+    let offset = heading.map {
       Geo.relativeAngle(
         heading: $0.trueHeadingDegrees - headingBiasDegrees, target: bearingToAim)
     }
-    let offset = steeringOffset(desired: desiredOffset, at: position.timestamp)
     offsetDegrees = offset
 
     if sideUnconfirmed, [.orient, .guide, .confirm, .lost].contains(state) {
@@ -591,33 +778,6 @@ public final class NavigationSession: ObservableObject {
     }
   }
 
-  /// Choose the clear camera-relative slice nearest the route direction. Stale or
-  /// missing perception leaves the route's direction unchanged; no clear slice means
-  /// don't point anywhere and tell the rider to stop.
-  private func steeringOffset(desired: Double?, at moment: Date) -> Double? {
-    guard let desired else { return nil }
-    guard let freeSpace = latestFreeSpace,
-      abs(moment.timeIntervalSince(freeSpace.timestamp)) <= thresholds.freeSpaceMaxAgeSeconds
-    else { return desired }
-
-    let clear = freeSpace.slices.filter {
-      $0.clearMeters >= thresholds.minClearPathMeters
-        && $0.confidence >= thresholds.minFreeSpaceConfidence
-    }
-    guard let best = clear.min(by: {
-      abs(Geo.relativeAngle(heading: $0.centerOffsetDegrees, target: desired))
-        < abs(Geo.relativeAngle(heading: $1.centerOffsetDegrees, target: desired))
-    }) else {
-      if noClearPathSaidAt.map({
-        moment.timeIntervalSince($0) >= thresholds.noClearPathRepeatSeconds
-      }) ?? true {
-        noClearPathSaidAt = moment
-        feedback.emit(.noClearPath)
-      }
-      return nil
-    }
-    return best.centerOffsetDegrees
-  }
 
   /// Turning on the spot until the heading holds within 15° for a second.
   private func updateOrient(position: GuidancePosition, offset: Double?, distance: Double) {
@@ -840,7 +1000,6 @@ public final class NavigationSession: ObservableObject {
     calloutsSpoken = []
     routeProjection = nil
     latestFreeSpace = nil
-    noClearPathSaidAt = nil
     anchor = nil
 
     switch snapshot.state {

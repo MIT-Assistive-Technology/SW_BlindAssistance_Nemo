@@ -40,7 +40,10 @@ nonisolated extension ResolveResult {
   /// Distance to the nearest marked crossing, when the bundle found one. Spoken only
   /// when the door turns out to be across the street.
   public func metersToNearestCrossing(fromLat lat: Double, fromLon lon: Double) -> Double? {
-    guard let crossing = pathChecks.nearestCrossing, crossing.count >= 2 else { return nil }
+    // The crosswalk over the entrance street (Minh's `street_side.crossing`) is the one a
+    // rider on the far side needs; the path check's crossing is the fallback.
+    guard let crossing = streetSide?.crossing ?? pathChecks.nearestCrossing, crossing.count >= 2
+    else { return nil }
     return Geo.distanceMeters(lat1: lat, lon1: lon, lat2: crossing[1], lon2: crossing[0])
   }
 

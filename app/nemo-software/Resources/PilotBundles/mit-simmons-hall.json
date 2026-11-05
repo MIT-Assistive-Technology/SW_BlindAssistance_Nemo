@@ -132,22 +132,6 @@
           "tags": null
         }
       ]
-    },
-    {
-      "id": "c2",
-      "lat": 42.35706282043668,
-      "lon": -71.10144655749131,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/29585286",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -177,7 +161,8 @@
       ]
     ],
     "door_side_of_road": "left",
-    "oneway": false
+    "oneway": false,
+    "crossing": null
   },
   "recognize": {
     "text": [

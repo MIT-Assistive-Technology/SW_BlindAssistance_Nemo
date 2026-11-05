@@ -327,7 +327,11 @@
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": false
+    "oneway": false,
+    "crossing": [
+      -71.1107864,
+      42.3730998
+    ]
   },
   "recognize": {
     "text": [

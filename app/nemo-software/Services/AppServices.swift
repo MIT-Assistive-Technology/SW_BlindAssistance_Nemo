@@ -32,8 +32,11 @@ public final class AppServices: ObservableObject {
   private let arGuide = ARGuide()
   /// LiDAR and scene reconstruction (Pro iPhones). Other phones use text reading only.
   public static var canDetectDoors: Bool { ARGuide.isSupported && DoorMeshDetector.isSupported }
-  /// True only while ARKit is running and reporting a usable tracking state.
-  public var arGuideIsTracking: Bool { arGuide.isRunning && arGuide.isTrackingOK }
+  /// True only while ARKit is running, tracking well, and anchored well enough to
+  /// publish poses. Unanchored AR must not suppress GPS updates.
+  public var arGuideIsTracking: Bool {
+    arGuide.isRunning && arGuide.isTrackingOK && arGuide.hasAnchoredPose
+  }
   private var cancellables = Set<AnyCancellable>()
 
   /// Defaults are built inside the initializer, not as default arguments: a default
@@ -82,6 +85,15 @@ public final class AppServices: ObservableObject {
     self.camera = CameraViewModel(frameProvider: frameProvider, pipeline: pipeline)
 
     pipeline.onTextRead = { [weak self] read in self?.buildingCheck(read) }
+    pipeline.onDetections = { [weak self] detections in
+      self?.observeDetectedHazards(detections)
+    }
+    pipeline.onFreeSpace = { [weak self] freeSpace in self?.observeFreeSpace(freeSpace) }
+    // Phones without LiDAR get a relative scan from the monocular model when one is
+    // bundled; on LiDAR phones ARKit's sceneDepth scan supplies it instead.
+    if !ARGuide.canMeasureDepth {
+      pipeline.depthEstimator = MonocularDepthEstimator()
+    }
     arGuide.frameProvider.delegate = pipeline
     arGuide.onPose = { [weak self] position, heading in
       self?.session.update(position: position, heading: heading)
@@ -94,6 +106,7 @@ public final class AppServices: ObservableObject {
           kind: .door, offsetDegrees: hit.offsetDegrees, meters: hit.meters,
           confidence: min(1, Double(hit.faceCount) / 24)))
     }
+    arGuide.onFreeSpace = { [weak self] freeSpace in self?.observeFreeSpace(freeSpace) }
     arGuide.onLowLight = { [weak self] in self?.session.cameraCheckUnavailable(.lowLight) }
     session.$state
       .sink { [weak self] state in self?.cameraFollow(state) }
@@ -108,7 +121,7 @@ public final class AppServices: ObservableObject {
 
   // MARK: - Building check (CV-9 → FE-10)
 
-  private static let walkingStates: Set<SessionState> = [.orient, .guide, .confirm, .lost]
+  private static let walkingStates = NavigationSession.walkingStates
 
   /// Camera-first mode (plan section 7): the building check runs while walking. Raw
   /// "Number 77" speech is off then, so only the session's reviewed phrases are spoken.
@@ -117,26 +130,33 @@ public final class AppServices: ObservableObject {
     pipeline.announcesReads = !walking
     if walking { pipeline.setExpectedBundleTexts(session.expectedBuildingTexts) }
 
-    // ARKit owns the camera whenever it is available for the walk, and on LiDAR phones
-    // keeps running through `.confirm` so pose updates and door mesh scanning share one
-    // tracking session. AVCaptureSession and ARKit can't both have the camera.
-    let wantsDoorScan = state == .confirm && Self.canDetectDoors
-    let canStartARWalk = walking && ARGuide.isSupported && location.currentSnapshot.coordinate != nil
-    if wantsDoorScan || canStartARWalk {
-      cameraStartedForWalk = false
+    // ARKit owns the camera for the whole walk on phones that support it: the text
+    // reader and detector get frames through `ARFrameProvider`, `sceneDepth` feeds
+    // the free-space scan, and the mesh feeds the door finder in the last stretch.
+    // AVCaptureSession can't run alongside it.
+    if walking, ARGuide.isSupported {
       camera.stop()
+      cameraStartedForWalk = false
+      let fix = location.currentSnapshot
       if !arGuide.isRunning {
-        if let coordinate = location.currentSnapshot.coordinate {
+        if let coordinate = fix.coordinate, fix.hasUsableFix {
           arGuide.start(
-            originLat: coordinate.latitude,
-            originLon: coordinate.longitude,
-            accuracyMeters: location.currentSnapshot.horizontalAccuracy ?? 10)
+            originLat: coordinate.latitude, originLon: coordinate.longitude,
+            accuracyMeters: fix.horizontalAccuracy ?? 10)
         } else {
-          arGuide.startDoorSearch()
+          // No GPS anchor yet: camera, depth and free space still run; poses start
+          // once the first usable fix re-anchors the session below.
+          arGuide.start()
         }
+        arGuide.frameProvider.start()
+      } else if !arGuide.hasAnchoredPose,
+        let coordinate = fix.coordinate, fix.hasUsableFix
+      {
+        arGuide.start(
+          originLat: coordinate.latitude, originLon: coordinate.longitude,
+          accuracyMeters: fix.horizontalAccuracy ?? 10)
       }
-      arGuide.frameProvider.start()
-      arGuide.setDoorSearchEnabled(wantsDoorScan)
+      arGuide.setDoorSearchEnabled(state == .confirm)
       return
     }
 
@@ -165,7 +185,7 @@ public final class AppServices: ObservableObject {
     }
     guard Self.walkingStates.contains(session.state),
       let heading = location.currentSnapshot.headingReadout,
-      let fov = camera.fieldOfViewDegrees
+      let fov = activeFieldOfViewDegrees
     else { return }
     let expected = session.expectedBuildingTexts
     for number in read.numbers {
@@ -185,13 +205,18 @@ public final class AppServices: ObservableObject {
     }
   }
 
+  /// Field of view of whichever provider owns the camera right now: ARKit during the
+  /// walk on supported phones, the plain camera everywhere else.
+  private var activeFieldOfViewDegrees: Double? {
+    arGuide.isRunning
+      ? arGuide.frameProvider.portraitFieldOfViewDegrees : camera.fieldOfViewDegrees
+  }
+
   /// The door finder's text half: in the last stretch an entrance word, or the
   /// building's own number or name, becomes a `DoorSighting`, placed by where it is in
   /// the frame. Entrance words win: they're on the door, the number may be above it.
   private func doorCheck(_ read: CameraTextRead) {
-    let fov =
-      arGuide.isRunning ? arGuide.frameProvider.portraitFieldOfViewDegrees : camera.fieldOfViewDegrees
-    guard let fov else { return }
+    guard let fov = activeFieldOfViewDegrees else { return }
     let clue: (DoorClue, CGRect, Float)?
     if let sign = read.entranceSigns.first {
       clue = (.entranceSign(sign.word), sign.boundingBox, sign.confidence)
@@ -209,6 +234,54 @@ public final class AppServices: ObservableObject {
         kind: .clue(kind),
         offsetDegrees: DoorSighting.offsetDegrees(normalizedX: box.midX, fovDegrees: fov),
         confidence: Double(confidence)))
+  }
+
+  // MARK: - Hazards (the path ahead)
+
+  /// The latest free-space scan, kept for fusing distances onto object detections.
+  private var latestFreeSpace: FreeSpace?
+
+  /// One scan from depth (LiDAR via `ARGuide`, or the monocular model via the
+  /// pipeline). The session turns blocked and dropping slices into hazard notices
+  /// and runs the steering picker; kept here too for detection fusion.
+  private func observeFreeSpace(_ freeSpace: FreeSpace) {
+    latestFreeSpace = freeSpace
+    session.observeFreeSpace(freeSpace)
+  }
+
+  /// Object detections → hazard sightings. A detection gets its direction from where
+  /// it sits in the frame (same pinhole math as the door finder), and its distance
+  /// from the free-space slice covering that direction when depth is up.
+  private func observeDetectedHazards(_ detections: [Detection]) {
+    guard Self.walkingStates.contains(session.state),
+      let fov = activeFieldOfViewDegrees
+    else { return }
+    for detection in detections {
+      guard let kind = detection.labels.lazy
+        .compactMap({ HazardSighting.Kind(label: $0.identifier) }).first
+      else { continue }
+      let offset = DoorSighting.offsetDegrees(
+        normalizedX: detection.boundingBox.midX, fovDegrees: fov)
+      var meters: Double?
+      if let slice = latestFreeSpace?.slice(containingOffsetDegrees: offset) {
+        switch slice.status {
+        case .blocked(let m), .stepUp(let m): meters = m
+        default: break
+        }
+      }
+      // With no depth to give a distance, only things that look near are worth a
+      // spoken hazard: a box low in the frame and reasonably tall. A distant person
+      // near the horizon is real but not something to interrupt for.
+      if meters == nil,
+        detection.boundingBox.minY > 0.5 || detection.boundingBox.height < 0.12
+      {
+        continue
+      }
+      session.observeHazard(
+        HazardSighting(
+          kind: kind, offsetDegrees: offset, meters: meters,
+          confidence: Double(detection.confidence)))
+    }
   }
 
   /// One owner for the audio session: Trish's `AudioSessionManager` (FE-8), which also

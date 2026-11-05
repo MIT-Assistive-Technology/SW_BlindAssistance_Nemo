@@ -126,38 +126,6 @@
           }
         }
       ]
-    },
-    {
-      "id": "c4",
-      "lat": 42.35913467391364,
-      "lon": -71.08815846310378,
-      "confidence": 0.3,
-      "band": "facade",
-      "label": "Street-facing side on Memorial Drive (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/812712469",
-          "tags": null
-        }
-      ]
-    },
-    {
-      "id": "c5",
-      "lat": 42.35913265405598,
-      "lon": -71.0881593865261,
-      "confidence": 0.2,
-      "band": "facade",
-      "label": "Address point (approximate)",
-      "speak": null,
-      "provenance": [
-        {
-          "source": "geometry_fallback",
-          "ref": "way/24494050",
-          "tags": null
-        }
-      ]
     }
   ],
   "path_checks": {
@@ -195,13 +163,18 @@
       ]
     ],
     "door_side_of_road": "right",
-    "oneway": true
+    "oneway": true,
+    "crossing": [
+      -71.0873034,
+      42.3591477
+    ]
   },
   "recognize": {
     "text": [
       "142",
       "50 Walker Memorial",
-      "Walker Memorial"
+      "Walker Memorial",
+      "MIT Building 50"
     ]
   },
   "landmarks": null,

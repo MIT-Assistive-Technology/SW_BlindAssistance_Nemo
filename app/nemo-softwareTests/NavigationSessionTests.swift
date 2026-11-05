@@ -633,39 +633,45 @@ final class NavigationSessionTests: XCTestCase {
 
   func testBlockedRouteDirectionChoosesTheClosestClearSlice() {
     startWalking()
-    speaker.spoken = []
-
     session.update(
       position: position(metersNorth: 45, seconds: 5),
-      heading: heading(180, seconds: 5),
-      freeSpace: FreeSpaceObservation(
-        timestamp: base.addingTimeInterval(5),
+      heading: heading(180, seconds: 5))
+    speaker.spoken = []
+
+    session.observeFreeSpace(
+      FreeSpace(
         slices: [
-          FreeSpaceSlice(centerOffsetDegrees: 0, widthDegrees: 20, clearMeters: 0.5),
-          FreeSpaceSlice(centerOffsetDegrees: 15, widthDegrees: 20, clearMeters: 3),
-          FreeSpaceSlice(centerOffsetDegrees: -35, widthDegrees: 20, clearMeters: 2.5)
+          FreeSpace.Slice(offsetDegrees: 0, status: .blocked(meters: 0.5)),
+          FreeSpace.Slice(offsetDegrees: 15, status: .clear),
+          FreeSpace.Slice(offsetDegrees: -35, status: .clear)
         ]))
 
-    // Straight ahead is blocked, so guidance picks the clear slice nearest the route.
-    XCTAssertEqual(session.offsetDegrees ?? 999, 15, accuracy: 0.001)
+    // The route target stays straight ahead; the separate steering cue chooses the
+    // nearest clear slice around the obstruction.
+    XCTAssertEqual(session.offsetDegrees ?? 999, 0, accuracy: 0.001)
+    XCTAssertTrue(
+      speaker.spoken.contains(
+        Phrases.steerAround(
+          kind: .object, hazardOffsetDegrees: 0, clearOffsetDegrees: 15, meters: 0.5)),
+      "said: \(speaker.spoken)")
   }
 
   func testNoClearSliceProducesAStopCue() {
     startWalking()
-    speaker.spoken = []
-
     session.update(
       position: position(metersNorth: 45, seconds: 5),
-      heading: heading(180, seconds: 5),
-      freeSpace: FreeSpaceObservation(
-        timestamp: base.addingTimeInterval(5),
+      heading: heading(180, seconds: 5))
+    speaker.spoken = []
+
+    session.observeFreeSpace(
+      FreeSpace(
         slices: [
-          FreeSpaceSlice(centerOffsetDegrees: 0, widthDegrees: 20, clearMeters: 0.5),
-          FreeSpaceSlice(centerOffsetDegrees: 25, widthDegrees: 20, clearMeters: 1)
+          FreeSpace.Slice(offsetDegrees: 0, status: .blocked(meters: 0.5)),
+          FreeSpace.Slice(offsetDegrees: 25, status: .blocked(meters: 1))
         ]))
 
-    XCTAssertNil(session.offsetDegrees)
-    XCTAssertTrue(speaker.spoken.contains(Phrases.noClearPath))
+    XCTAssertEqual(session.offsetDegrees ?? 999, 0, accuracy: 0.001)
+    XCTAssertTrue(speaker.spoken.contains(Phrases.pathBlocked))
   }
 
   func testFollowingAWalkRouteDoesNotBecomeLost() {
