@@ -1,0 +1,7 @@
+# dst_cambridge-city-hall  door=(42.3670326, -71.1057767)
+# street=Massachusetts Avenue door_side=left crossing=None crosses_road=False
+
+way/891780638  highway=footway  nearest=0m  name=None  surface=None
+  [-71.1057891, 42.3670196]   # 2m
+  [-71.1057767, 42.3670326]   # 0m
+

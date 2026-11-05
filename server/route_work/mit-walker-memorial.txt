@@ -1,0 +1,71 @@
+# dst_mit-walker-memorial  door=(42.3591293, -71.0881747)
+# street=Memorial Drive door_side=right crossing=None crosses_road=False
+
+way/401495037  highway=footway  nearest=139m  name=None  surface=paving_stones
+  [-71.0898678, 42.3591984]   # 139m
+  [-71.0898859, 42.3592207]   # 141m
+
+way/435052280  highway=corridor  nearest=85m  name=None  surface=concrete
+  [-71.0891123, 42.3594481]   # 85m
+  [-71.089124, 42.3594691]   # 87m
+
+way/435052284  highway=footway  nearest=120m  name=None  surface=concrete
+  [-71.0896716, 42.3590384]   # 124m
+  [-71.0896278, 42.3590529]   # 120m
+
+way/581339788  highway=footway  nearest=198m  name=None  surface=concrete
+  [-71.0868149, 42.360593]   # 198m
+  [-71.0867831, 42.3608018]   # 219m
+
+way/581339789  highway=steps  nearest=180m  name=None  surface=concrete
+  [-71.0868027, 42.3604937]   # 189m
+  [-71.0868645, 42.3604751]   # 185m
+  [-71.0869239, 42.3604572]   # 180m
+
+way/843177481  highway=steps  nearest=0m  name=None  surface=concrete
+  [-71.0881307, 42.3590555]   # 9m
+  [-71.0881747, 42.3591293]   # 0m
+
+way/1011548276  highway=corridor  nearest=104m  name=None  surface=None
+  [-71.0896278, 42.3590529]   # 120m
+  [-71.0894394, 42.3591139]   # 104m
+
+way/1011548279  highway=footway  nearest=87m  name=None  surface=concrete
+  [-71.089124, 42.3594691]   # 87m
+  [-71.0891346, 42.3594862]   # 88m
+
+way/1057766487  highway=pedestrian  nearest=0m  name=None  surface=concrete
+  [-71.088471, 42.3589995]   # 28m
+  [-71.0885447, 42.3589751]   # 35m
+  [-71.0885567, 42.3589711]   # 36m
+  [-71.0885704, 42.3589666]   # 37m
+  [-71.0886555, 42.3589384]   # 45m
+  [-71.0886152, 42.358872]   # 46m
+  [-71.0885129, 42.3589059]   # 37m
+  [-71.0884148, 42.3589384]   # 29m
+  [-71.0881138, 42.3590381]   # 11m
+  [-71.0879005, 42.3591088]   # 23m
+  [-71.0879382, 42.3591711]   # 20m
+  [-71.0880294, 42.3591409]   # 12m
+  [-71.0880478, 42.3591713]   # 11m
+  [-71.0881747, 42.3591293]   # 0m
+  [-71.0883012, 42.3590874]   # 11m
+  [-71.0882968, 42.3590801]   # 11m
+  [-71.0882852, 42.3590611]   # 12m
+  [-71.0883667, 42.3590341]   # 19m
+  [-71.0884417, 42.3590092]   # 26m
+  [-71.0884575, 42.359004]   # 27m
+  [-71.088471, 42.3589995]   # 28m
+
+way/1247717010  highway=footway  nearest=59m  name=None  surface=concrete
+  [-71.088637, 42.3595612]   # 61m
+  [-71.0886238, 42.3595382]   # 59m
+
+way/1247717011  highway=footway  nearest=59m  name=None  surface=concrete
+  [-71.0883036, 42.359669]   # 61m
+  [-71.0882921, 42.3596498]   # 59m
+
+way/1317439772  highway=footway  nearest=141m  name=None  surface=concrete
+  [-71.0898859, 42.3592207]   # 141m
+  [-71.0898901, 42.3592271]   # 142m
+

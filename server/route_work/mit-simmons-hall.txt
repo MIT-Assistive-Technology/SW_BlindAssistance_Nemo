@@ -1,0 +1,3 @@
+# dst_mit-simmons-hall  door=(42.357054404167165, -71.1014636537549)
+# street=Vassar Street door_side=left crossing=None crosses_road=False
+

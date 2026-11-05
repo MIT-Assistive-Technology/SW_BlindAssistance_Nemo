@@ -1,0 +1,52 @@
+# dst_mit-building-7  door=(42.3591286, -71.0933469)
+# street=Massachusetts Avenue door_side=right crossing=None crosses_road=False
+
+way/84473998  highway=corridor  nearest=0m  name=Infinite Corridor  surface=None
+  [-71.0933469, 42.3591286]   # 0m
+  [-71.0931966, 42.3591788]   # 14m
+  [-71.0927706, 42.3593211]   # 52m
+  [-71.0926336, 42.3593669]   # 64m
+  [-71.0922429, 42.3594974]   # 100m
+  [-71.0922087, 42.3595088]   # 103m
+  [-71.0919548, 42.3595936]   # 126m
+  [-71.0917073, 42.3596763]   # 148m
+  [-71.091677, 42.3596864]   # 151m
+  [-71.0912824, 42.3598182]   # 186m
+  [-71.0911416, 42.3598652]   # 199m
+  [-71.0907217, 42.3600055]   # 237m
+  [-71.090616, 42.3600408]   # 247m
+
+way/172058431  highway=footway  nearest=93m  name=None  surface=concrete
+  [-71.0943809, 42.3587815]   # 93m
+  [-71.0944633, 42.3589213]   # 95m
+  [-71.0944671, 42.3589278]   # 95m
+
+way/172059672  highway=footway  nearest=127m  name=None  surface=concrete
+  [-71.0947506, 42.3586551]   # 127m
+  [-71.0948371, 42.3588037]   # 128m
+
+way/243332876  highway=steps  nearest=0m  name=None  surface=concrete
+  [-71.0934192, 42.3591032]   # 7m
+  [-71.0933469, 42.3591286]   # 0m
+
+way/435077016  highway=steps  nearest=105m  name=None  surface=concrete
+  [-71.0946117, 42.3588453]   # 109m
+  [-71.0945683, 42.3588587]   # 105m
+
+way/435077018  highway=steps  nearest=114m  name=None  surface=concrete
+  [-71.0946738, 42.3588255]   # 114m
+  [-71.0947192, 42.3588091]   # 118m
+
+way/435077019  highway=footway  nearest=102m  name=None  surface=concrete
+  [-71.0945683, 42.3588587]   # 105m
+  [-71.0945406, 42.3588692]   # 102m
+  [-71.0945539, 42.3588921]   # 103m
+  [-71.0947604, 42.3588227]   # 121m
+  [-71.0947475, 42.3588002]   # 121m
+  [-71.0947192, 42.3588091]   # 118m
+
+way/1005738160  highway=footway  nearest=13m  name=None  surface=paving_stones
+  [-71.0934919, 42.3593715]   # 30m
+  [-71.0934108, 42.3592434]   # 14m
+  [-71.0934043, 42.3592337]   # 13m
+

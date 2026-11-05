@@ -1,0 +1,11 @@
+# dst_harvard-smith-center  door=(42.373065, -71.1181987)
+# street=Massachusetts Avenue door_side=left crossing=None crosses_road=False
+
+way/8615078  highway=living_street  nearest=144m  name=Palmer Street  surface=paving_stones
+  [-71.1201563, 42.3743864]   # 218m
+  [-71.1201478, 42.3743403]   # 214m
+  [-71.1201034, 42.3741008]   # 195m
+  [-71.1200803, 42.3739979]   # 186m
+  [-71.119922, 42.3734502]   # 148m
+  [-71.1198973, 42.3733691]   # 144m
+

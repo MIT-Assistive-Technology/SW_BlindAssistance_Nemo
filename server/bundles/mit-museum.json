@@ -103,9 +103,22 @@
     ]
   },
   "landmarks": null,
-  "route": null,
+  "route": [
+    [
+      -71.0862041,
+      42.3623722
+    ],
+    [
+      -71.0866272,
+      42.3624059
+    ],
+    [
+      -71.0866374,
+      42.3623357
+    ]
+  ],
   "attribution": [
-    "© OpenStreetMap contributors"
+    "\u00a9 OpenStreetMap contributors"
   ],
   "data_version": {
     "osm": "2026-10-28",

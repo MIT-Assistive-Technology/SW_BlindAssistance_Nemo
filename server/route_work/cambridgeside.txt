@@ -1,0 +1,12 @@
+# dst_cambridgeside  door=(42.3686342, -71.0760303)
+# street=Monsignor O'Brien Highway door_side=right crossing=None crosses_road=False
+
+way/298494810  highway=corridor  nearest=0m  name=None  surface=None
+  [-71.0763875, 42.3671368]   # 169m
+  [-71.0763775, 42.3671778]   # 165m
+  [-71.0760303, 42.3686342]   # 0m
+
+way/485266660  highway=footway  nearest=0m  name=None  surface=paving_stones
+  [-71.0760286, 42.3686567]   # 3m
+  [-71.0760303, 42.3686342]   # 0m
+

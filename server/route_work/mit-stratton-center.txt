@@ -1,0 +1,58 @@
+# dst_mit-stratton-center  door=(42.3589278, -71.0944671)
+# street=Amherst Street door_side=left crossing=None crosses_road=False
+
+way/84473998  highway=corridor  nearest=95m  name=Infinite Corridor  surface=None
+  [-71.0933469, 42.3591286]   # 95m
+  [-71.0931966, 42.3591788]   # 108m
+  [-71.0927706, 42.3593211]   # 146m
+  [-71.0926336, 42.3593669]   # 159m
+  [-71.0922429, 42.3594974]   # 194m
+  [-71.0922087, 42.3595088]   # 197m
+  [-71.0919548, 42.3595936]   # 220m
+  [-71.0917073, 42.3596763]   # 242m
+  [-71.091677, 42.3596864]   # 245m
+  [-71.0912824, 42.3598182]   # 280m
+  [-71.0911416, 42.3598652]   # 293m
+  [-71.0907217, 42.3600055]   # 331m
+  [-71.090616, 42.3600408]   # 340m
+
+way/172058431  highway=footway  nearest=0m  name=None  surface=concrete
+  [-71.0943809, 42.3587815]   # 18m
+  [-71.0944633, 42.3589213]   # 1m
+  [-71.0944671, 42.3589278]   # 0m
+
+way/172059672  highway=footway  nearest=33m  name=None  surface=concrete
+  [-71.0947506, 42.3586551]   # 38m
+  [-71.0948371, 42.3588037]   # 33m
+
+way/243332876  highway=steps  nearest=88m  name=None  surface=concrete
+  [-71.0934192, 42.3591032]   # 88m
+  [-71.0933469, 42.3591286]   # 95m
+
+way/435077016  highway=steps  nearest=11m  name=None  surface=concrete
+  [-71.0946117, 42.3588453]   # 15m
+  [-71.0945683, 42.3588587]   # 11m
+
+way/435077018  highway=steps  nearest=20m  name=None  surface=concrete
+  [-71.0946738, 42.3588255]   # 20m
+  [-71.0947192, 42.3588091]   # 25m
+
+way/435077019  highway=footway  nearest=8m  name=None  surface=concrete
+  [-71.0945683, 42.3588587]   # 11m
+  [-71.0945406, 42.3588692]   # 9m
+  [-71.0945539, 42.3588921]   # 8m
+  [-71.0947604, 42.3588227]   # 27m
+  [-71.0947475, 42.3588002]   # 27m
+  [-71.0947192, 42.3588091]   # 25m
+
+way/1005738160  highway=footway  nearest=94m  name=None  surface=paving_stones
+  [-71.0934919, 42.3593715]   # 94m
+  [-71.0934108, 42.3592434]   # 94m
+  [-71.0934043, 42.3592337]   # 94m
+
+way/1047497892  highway=footway  nearest=144m  name=None  surface=concrete
+  [-71.0965892, 42.3593036]   # 180m
+  [-71.0965479, 42.3592595]   # 175m
+  [-71.0965342, 42.3592449]   # 174m
+  [-71.0962184, 42.3589019]   # 144m
+

@@ -1,0 +1,9 @@
+# dst_cambridge-public-library  door=(42.3738086, -71.1103983)
+# street=Broadway door_side=right crossing=None crosses_road=False
+
+way/39186798  highway=footway  nearest=0m  name=None  surface=paving_stones
+  [-71.1103983, 42.3738086]   # 0m
+  [-71.1104259, 42.3737745]   # 4m
+  [-71.1104699, 42.3737136]   # 12m
+  [-71.1107912, 42.3732803]   # 67m
+
