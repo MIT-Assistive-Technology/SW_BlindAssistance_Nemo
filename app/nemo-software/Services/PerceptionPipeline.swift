@@ -157,7 +157,7 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
 
     // Building-number check is 2–3 times a second. The buffer stays on this queue and is
     // released when `process` returns, which is what the camera provider requires.
-    let fresh = recognizeText(in: buffer, orientation: orientation, now: started)
+    recognizeText(in: buffer, orientation: orientation, now: started)
 
     let snapshot: FrameStats = lock.withLock {
       stats.processed += 1
@@ -169,20 +169,15 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     // `buffer` is not captured below, so the camera gets it back now.
     let visibleNumbers = heldNumbers
     let visibleSigns = heldSigns
-    let phrase = spokenNumbers.phrase(for: fresh.numbers)
-    let signPhrase = spokenNumbers.phrase(forSign: fresh.streetSigns.first?.text)
+    // One sentence for the number and the sign. The overlay shows this same string.
+    let readout = CameraReadout.sentence(numbers: visibleNumbers, signs: visibleSigns)
+    let phrase = spokenNumbers.phrase(for: readout)
     Task { @MainActor [self] in
-      // Speak the most interesting detection(s) so the user gets audio feedback.
-      // TODO: Avoid repeating the same label on every frame (add a chatter guard), and move
-      // announcements to FeedbackKit events.
-      if let top = detections.first {
-        speaker.speak(top.labels.first?.identifier ?? "something")
-      }
       if let phrase {
         speaker.speak(phrase)
-      }
-      if let signPhrase {
-        speaker.speak(signPhrase)
+      } else if readout == nil, let seen = CameraReadout.seen(detections) {
+        // No number or sign in view. Say the same "I see" line the overlay shows.
+        speaker.speak(seen)
       }
 
       // LocationService is main-actor, so the snapshot is read here, a few ms after capture.
@@ -224,34 +219,42 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   }
 }
 
-/// Doesn't repeat the same building number on every check.
+/// The words on the camera screen and the words that are spoken. One sentence so a
+/// building number and a street sign are both shown and both said.
+nonisolated enum CameraReadout {
+  static func sentence(numbers: [RecognizedNumber], signs: [RecognizedStreetSign]) -> String? {
+    var parts: [String] = []
+    if !numbers.isEmpty {
+      parts.append("Number \(numbers.map(\.value).joined(separator: ", "))")
+    }
+    if !signs.isEmpty {
+      parts.append("Sign \(signs.map(\.text).joined(separator: ", "))")
+    }
+    guard !parts.isEmpty else { return nil }
+    return parts.joined(separator: ". ") + "."
+  }
+
+  static func seen(_ detections: [Detection]) -> String? {
+    let names = detections.map { $0.labels.first?.identifier ?? "something" }
+    guard !names.isEmpty else { return nil }
+    return "I see: \(names.joined(separator: ", "))"
+  }
+}
+
+/// Doesn't repeat the same camera sentence on every check.
 private nonisolated final class SpokenNumbers: @unchecked Sendable {
   private let lock = NSLock()
   private var lastValue: String?
   private var lastAt = Date.distantPast
 
-  func phrase(for numbers: [RecognizedNumber]) -> String? {
-    guard let top = numbers.first else { return nil }
+  func phrase(for sentence: String?) -> String? {
+    guard let sentence else { return nil }
     let now = Date()
     lock.lock()
     defer { lock.unlock() }
-    if lastValue == top.value, now.timeIntervalSince(lastAt) < 6 { return nil }
-    lastValue = top.value
+    if lastValue == sentence, now.timeIntervalSince(lastAt) < 6 { return nil }
+    lastValue = sentence
     lastAt = now
-    return "Number \(top.value)"
+    return sentence
   }
-
-  func phrase(forSign text: String?) -> String? {
-    guard let text else { return nil }
-    let now = Date()
-    lock.lock()
-    defer { lock.unlock() }
-    if lastSign == text, now.timeIntervalSince(lastSignAt) < 6 { return nil }
-    lastSign = text
-    lastSignAt = now
-    return "Sign \(text)"
-  }
-
-  private var lastSign: String?
-  private var lastSignAt = Date.distantPast
 }
