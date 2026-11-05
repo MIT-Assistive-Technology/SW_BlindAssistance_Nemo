@@ -42,6 +42,9 @@ public final class GuidanceViewModel: ObservableObject {
   private let location: LocationService
   private var saidWaitingForFix = false
   private let feedback: FeedbackKit?
+  /// GPS is the fallback. While ARKit reports good tracking, `ARGuide.onPose` feeds the
+  /// session instead so GPS jitter doesn't fight the smoother local pose.
+  public var prefersARPose: (() -> Bool)?
   private var cancellables = Set<AnyCancellable>()
 
   public init(session: NavigationSession, location: LocationService, feedback: FeedbackKit? = nil) {
@@ -115,6 +118,7 @@ public final class GuidanceViewModel: ObservableObject {
     hasFix = true
     let heading = steeringHeading(snapshot)
     updateDebug(snapshot, heading: heading)
+    guard prefersARPose?() != true else { return }
     session.update(
       position: GuidancePosition(
         latitude: coordinate.latitude,

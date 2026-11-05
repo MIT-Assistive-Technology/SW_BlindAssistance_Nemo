@@ -252,6 +252,10 @@ nonisolated public enum Phrases {
   public static let offRoute =
     "Off route. Stop, then turn slowly until I tell you that's the direction."
 
+  /// No free-space slice is usable. This is an instruction, not a promise that the
+  /// camera saw everything around the rider.
+  public static let noClearPath = "The path ahead is blocked. Stop."
+
   /// Entering the last few meters. The door facts come from the bundle, which is the
   /// most useful thing the app knows at this point.
   /// It also starts the door finder, so it says how to hold the phone: the camera can
@@ -464,6 +468,7 @@ nonisolated public enum Phrases {
       bearingLock(metersToDoor: nil),
       directionUncertain,
       offRoute,
+      noClearPath,
       finalApproach(
         metersToDoor: 9,
         brief: DestinationBrief(band: "main", automaticDoor: "button", stepCount: 3)),

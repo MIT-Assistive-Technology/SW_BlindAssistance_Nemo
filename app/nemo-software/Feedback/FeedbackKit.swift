@@ -86,6 +86,8 @@ nonisolated public enum FeedbackEvent: Sendable {
   case waitingToCrossStreet
   /// The first-steps check failed: say so before giving any more guidance.
   case directionUncertain
+  /// Perception sees no clear walking slice ahead, so the only safe cue is stop.
+  case noClearPath
   /// The last few meters, with the door facts from the bundle.
   case finalApproach(metersToDoor: Double?, DestinationBrief)
 }
@@ -215,7 +217,8 @@ public final class SpeechChannel: FeedbackChannel {
   /// Events the rider must hear even if the same words were just spoken.
   public static func isCritical(_ event: FeedbackEvent) -> Bool {
     switch event {
-    case .warning, .lost, .arrival, .directionUncertain, .locationPermissionDenied:
+    case .warning, .lost, .arrival, .directionUncertain, .noClearPath,
+      .locationPermissionDenied:
       return true
     default:
       return false
@@ -285,6 +288,8 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.directionUncertain
     case .lost:
       return Phrases.offRoute
+    case .noClearPath:
+      return Phrases.noClearPath
     case .finalApproach(let metersToDoor, let brief):
       return Phrases.finalApproach(metersToDoor: metersToDoor, brief: brief, units: units)
     case .arrival:
@@ -355,7 +360,7 @@ public final class HapticsChannel: FeedbackChannel {
             haptic(intensity: 0.4, sharpness: 0.3)
         case .arrival:
             haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
-        case .warning, .lost:
+        case .warning, .lost, .noClearPath:
             haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
         default:
             break

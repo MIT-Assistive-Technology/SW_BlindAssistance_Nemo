@@ -71,6 +71,38 @@ final class NavigationSessionTests: XCTestCase {
     session.riderIsOutOfCar(isOnDoorSide: onDoorSide)
   }
 
+  private func bundleWithRoute(_ route: [[Double]]) -> ResolveResult {
+    ResolveResult(
+      destinationId: bundle.destinationId,
+      status: bundle.status,
+      building: bundle.building,
+      candidates: bundle.candidates,
+      pathChecks: bundle.pathChecks,
+      streetSide: bundle.streetSide,
+      recognize: bundle.recognize,
+      landmarks: bundle.landmarks,
+      route: route,
+      attribution: bundle.attribution,
+      dataVersion: bundle.dataVersion)
+  }
+
+  private func routePoint(north: Double, east: Double) -> [Double] {
+    let metersPerDegree = 111_194.93
+    return [
+      doorLon + east / (metersPerDegree * cos(doorLat * .pi / 180)),
+      doorLat + north / metersPerDegree
+    ]
+  }
+
+  /// An L-shaped route: east along the sidewalk, then south-west to the door.
+  private var testRoute: [[Double]] {
+    [
+      routePoint(north: 50, east: 0),
+      routePoint(north: 50, east: 20),
+      routePoint(north: 0, east: 0)
+    ]
+  }
+
   // MARK: A full trip
 
   func testAFullTripFromTheCurbToTheDoor() {
@@ -595,5 +627,124 @@ final class NavigationSessionTests: XCTestCase {
     session.riderIsAtDoor()
     XCTAssertEqual(session.state, .arrived)
     XCTAssertTrue(speaker.spoken.contains(Phrases.arrivedAtDoor))
+  }
+
+  // MARK: Route following
+
+  func testBlockedRouteDirectionChoosesTheClosestClearSlice() {
+    startWalking()
+    speaker.spoken = []
+
+    session.update(
+      position: position(metersNorth: 45, seconds: 5),
+      heading: heading(180, seconds: 5),
+      freeSpace: FreeSpaceObservation(
+        timestamp: base.addingTimeInterval(5),
+        slices: [
+          FreeSpaceSlice(centerOffsetDegrees: 0, widthDegrees: 20, clearMeters: 0.5),
+          FreeSpaceSlice(centerOffsetDegrees: 15, widthDegrees: 20, clearMeters: 3),
+          FreeSpaceSlice(centerOffsetDegrees: -35, widthDegrees: 20, clearMeters: 2.5)
+        ]))
+
+    // Straight ahead is blocked, so guidance picks the clear slice nearest the route.
+    XCTAssertEqual(session.offsetDegrees ?? 999, 15, accuracy: 0.001)
+  }
+
+  func testNoClearSliceProducesAStopCue() {
+    startWalking()
+    speaker.spoken = []
+
+    session.update(
+      position: position(metersNorth: 45, seconds: 5),
+      heading: heading(180, seconds: 5),
+      freeSpace: FreeSpaceObservation(
+        timestamp: base.addingTimeInterval(5),
+        slices: [
+          FreeSpaceSlice(centerOffsetDegrees: 0, widthDegrees: 20, clearMeters: 0.5),
+          FreeSpaceSlice(centerOffsetDegrees: 25, widthDegrees: 20, clearMeters: 1)
+        ]))
+
+    XCTAssertNil(session.offsetDegrees)
+    XCTAssertTrue(speaker.spoken.contains(Phrases.noClearPath))
+  }
+
+  func testFollowingAWalkRouteDoesNotBecomeLost() {
+    session.setDestination(bundleWithRoute(testRoute), address: address)
+    session.thresholds.lostAfterSeconds = 1
+
+    arriveAtCurb()
+    session.startGuidance()
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 0),
+      heading: heading(90, seconds: 0))
+    session.update(
+      position: position(metersNorth: 50, seconds: 2),
+      heading: heading(90, seconds: 2))
+    XCTAssertEqual(session.state, .guide)
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 5, metersEast: 10),
+      heading: heading(90, seconds: 5))
+    session.update(
+      position: position(metersNorth: 45, seconds: 10, metersEast: 20),
+      heading: heading(160, seconds: 10))
+
+    XCTAssertEqual(session.state, .guide)
+    XCTAssertFalse(speaker.spoken.contains(Phrases.offRoute))
+  }
+
+  func testLeavingTheRouteBecomesLost() {
+    session.setDestination(bundleWithRoute(testRoute), address: address)
+    session.thresholds.lostAfterSeconds = 1
+    session.thresholds.routeOffRouteMeters = 8
+
+    arriveAtCurb()
+    session.startGuidance()
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 0),
+      heading: heading(90, seconds: 0))
+    session.update(
+      position: position(metersNorth: 50, seconds: 2),
+      heading: heading(90, seconds: 2))
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 4, metersEast: -20),
+      heading: heading(90, seconds: 4))
+    session.update(
+      position: position(metersNorth: 50, seconds: 6, metersEast: -20),
+      heading: heading(90, seconds: 6))
+
+    XCTAssertEqual(session.state, .lost)
+  }
+
+  func testReturningToTheRouteRecoversFromLost() {
+    session.setDestination(bundleWithRoute(testRoute), address: address)
+    session.thresholds.lostAfterSeconds = 1
+    session.thresholds.routeOffRouteMeters = 8
+    session.thresholds.recoverHoldSeconds = 1
+
+    arriveAtCurb()
+    session.startGuidance()
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 0),
+      heading: heading(90, seconds: 0))
+    session.update(
+      position: position(metersNorth: 50, seconds: 2),
+      heading: heading(90, seconds: 2))
+    session.update(
+      position: position(metersNorth: 50, seconds: 5, metersEast: -20),
+      heading: heading(90, seconds: 5))
+    XCTAssertEqual(session.state, .lost)
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 7, metersEast: 2),
+      heading: heading(90, seconds: 7))
+    session.update(
+      position: position(metersNorth: 50, seconds: 9, metersEast: 2),
+      heading: heading(90, seconds: 9))
+    XCTAssertEqual(session.state, .orient)
   }
 }

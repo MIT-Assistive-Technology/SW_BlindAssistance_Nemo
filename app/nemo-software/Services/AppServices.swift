@@ -8,6 +8,7 @@
 
 import AVFoundation
 import Combine
+import CoreLocation
 import Foundation
 
 @MainActor
@@ -31,6 +32,8 @@ public final class AppServices: ObservableObject {
   private let arGuide = ARGuide()
   /// LiDAR and scene reconstruction (Pro iPhones). Other phones use text reading only.
   public static var canDetectDoors: Bool { ARGuide.isSupported && DoorMeshDetector.isSupported }
+  /// True only while ARKit is running and reporting a usable tracking state.
+  public var arGuideIsTracking: Bool { arGuide.isRunning && arGuide.isTrackingOK }
   private var cancellables = Set<AnyCancellable>()
 
   /// Defaults are built inside the initializer, not as default arguments: a default
@@ -80,6 +83,10 @@ public final class AppServices: ObservableObject {
 
     pipeline.onTextRead = { [weak self] read in self?.buildingCheck(read) }
     arGuide.frameProvider.delegate = pipeline
+    arGuide.onPose = { [weak self] position, heading in
+      self?.session.update(position: position, heading: heading)
+    }
+    arGuide.onTracking = { [weak self] _ in self?.objectWillChange.send() }
     arGuide.onDoor = { [weak self] hit in
       // 12 faces is the detector's floor and counts as just sure enough.
       self?.session.observeDoor(
@@ -90,6 +97,12 @@ public final class AppServices: ObservableObject {
     arGuide.onLowLight = { [weak self] in self?.session.cameraCheckUnavailable(.lowLight) }
     session.$state
       .sink { [weak self] state in self?.cameraFollow(state) }
+      .store(in: &cancellables)
+    location.$currentSnapshot
+      .sink { [weak self] _ in
+        guard let self else { return }
+        self.cameraFollow(self.session.state)
+      }
       .store(in: &cancellables)
   }
 
@@ -104,15 +117,29 @@ public final class AppServices: ObservableObject {
     pipeline.announcesReads = !walking
     if walking { pipeline.setExpectedBundleTexts(session.expectedBuildingTexts) }
 
-    // Last stretch on a LiDAR phone: ARKit owns the camera. AVCaptureSession and ARKit
-    // can't both have it.
-    if state == .confirm, Self.canDetectDoors {
-      guard !arGuide.isRunning else { return }
+    // ARKit owns the camera whenever it is available for the walk, and on LiDAR phones
+    // keeps running through `.confirm` so pose updates and door mesh scanning share one
+    // tracking session. AVCaptureSession and ARKit can't both have the camera.
+    let wantsDoorScan = state == .confirm && Self.canDetectDoors
+    let canStartARWalk = walking && ARGuide.isSupported && location.currentSnapshot.coordinate != nil
+    if wantsDoorScan || canStartARWalk {
+      cameraStartedForWalk = false
       camera.stop()
+      if !arGuide.isRunning {
+        if let coordinate = location.currentSnapshot.coordinate {
+          arGuide.start(
+            originLat: coordinate.latitude,
+            originLon: coordinate.longitude,
+            accuracyMeters: location.currentSnapshot.horizontalAccuracy ?? 10)
+        } else {
+          arGuide.startDoorSearch()
+        }
+      }
       arGuide.frameProvider.start()
-      arGuide.startDoorSearch()
+      arGuide.setDoorSearchEnabled(wantsDoorScan)
       return
     }
+
     if arGuide.isRunning { arGuide.stop() }
 
     if walking {

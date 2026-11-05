@@ -40,6 +40,9 @@ public final class TripViewModel: ObservableObject {
       client: services.entranceClient, session: services.session)
     guidance = GuidanceViewModel(
       session: services.session, location: services.location, feedback: services.feedback)
+    guidance.prefersARPose = { [weak services] in
+      services?.arGuideIsTracking == true
+    }
 
     // Redraw when any part of the trip changes.
     let changes: [AnyPublisher<Void, Never>] = [

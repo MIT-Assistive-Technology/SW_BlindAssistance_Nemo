@@ -96,6 +96,11 @@ final class ARGuide: NSObject, ARSessionDelegate {
     let configuration = ARWorldTrackingConfiguration()
     configuration.worldAlignment = .gravityAndHeading
     configuration.isLightEstimationEnabled = true
+    // Keep the mesh available on LiDAR phones so the final approach can turn the door
+    // finder on without resetting tracking and losing the GPS-anchored position.
+    if DoorMeshDetector.isSupported {
+      configuration.sceneReconstruction = .meshWithClassification
+    }
     // 30 fps is plenty and saves battery.
     if let format = ARWorldTrackingConfiguration.supportedVideoFormats.first(where: {
       $0.framesPerSecond == 30
@@ -125,6 +130,14 @@ final class ARGuide: NSObject, ARSessionDelegate {
     configuration.sceneReconstruction = .meshWithClassification
     session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     isRunning = true
+  }
+
+  /// Turn mesh door scanning on/off without restarting the walk's anchored tracking.
+  func setDoorSearchEnabled(_ enabled: Bool) {
+    guard isRunning else { return }
+    throttle.withLock {
+      $0.searchingForDoors = enabled && DoorMeshDetector.isSupported
+    }
   }
 
   func stop() {

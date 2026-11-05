@@ -83,6 +83,27 @@ nonisolated public struct GuidanceThresholds: Equatable, Sendable {
   public var lostAfterSeconds = 5.0
   public var recoverWithinDegrees = 60.0
   public var recoverHoldSeconds = 2.0
+
+  /// Steering target this far along the route. Long enough to smooth GPS noise, short
+  /// enough not to point through the next corner.
+  public var routeLookaheadMeters = 6.0
+  /// Sustained distance away from the route that counts as lost.
+  public var routeOffRouteMeters = 10.0
+  /// Rider is back on route once they are this close to the route line.
+  public var routeRecoverWithinMeters = 4.0
+  /// While lost, aim a little beyond the projected point so the rider rejoins facing
+  /// forward along the route rather than turning back toward it.
+  public var routeRejoinLookaheadMeters = 4.0
+
+  /// A clear slice must offer at least this much room before it counts as usable.
+  public var minClearPathMeters = 2.0
+  /// Perception results older than this are ignored and the route direction is used.
+  public var freeSpaceMaxAgeSeconds = 1.0
+  /// Confidence floor for a free-space slice.
+  public var minFreeSpaceConfidence = 0.4
+  /// Don't repeat "stop" on every frame.
+  public var noClearPathRepeatSeconds = 4.0
+
   public var firstStepsAfterMeters = 5.0
   public var breadcrumbEveryMeters = 5.0
   /// 60 ft and 30 ft, in meters.
@@ -187,6 +208,10 @@ public final class NavigationSession: ObservableObject {
   private let feedback: FeedbackKit
   private let store: SessionStore?
   private var bundle: ResolveResult?
+  private var route: WalkRoute?
+  private var routeProjection: RouteProjection?
+  private var latestFreeSpace: FreeSpaceObservation?
+  private var noClearPathSaidAt: Date?
   private var address = ""
 
   /// Where guidance started, used by the first-steps check.
@@ -209,6 +234,8 @@ public final class NavigationSession: ObservableObject {
   public func setDestination(_ bundle: ResolveResult, address: String) {
     self.bundle = bundle
     self.address = address
+    route = bundle.route.flatMap(WalkRoute.init(lonLat:))
+    routeProjection = nil
     if state == .setup { persist() }
   }
 
@@ -219,6 +246,12 @@ public final class NavigationSession: ObservableObject {
   /// door: the rider got off track somewhere, and the breadcrumb is a place they
   /// actually stood.
   public var targetCoordinate: (lat: Double, lon: Double)? {
+    if let route, let routeProjection {
+      let lookaheadMeters =
+        state == .lost ? thresholds.routeRejoinLookaheadMeters : thresholds.routeLookaheadMeters
+      let aim = route.lookahead(from: routeProjection, meters: lookaheadMeters)
+      return (aim.latitude, aim.longitude)
+    }
     if state == .lost, let crumb = breadcrumbs.last {
       return (crumb.latitude, crumb.longitude)
     }
@@ -269,6 +302,9 @@ public final class NavigationSession: ObservableObject {
       recoveringSince = nil
       firstStepsChecked = false
       calloutsSpoken = []
+      routeProjection = nil
+      latestFreeSpace = nil
+      noClearPathSaidAt = nil
       // A new walk learns the compass error again; the old one was measured from a
       // different place and may not apply.
       headingBiasDegrees = 0
@@ -297,6 +333,9 @@ public final class NavigationSession: ObservableObject {
     metersToDoor = nil
     offsetDegrees = nil
     sideUnconfirmed = false
+    routeProjection = nil
+    latestFreeSpace = nil
+    noClearPathSaidAt = nil
     resetDoorFinder()
     store?.clear()
   }
@@ -483,11 +522,21 @@ public final class NavigationSession: ObservableObject {
 
   /// Called for every position update while guiding. Heading is nil when the compass
   /// isn't usable, in which case orientation can't be judged and the state holds.
-  public func update(position: GuidancePosition, heading: HeadingReadout?) {
+  /// `freeSpace` is Person B's local obstacle answer; route still decides the desired
+  /// direction and this chooses the closest clear slice to it.
+  public func update(
+    position: GuidancePosition,
+    heading: HeadingReadout?,
+    freeSpace: FreeSpaceObservation? = nil
+  ) {
+    if let freeSpace { latestFreeSpace = freeSpace }
     guard let target else { return }
     lastPosition = position
-    let distance = Geo.distanceMeters(
+    let projection = route?.projection(for: position)
+    routeProjection = projection
+    let directDistance = Geo.distanceMeters(
       lat1: position.latitude, lon1: position.longitude, lat2: target.lat, lon2: target.lon)
+    let distance = projection?.remainingMeters ?? directDistance
     metersToDoor = distance
     distanceHistory.append((position.timestamp, distance))
     distanceHistory.removeAll {
@@ -500,10 +549,11 @@ public final class NavigationSession: ObservableObject {
     // Every direction in the app goes through the corrected heading, so a camera
     // sighting improves orienting, guiding, the lost check and the first-steps check
     // at once (plan section 7: the building check re-anchors the guidance).
-    let offset = heading.map {
+    let desiredOffset = heading.map {
       Geo.relativeAngle(
         heading: $0.trueHeadingDegrees - headingBiasDegrees, target: bearingToAim)
     }
+    let offset = steeringOffset(desired: desiredOffset, at: position.timestamp)
     offsetDegrees = offset
 
     if sideUnconfirmed, [.orient, .guide, .confirm, .lost].contains(state) {
@@ -539,6 +589,34 @@ public final class NavigationSession: ObservableObject {
     case .setup, .riding, .arrival, .arrived:
       break
     }
+  }
+
+  /// Choose the clear camera-relative slice nearest the route direction. Stale or
+  /// missing perception leaves the route's direction unchanged; no clear slice means
+  /// don't point anywhere and tell the rider to stop.
+  private func steeringOffset(desired: Double?, at moment: Date) -> Double? {
+    guard let desired else { return nil }
+    guard let freeSpace = latestFreeSpace,
+      abs(moment.timeIntervalSince(freeSpace.timestamp)) <= thresholds.freeSpaceMaxAgeSeconds
+    else { return desired }
+
+    let clear = freeSpace.slices.filter {
+      $0.clearMeters >= thresholds.minClearPathMeters
+        && $0.confidence >= thresholds.minFreeSpaceConfidence
+    }
+    guard let best = clear.min(by: {
+      abs(Geo.relativeAngle(heading: $0.centerOffsetDegrees, target: desired))
+        < abs(Geo.relativeAngle(heading: $1.centerOffsetDegrees, target: desired))
+    }) else {
+      if noClearPathSaidAt.map({
+        moment.timeIntervalSince($0) >= thresholds.noClearPathRepeatSeconds
+      }) ?? true {
+        noClearPathSaidAt = moment
+        feedback.emit(.noClearPath)
+      }
+      return nil
+    }
+    return best.centerOffsetDegrees
   }
 
   /// Turning on the spot until the heading holds within 15° for a second.
@@ -609,6 +687,26 @@ public final class NavigationSession: ObservableObject {
       feedback.emit(.distance(meters: distance))
     }
 
+    // With a route, cross-track distance is the real lost check. A rider can be far
+    // off the door's bearing while correctly following a sidewalk around a building.
+    if let routeProjection {
+      let allowedOffRoute = max(
+        thresholds.routeOffRouteMeters,
+        position.horizontalAccuracyMeters ?? 0)
+      if routeProjection.crossTrackMeters > allowedOffRoute {
+        let since = offRouteSince ?? position.timestamp
+        offRouteSince = since
+        if position.timestamp.timeIntervalSince(since) >= thresholds.lostAfterSeconds {
+          lastLostReason =
+            "Off route: \(Int(routeProjection.crossTrackMeters)) m from the path for \(Int(thresholds.lostAfterSeconds)) s"
+          enterLost(reason: .lost)
+        }
+      } else {
+        offRouteSince = nil
+      }
+      return
+    }
+
     // Badly off course for long enough counts as lost, but only if the rider isn't
     // getting closer: walking along the sidewalk towards a door round the corner is
     // "off" by angle and still exactly right.
@@ -648,9 +746,24 @@ public final class NavigationSession: ObservableObject {
     }
   }
 
-  /// Lost recovers by turning back towards the last breadcrumb, which is somewhere the
-  /// rider has actually stood.
+  /// Lost recovers by rejoining the route when one exists, or by turning back towards
+  /// the last breadcrumb for a straight-line trip.
   private func updateLost(offset: Double?, at moment: Date) {
+    if let routeProjection {
+      guard routeProjection.crossTrackMeters <= thresholds.routeRecoverWithinMeters else {
+        recoveringSince = nil
+        return
+      }
+      let since = recoveringSince ?? moment
+      recoveringSince = since
+      guard moment.timeIntervalSince(since) >= thresholds.recoverHoldSeconds else { return }
+      recoveringSince = nil
+      lockedSince = nil
+      state = .orient
+      persist()
+      return
+    }
+
     guard let offset else { return }
     guard abs(offset) <= thresholds.recoverWithinDegrees else {
       recoveringSince = nil
@@ -715,6 +828,8 @@ public final class NavigationSession: ObservableObject {
   /// and goes back to .orient rather than pretending to still be on course.
   public func resume(from snapshot: SessionSnapshot, bundle: ResolveResult) {
     self.bundle = bundle
+    route = bundle.route.flatMap(WalkRoute.init(lonLat:))
+    routeProjection = nil
     address = snapshot.address
     breadcrumbs = snapshot.breadcrumbs
     riderIsOnDoorSide = snapshot.riderIsOnDoorSide
@@ -723,6 +838,9 @@ public final class NavigationSession: ObservableObject {
     recoveringSince = nil
     firstStepsChecked = false
     calloutsSpoken = []
+    routeProjection = nil
+    latestFreeSpace = nil
+    noClearPathSaidAt = nil
     anchor = nil
 
     switch snapshot.state {
