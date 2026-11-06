@@ -700,6 +700,29 @@ final class NavigationSessionTests: XCTestCase {
     XCTAssertFalse(speaker.spoken.contains(Phrases.offRoute))
   }
 
+  func testTheFirstStepsCheckCatchesWalkingTheWrongWayFromARoute() {
+    session.setDestination(bundleWithRoute(testRoute), address: address)
+
+    arriveAtCurb()
+    session.startGuidance()
+
+    session.update(
+      position: position(metersNorth: 50, seconds: 0),
+      heading: heading(90, seconds: 0))
+    session.update(
+      position: position(metersNorth: 50, seconds: 2),
+      heading: heading(90, seconds: 2))
+    XCTAssertEqual(session.state, .guide)
+
+    // The route starts east; the rider heads west.
+    session.update(
+      position: position(metersNorth: 50, seconds: 5, metersEast: -12),
+      heading: heading(90, seconds: 5))
+
+    XCTAssertEqual(session.state, .lost)
+    XCTAssertTrue(speaker.spoken.contains(Phrases.directionUncertain))
+  }
+
   func testLeavingTheRouteBecomesLost() {
     session.setDestination(bundleWithRoute(testRoute), address: address)
     session.thresholds.lostAfterSeconds = 1

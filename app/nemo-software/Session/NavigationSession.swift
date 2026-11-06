@@ -819,8 +819,12 @@ public final class NavigationSession: ObservableObject {
         thresholds.firstStepsAfterMeters, 2 * (position.horizontalAccuracyMeters ?? 10))
       if walked >= needed {
         firstStepsChecked = true
-        let startDistance = Geo.distanceMeters(
-          lat1: anchor.latitude, lon1: anchor.longitude, lat2: target!.lat, lon2: target!.lon)
+        // `distance` is route distance when there's a route, so the start has to be too.
+        // A route can head away from the door at first and still be the right way.
+        let startDistance =
+          route?.projection(for: anchor)?.remainingMeters
+          ?? Geo.distanceMeters(
+            lat1: anchor.latitude, lon1: anchor.longitude, lat2: target!.lat, lon2: target!.lon)
         let progress = startDistance - distance
         if progress < walked * thresholds.firstStepsMinProgressRatio {
           lastLostReason =
