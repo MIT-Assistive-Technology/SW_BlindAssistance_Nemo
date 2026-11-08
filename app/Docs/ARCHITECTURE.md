@@ -42,6 +42,32 @@ Core models: Frame, Detection, LocationSnapshot · EntranceModels (server contra
 Phrases: Feedback/Phrases.swift — every spoken string, checked by SAFE-1
 ```
 
+## Planned: drop-off orientation at any address (ADR 0015)
+
+Proposed in [`docs/adr/0015-drop-off-orientation-any-address.md`](../../docs/adr/0015-drop-off-orientation-any-address.md). Nothing below exists yet. Tasks and owners are in the plan's [section 20](../../docs/car-to-curb-plan.md#20-work-breakdown).
+
+```
+EntranceAPI
+  FallbackEntranceClient     NEW (FE-15) live server → Apple geocoder as a point bundle;
+                             replaces PilotBundleClient as the upstream in AppServices
+  EntranceModels             CHANGED (QA-9) bundle v2: knowledge, nullable building,
+                             nullable path checks, walk_network
+LocationKit
+  SiteGeometry               NEW (FE-17) orient(rider:heading:bundle:) -> DropOffOrientation,
+                             pure Swift, nearSide nil when GPS can't tell
+  WalkPlanner                NEW (FE-19) route from the rider's real position:
+                             walk_network graph → Apple walking → direction only
+Session
+  NavigationSession          CHANGED (FE-16) distance includes distance from the route,
+                             no stall without road data, nil building;
+                             NEW setPlannedRoute(_:), replans when Lost
+Feedback
+  FeedbackEvent              NEW (FE-18) .dropOffOrientation, spoken once after
+                             "I'm out of the car" and repeated by "Where am I"
+```
+
+Rules that carry over: `NavigationSession` keeps `update(position:heading:)` as its only position input; every spoken word comes from `Phrases`; the server only receives the destination address. Apple walking directions send the rider's position to Apple, so the privacy text should mention it.
+
 ## Responsibilities
 
 | Folder | What it does | Plan tasks |
@@ -49,9 +75,9 @@ Phrases: Feedback/Phrases.swift — every spoken string, checked by SAFE-1
 | `Core/` | Value types with no UI or framework logic | — |
 | `FramePublishers/` | Produces `CVPixelBuffer` frames behind the `FrameProvider` protocol | FE-12 (ARKit adapter) |
 | `Location/` | Publishes `LocationSnapshot` (GPS + true heading) and records the car's course for the ride | FE-3, FE-13 |
-| `LocationKit/` | Geometry math and the rules built on it, unit-tested, no CoreLocation | FE-2, FE-3, FE-13 |
+| `LocationKit/` | Geometry math and the rules built on it, unit-tested, no CoreLocation | FE-2, FE-3, FE-13, FE-17, FE-19 |
 | `Perception/` | Object detection to `[Detection]`, later building text check | CV-8, CV-9 |
-| `EntranceAPI/` | Server contract types, clients (stub / live / caching) and the on-phone `BundleStore` | FE-11 |
+| `EntranceAPI/` | Server contract types, clients (stub / live / caching) and the on-phone `BundleStore` | FE-11, FE-15, QA-9 |
 | `Feedback/` | `FeedbackKit`, its channels and the `Phrases` table; the only place that makes sound or vibration | FE-4, FE-5, FE-6 |
 | `Session/` | `NavigationSession` trip state machine and `SessionStore` (resume after relaunch). Takes value types in through `update(position:heading:)`, emits `FeedbackEvent`s — no CoreLocation, so a recorded trace replays headless | FE-10 |
 | `Services/` | `PerceptionPipeline` wiring, `Speaker` (speech) | — |

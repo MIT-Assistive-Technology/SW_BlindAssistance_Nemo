@@ -82,6 +82,36 @@ Files: `app/overpass.py`, `app/doors.py` → `find_building`
 - [x] Unblock it: the default stages now run `app/doors.py` (BE-3, BE-4, BE-5, BE-7). Equal scores are tie-broken by house number, then distance to the entrance street.
 - [ ] OSM entrance coverage is low (about 10% of MIT/Kendall buildings, 1.8% of Cambridge). Before building bundles, survey the pilot entrances on site and add them to OSM by hand, with changeset comments like "Add main entrance to … based on survey".
 
+## 7. Any address (ADR 0015)
+
+The next priority, proposed in [`docs/adr/0015-drop-off-orientation-any-address.md`](../docs/adr/0015-drop-off-orientation-any-address.md). Owners are in the assignment table in the plan's [section 20](../docs/car-to-curb-plan.md#20-work-breakdown).
+
+**QA-9 Bundle v2 contract and level fixtures** · `contract/`, `app/models.py`
+- [ ] In `contract/resolve.example.json`: add `knowledge` (`door`, `building`, `point`), make `building` nullable, make the `path_checks` booleans nullable (null means unknown), and add `walk_network`.
+- [ ] Then `app/models.py`, then the Swift models; `tests/test_contract.py` keeps them together.
+- [ ] One fixture per level in `contract/levels/`, including a parking-lot site.
+
+**BE-10 Fix door ranking** · `app/bundle.py`, `app/scoring.py`
+- [ ] CambridgeSide, MIT Medical and the MFA rank a 0.3 street-facing guess above a mapped door, though the comment in `build_bundle` says fallbacks rank last. Fix it or write down why.
+
+**BE-9 Lookup ladder that never gives up** · `app/doors.py`, `app/bundle.py`
+- [ ] No outline within 40 m (`doors.py:97`) gives a `point` bundle instead of a `StageError`.
+- [ ] No entrance street gives `street_side: null` and unknown path checks instead of an error.
+- [ ] Tests: an address with no outline, and one with no named road.
+
+**BE-11 Walk network in the bundle** · `app/bundle.py`, `app/overpass.py`, `fill_routes.py`
+- [ ] Move the footway graph from `fill_routes.py` into the builder.
+- [ ] Add roads, crossings, service roads, parking aisles and `amenity=parking` areas within about 300 m of the door.
+- [ ] The CambridgeSide and MFA bundles include their lots and footways.
+
+**BE-13 Coverage audit across Greater Boston** · `scripts/audit_entrances.py`
+- [ ] Run 100 addresses outside the pilot area, and record the share at each knowledge level in `docs/audit/`.
+
+**BE-12 Live `/v2/resolve` and hosting** · `app/main.py`, `app/resolver.py`
+- [ ] Any address to a bundle v2, with caching, the 1 request/s Nominatim limit and rate limits.
+- [ ] Massachusetts data on the server first; everywhere else gets `point`.
+- [ ] No address logs and no rider location, as in the rules below.
+
 ## Rules
 
 - **The contract is shared.** Change `contract/resolve.example.json` first, then `app/models.py`, then the app's Swift models. `tests/test_contract.py` fails if they drift, or if the app's bundled copy differs.

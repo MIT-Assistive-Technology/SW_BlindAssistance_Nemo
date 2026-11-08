@@ -2,7 +2,9 @@
 
 **Team:** MIT Assistive Tech, Blind Assistance [Software], 2026–27
 **Status:** Draft for team review. Every number and threshold here is a proposal until the team and the codesigners sign off.
-**Last updated:** 2026-10-06
+**Last updated:** 2026-11-08
+
+> **Scope change proposed (2026-11-08), [ADR 0015](adr/0015-drop-off-orientation-any-address.md).** Drop-off orientation becomes the core feature, and every findable address starts a trip. The new architecture is in [section 4](#4-architecture-overview) and the new assignable tasks are at the top of [section 20](#20-work-breakdown). Everything else below still stands unless it says otherwise.
 
 > **Architecture review (2026-10-06).** Four independent checks were run against current documentation, published research and live API calls:
 > - iOS platform limits
@@ -79,6 +81,7 @@ After an Uber, Lyft or Waymo drops off a blind or low-vision rider, existing app
 The review found the original MVP was about three times what the team can ship by April, with the critical path on the team's least familiar skill (Swift). This is the tighter **"Same-side Car to Curb"** MVP.
 
 ### In, by the April freeze
+- **Drop-off orientation at any address ([ADR 0015](adr/0015-drop-off-orientation-any-address.md), proposed).** Out of the car, Nemo says where the building is, which side the rider is near and which way round the entrance is, then plans a route from where they actually are. Every findable address gets this at the level its data supports. This replaces "a live `/v1/resolve` for any address is a stretch goal" below.
 - **Precomputed entrance bundles for the pilot sites.** A Python script turns OSM data into JSON bundles for the golden sites plus a few dozen MIT and Kendall buildings. They're served as static files or shipped in the app. A live `/v1/resolve` for any address is a stretch goal.
 - **Side of street from the car's course along the road,** with "unknown → ask" ([section 6](#6-side-of-street-detection)).
 - **GPS and compass anchor, then a straight-line spatial beacon with voice distances,** using sidewalk and footway waypoints where OSM has them.
@@ -206,7 +209,58 @@ Example: a blind rider is going to a meeting at MIT Building 7, 77 Massachusetts
 
 ## 4. Architecture overview
 
-Two halves meet once per trip: entrance data for buildings, and an iPhone app that knows about the user. For the MVP, the entrance data is a set of precomputed bundles. A live server is a stretch goal. Either way, nothing ever learns where the rider actually is, and the walk needs no signal.
+Two halves meet once per trip: entrance data for buildings, and an iPhone app that knows about the user.
+
+### Proposed: drop-off orientation at any address (ADR 0015)
+
+The server turns any address into a bundle before the ride. The phone does everything after that, so the walk needs no signal. The server only ever receives the destination address.
+
+```mermaid
+flowchart LR
+  subgraph SV["Server · before the ride"]
+    OSM[("OSM extract<br/>+ Overpass cache")] --> L["Lookup ladder<br/>never gives up (BE-9)"]
+    GEO[("Nominatim")] --> L
+    L --> R["Door ranking<br/>+ more sources (BE-10, BE-14)"]
+    R --> W["Walk network builder<br/>footways · roads · lots (BE-11)"]
+    W --> API["POST /v2/resolve<br/>any address (BE-12)"]
+  end
+  API -->|"bundle v2, fetched once (QA-9)"| LC
+  subgraph PH["Phone · the whole trip"]
+    LC["Lookup chain<br/>cache → server → Apple point (FE-15)"] --> BS[("BundleStore")]
+    BS --> SG["Site geometry<br/>direction · near side (FE-17)"]
+    SG --> DB["Drop-off brief<br/>spoken once (FE-18)"]
+    BS --> WP["Walk planner<br/>from the rider's real spot (FE-19)"]
+    POS["GPS · compass · ARKit"] --> SG
+    POS --> NS["NavigationSession<br/>fixed: distance, no-road stall (FE-16)"]
+    CAM["Camera + LiDAR<br/>doors · hazards (CV-12)"] --> NS
+    DB --> NS
+    WP -->|"planned route"| NS
+    NS -.->|"off route: replan"| WP
+    NS --> FK["FeedbackKit + Phrases"]
+  end
+```
+
+| Knowledge level | What the bundle has | What the rider gets |
+|---|---|---|
+| `door` | Outline and a mapped door | Direction, near side, which way round, route to the door |
+| `building` | Outline, no door | The same, to the street-facing wall; the camera searches for the door |
+| `point` | Address point only | Direction and distance, said to be approximate |
+| `none` | Address not found | Told at setup, before the ride |
+
+The contracts between parts, so people can build them separately:
+
+| Seam | Shape | Owner tasks |
+|---|---|---|
+| Server → phone | Bundle v2: `knowledge`, nullable `building`, nullable `path_checks` booleans (null = unknown), new `walk_network`, plus one fixture per level in `contract/levels/` | QA-9 |
+| Address → bundle | The existing `EntranceClient` protocol; `FallbackEntranceClient` replaces `PilotBundleClient` as the upstream in `AppServices` | FE-15 |
+| Bundle + rider → orientation | `orient(rider:heading:bundle:) -> DropOffOrientation`, pure Swift. `nearSide` stays nil unless the rider's distance from the side boundary is larger than the GPS accuracy | FE-17 |
+| Rider + bundle → route | `WalkPlanner.plan(from:to:bundle:) -> PlannedRoute`, then `NavigationSession.setPlannedRoute(_:)` | FE-19 |
+| Position → session | `update(position:heading:)`, unchanged. Better position sources (Geospatial, CV-13) plug in behind it | — |
+| Session → rider | `FeedbackEvent` with words in `Phrases` only; new `.dropOffOrientation` and `.noRoadData` | FE-16, FE-18 |
+
+### Current MVP architecture
+
+For the MVP as first planned, the entrance data is a set of precomputed bundles. A live server is a stretch goal. Either way, nothing ever learns where the rider actually is, and the walk needs no signal.
 
 ```mermaid
 flowchart LR
@@ -947,6 +1001,62 @@ Raise thresholds once they're met; never lower them quietly.
 
 Every task needed to reach the MVP, grouped by area. Each one says what "done" means. The deferred tasks are listed under "Later".
 
+### Drop-off orientation at any address (ADR 0015): current priority
+
+These tasks build the architecture in [section 4](#proposed-drop-off-orientation-at-any-address-adr-0015). Only QA-9 blocks anyone: once its fixtures exist, every task in step 1 can run at the same time against them, and the app can be finished with the server switched off.
+
+**Assignments.** Fill in **Owner** when someone takes a task. "Suggested" is only a guess from who wrote the related code.
+
+| Step | ID | Task | Needs | Suggested | Owner | Status |
+|---|---|---|---|---|---|---|
+| 0 | QA-9 | Bundle v2 contract and level fixtures | — | Minh + Jing | | Not started |
+| 0 | FE-16 | Engine fixes (distance first) | Distance fix: nothing. Rest: QA-9 | Jing | | Not started |
+| 0 | BE-10 | Fix door ranking | — | Minh | | Not started |
+| 0 | MAP-2 | Survey doors, drop-offs and two lots | — | Everyone, in pairs | | Not started |
+| 1 | BE-9 | Lookup ladder that never gives up | QA-9 | Minh | | Not started |
+| 1 | BE-11 | Walk network in the bundle | QA-9 | Trish + Minh | | Not started |
+| 1 | BE-13 | Coverage audit across Greater Boston | BE-9 for levels | Anyone | | Not started |
+| 1 | FE-17 | Site geometry | QA-9 | Trish | | Not started |
+| 1 | FE-19 | Walk planner | QA-9 | Trish | | Not started |
+| 1 | FE-20 | Walk reliability | — | Jing + Amy | | Not started |
+| 1 | CV-12 | Door finder without bundle text, lot warnings | — | Amy | | Not started |
+| 1 | QA-10 | Replay at every knowledge level | QA-9 | Trish | | Not started |
+| 2 | BE-12 | Live `/v2/resolve` and hosting | BE-9, BE-11 | Minh | | Not started |
+| 2 | FE-15 | Lookup chain | QA-9, FE-16; BE-12 for live data | Jing | | Not started |
+| 2 | FE-18 | Drop-off brief | FE-17, SAFE-1 | Jing or Anna | | Not started |
+| 3 | — | Integrate: QA-10 passes at every level | All of step 2 | Everyone | | Not started |
+| 4 | QA-11 | Parking-lot field test | Integration, MAP-2 | Everyone | | Not started |
+| 4 | BE-14 | More door sources | MAP-2, terms check | Minh or Anna | | Not started |
+| 4 | CV-13 | Geospatial log-only test | Integration, MAP-2 | Minh | | Not started |
+
+**Step 0: start now**
+- **QA-9 Bundle v2 contract and level fixtures.** Change `contract/resolve.example.json` first, then `EntranceModels.swift`, then `server/app/models.py`: add `knowledge` (`door`, `building`, `point`), make `building` nullable, make the `path_checks` booleans nullable (null means unknown, never false), and add `walk_network` (walkways by kind, roads, parking areas, `radius_m`). Add one fixture per level to `contract/levels/`, including a parking-lot site. Done when QA-3 passes on all three sides and every level has a fixture.
+- **FE-16 Engine fixes.** In `NavigationSession`: add the rider's distance from the route to the remaining distance, so a rider far from the route never hears "The door should be close"; remove the stall when there's no street centerline by giving direction with a spoken warning that roads aren't known; handle a nil `building`. Done when unit tests cover a rider 100 m from a route's end, a bundle with no centerline, and a point-level bundle. The distance fix needs nothing else and can ship first.
+- **BE-10 Fix door ranking.** At CambridgeSide, MIT Medical and the MFA a 0.3 street-facing guess ranks above a mapped door, although `bundle.py` says fallbacks rank last. Done when those bundles target the mapped door, or the reason is written down here.
+- **MAP-2 Survey doors, drop-offs and two lots.** Extends MAP-1 and QA-1: measure entrances and drop-off points at the golden sites, plus random standing spots in the CambridgeSide and MFA lots. `golden/locations.json` has no measured truth yet. Done when every golden site and both lots have measured coordinates.
+
+**Step 1: in parallel, against the QA-9 fixtures**
+- **BE-9 Lookup ladder that never gives up.** In `server/app/doors.py` and `bundle.py`: no outline within 40 m gives a `point` bundle instead of failing (`doors.py:97`), and no street gives `street_side: null` with unknown path checks instead of an error. Done when a test address with no outline and one with no named road both return valid bundles at the right level.
+- **BE-11 Walk network in the bundle.** Move the footway graph from `server/fill_routes.py` into the builder and add roads, crossings, service roads, parking aisles and `amenity=parking` areas within about 300 m of the door. Done when the CambridgeSide and MFA bundles include their lots and footways, and the bundle stays under an agreed size.
+- **BE-13 Coverage audit across Greater Boston.** Extends BE-8: run `scripts/audit_entrances.py` and the ladder over 100 addresses outside the pilot area. Done when the share of addresses at each knowledge level is recorded in `docs/audit/`.
+- **FE-17 Site geometry.** A pure Swift `orient(rider:heading:bundle:) -> DropOffOrientation` in `LocationKit/`: offset to the building, distance, which side the rider is near (front, back, left, right, relative to the entrance or street-facing wall) and which way round the entrance is. `nearSide` stays nil when GPS accuracy can't separate the sides. Done when unit tests on real pilot outlines give the right side for clear positions and nil for uncertain ones.
+- **FE-19 Walk planner.** `WalkPlanner.plan(from:to:bundle:) -> PlannedRoute`: search the `walk_network` graph from the rider's real position; without one, Apple walking directions when there's signal; otherwise direction only. Replan when the session goes to Lost. No route crosses a known road except at a mapped crossing. Add `NavigationSession.setPlannedRoute(_:)`. Done when replays from a lot fixture produce a route and the roadway rule holds (SAFE-2).
+- **FE-20 Walk reliability.** Keep the screen awake during the walk, speak when the camera or ARKit stops, make the building-check heading bias use the same heading source as guidance, and make the low-light message say what stopped working. Done when locking the phone mid-walk is never silent.
+- **CV-12 Door finder without bundle text, and lot warnings.** The door finder works on `building` and `point` bundles with no expected text (entrance signs and LiDAR doors), and parked or moving cars in a lot give a warning, worded with O&M. Done when it works on a point-level fixture and the warnings pass review.
+- **QA-10 Replay at every knowledge level.** Strip the 19 pilot bundles down level by level (no route, no door, no outline, no street, point only) and replay each walk. Done when every level ends in guidance or a clear spoken reason, never silence or a stall, in CI.
+
+**Step 2: connect**
+- **BE-12 Live `/v2/resolve` and hosting.** Any address to a bundle v2, with caching, the 1 request/s Nominatim limit, rate limits, no address logs and no rider location. Massachusetts data on the server first; everywhere else gets `point`. Done when a new Massachusetts address returns a bundle from the hosted server.
+- **FE-15 Lookup chain.** `FallbackEntranceClient: EntranceClient` tries the live server, then Apple's geocoder as a `point` bundle; it replaces `PilotBundleClient` as the upstream in `AppServices`, and pilot bundles stay as the shipped cache. Done when any findable address starts a trip, including with the server off.
+- **FE-18 Drop-off brief.** A `.dropOffOrientation` event spoken once after "I'm out of the car", repeated by "Where am I", with every word in `Phrases`. Done when SAFE-1 passes and a VoiceOver user hears it once, without overlapping other speech.
+
+**Step 3: integrate.** Done when QA-10 passes at every level and a trip starts from any findable address, with and without the server.
+
+**Step 4: in the field**
+- **QA-11 Parking-lot field test.** At random spots in the CambridgeSide and MFA lots, compare the brief's direction and side with MAP-2 truth. Done when right, unsure and wrong are counted. "Wrong" is the number that matters.
+- **BE-14 More door sources.** Try Google Geocoding v4 entrances at the 6 pilot sites with no mapped door, then Mapillary. Done when compared with MAP-2 truth and the terms on storing results have been read.
+- **CV-13 Geospatial log-only test.** Record ARCore Geospatial position and heading beside GPS and compass, without changing guidance. Done when compared with MAP-2 truth at 5 sites, including a lot.
+
 ### No-code tests (October, before much Swift is written)
 - **R1 Anchor accuracy.** At 10 curb spots near known doors, log 30 s of GPS and heading with an off-the-shelf logger app, and compare with surveyed points and the street's true bearing. Done when the median and 90th percentile errors are recorded. If the 90th percentile is above 8 m or 15°, the walk design changes before building.
 - **R3 Beacon walk.** Drop a VoiceVista marker at each OSM entrance and walk 5 golden sites with its audio beacon. Ask whether a beacon or sidewalk cues feel better. Done when notes are in `docs/codesigner-sessions/`. This is also the head-to-head baseline.
@@ -1013,7 +1123,7 @@ Every task needed to reach the MVP, grouped by area. Each one says what "done" m
 - **QA-8 Dry run.** A Phase A trial on 3 sites. Done when every issue is filed as a ticket with its log attached.
 
 ### Later (not in the April MVP)
-- **Live server:** `POST /v1/resolve` from the cache within ~3 s, the error envelope, Fly.io with SQLite in WAL mode, rate limits in memory. Done when the app works against it as well as against static bundles.
+- **Live server:** moved into scope as BE-12 if ADR 0015 is agreed. `POST /v1/resolve` from the cache within ~3 s, the error envelope, Fly.io with SQLite in WAL mode, rate limits in memory. Done when the app works against it as well as against static bundles.
 - **Door detector:** Open Images "Door" data, a labeling guide, labeled campus frames, a baseline detector and a Core ML benchmark. Only if CV-11 shows Magnifier isn't enough.
 - **Street-photo pipeline:** a Mapillary probe, pinhole ray casting, triangulation and clustering, run offline. Done when its candidates meet median ≤ 4 m at the pilot sites.
 - **Valhalla:** `type=blind` routes for opposite-side and campus sites, self-hosted or fetched at trip time.
@@ -1028,6 +1138,10 @@ Every task needed to reach the MVP, grouped by area. Each one says what "done" m
 | Walk design (FE-12) | The October go/reshape decision (PM-4) |
 | Building check (CV-9) | ARKit session (FE-12) and `recognize.text` in the bundle |
 | Resolver accuracy numbers | Golden locations (QA-1), MAP-1 and fixtures (QA-2) |
+| Every ADR 0015 task in step 1 | Bundle v2 fixtures (QA-9) |
+| Lookup chain with live data (FE-15) | Live endpoint (BE-12), which needs BE-9 and BE-11 |
+| Drop-off brief (FE-18) | Site geometry (FE-17) and the phrase lint (SAFE-1) |
+| Parking-lot field test (QA-11) | Integration and survey truth (MAP-2) |
 | Codesigner trials | Ethics (ETH-1), O&M review (ORG-1), trial kit (QA-7) and TestFlight (OPS-2) |
 
 ---
@@ -1045,6 +1159,15 @@ The order de-risks the riskiest assumptions first, with no code where possible.
 | Jan–Feb | ARKit handoff with re-anchoring, plus the building check. The door detector is an optional parallel track, gated on CV-11. | M3: building and side right ≥ 90% |
 | Mar–Apr | Codesigner Phase B, head-to-head against current tools, fix the 2 worst failures, freeze | M4 (qualitative plus quantitative) |
 | May | Showcase, retro, v2 scope | v2 priorities |
+
+**ADR 0015 timing (proposed):**
+
+| When | Work | Gate |
+|---|---|---|
+| Week of Nov 9 | Finish the open merge, assign owners, QA-9 fixtures, FE-16 distance fix, BE-10 | Fixtures in the repo; no false "door is close" |
+| Through November | Step 1 tasks and the MAP-2 survey | The drop-off brief heard at a real lot on a test build |
+| By the December alpha | Step 2 and integration | A trip starts from any findable address, with or without the server |
+| Jan–Mar | QA-11 lot trials, BE-14 door sources, CV-13 Geospatial test, then codesigners | Measured right / unsure / wrong rates |
 
 **Winter:** Cambridge snow and short days limit field work in Jan–Mar. Put Phase B dates on the calendar now, with indoor or covered fallback sites.
 
@@ -1078,6 +1201,7 @@ Each becomes a one-page file in `docs/adr/NNNN-title.md` (context, decision, con
 | 0012 | Precomputed pilot bundles instead of a live server for the MVP | Removes hosting, rate limits and log privacy from the critical path; work stays in Python | Proposed |
 | 0013 | Background location: When In Use + "I'm in the car" | Geofences need Always; background updates must start in the foreground | Proposed |
 | 0014 | Three spoken bands, best-of-independent-classes scoring | Sources aren't independent, so noisy-OR overstates confidence; no calibration data yet | Proposed |
+| 0015 | [Drop-off orientation at any address](adr/0015-drop-off-orientation-any-address.md) | Orienting a dropped-off rider is what sets Nemo apart, and it has to work beyond the 19 pilot sites. Changes 0012 in part | Proposed |
 
 ---
 
@@ -1098,8 +1222,13 @@ Each becomes a one-page file in `docs/adr/NNNN-title.md` (context, decision, con
 - CurbToCar: ask its developer how its feedback was built.
 - Who is the team contact for the Overpass and Nominatim User-Agent?
 
+**Decide for ADR 0015:**
+- Server coverage first: Massachusetts only, with `point` level elsewhere?
+
 **Verify technically:**
 - How accurate is the curb starting point at our sites? (R1)
+- Do Apple's geocoder and walking directions work for drop-off routes, and how often is there no signal at the drop-off? (FE-15, FE-19)
+- What share of Greater Boston addresses reach each knowledge level? (BE-13)
 - How often do riders exit on the street side, or cars stop in a lane? (R5)
 - Is Magnifier Door Detection good enough for the last 5 m? (CV-11)
 - GeoTracking availability at each golden site (CV-10)

@@ -180,6 +180,48 @@ a working app and a broken one. Keep them when you add a screen:
 - **Answering by gesture rather than by button.** The plan wants Back Tap for "repeat / where am I" and a tap / double-tap answer at the door. Until that lands, every prompt also has an on-screen button.
 - **Verbosity.** Some prompts are long for a rider stepping out of a car into traffic. Two verbosity levels are part of the settings screen.
 
+## 9. Drop-off orientation at any address (ADR 0015)
+
+The next priority, proposed in [`docs/adr/0015-drop-off-orientation-any-address.md`](../../docs/adr/0015-drop-off-orientation-any-address.md). Owners are in the assignment table in the plan's [section 20](../../docs/car-to-curb-plan.md#20-work-breakdown). Build against the `contract/levels/` fixtures from QA-9, so nobody waits for the server.
+
+**FE-16 Engine fixes** · `Session/NavigationSession.swift`
+- [ ] In `update(position:heading:)`, add `projection.crossTrackMeters` to the remaining distance, so a rider far from the route never reaches `.confirm` or hears "The door should be close". This needs nothing else and can ship first.
+- [ ] Remove the stall when the bundle has no street centerline (`lineToDoorCrossesStreet` returns true forever today): give direction, with a spoken warning that roads aren't known.
+- [ ] Handle a nil `building` once QA-9 makes it optional (`expectedBuildingTexts`, `buildingCenter`).
+- [ ] Tests: a rider 100 m from a route's end, a bundle with no centerline, a point-level bundle.
+
+**FE-17 Site geometry** · new `LocationKit/SiteGeometry.swift`
+- [ ] `orient(rider:heading:bundle:) -> DropOffOrientation`: offset to the building, distance, `nearSide` (front, back, left, right, relative to the entrance or street-facing wall) and `wayToEntrance`.
+- [ ] `nearSide` stays nil unless the rider's distance from the side boundary is larger than the GPS accuracy.
+- [ ] Mark it `nonisolated`, with no CoreLocation. Unit tests use real pilot outlines.
+
+**FE-19 Walk planner** · new `LocationKit/WalkPlanner.swift`
+- [ ] `plan(from:to:bundle:) -> PlannedRoute`: shortest path over `walk_network`, then Apple walking directions, then direction only.
+- [ ] Never cross a known road except at a mapped crossing.
+- [ ] Add `NavigationSession.setPlannedRoute(_:)`, and replan when the session enters `.lost`.
+
+**FE-18 Drop-off brief** · `Feedback/FeedbackKit.swift`, `Feedback/Phrases.swift`, `ViewModels/TripViewModel.swift`
+- [ ] Add a `.dropOffOrientation(DropOffOrientation)` event, with its words in `Phrases` only.
+- [ ] Speak it once after "I'm out of the car"; "Where am I" repeats it.
+- [ ] SAFE-1 passes, and it doesn't overlap other speech under VoiceOver.
+
+**FE-15 Lookup chain** · new `EntranceAPI/FallbackEntranceClient.swift`, `Services/AppServices.swift`
+- [ ] `FallbackEntranceClient: EntranceClient`: live server (BE-12), then Apple's geocoder as a `point` bundle.
+- [ ] Use it as the upstream in `AppServices` in place of `PilotBundleClient`; pilot bundles stay as the shipped cache.
+- [ ] Any findable address starts a trip, including with the server off.
+
+**FE-20 Walk reliability** · `ARGuide/ARGuide.swift`, `Services/AppServices.swift`
+- [ ] Keep the screen awake during the walk, and speak when the camera or ARKit stops.
+- [ ] `buildingCheck` must use the same heading source as guidance, so the heading bias isn't learned from the compass and applied to ARKit.
+
+**CV-12 Door finder without bundle text, and lot warnings** · `Services/AppServices.swift`, `Perception/`
+- [ ] The door finder works on `building` and `point` bundles with no expected text: entrance signs and LiDAR doors.
+- [ ] Parked or moving cars in a lot give a warning, worded with the O&M specialist.
+
+**QA-10 Replay at every knowledge level** · `nemo-softwareTests/`
+- [ ] Strip each pilot bundle to no route, no door, no outline, no street and point only, then replay the walk.
+- [ ] Every level ends in guidance or a clear spoken reason, never silence or a stall.
+
 ## Recommended order
 
 1. Project setup and camera stream (you see pixels).
