@@ -89,7 +89,7 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   private let detector: ObjectDetector
   private let numberRecognizer: any NumberRecognizer
   private let locationProvider: LocationProvider
-  private let speaker: Speaker
+  private let speaker: any SpeechOutput
   private let spokenNumbers = SpokenNumbers()
 
   /// Only touched on `perceptionQueue`, except `expectedBundleTexts`, which uses `lock`.
@@ -114,7 +114,7 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     detector: ObjectDetector,
     numberRecognizer: any NumberRecognizer,
     locationProvider: LocationProvider,
-    speaker: Speaker,
+    speaker: any SpeechOutput,
     maxFramesPerSecond: Double = 10
   ) {
     self.detector = detector
@@ -212,11 +212,13 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
     // `buffer` is not captured below, so the camera gets it back now.
     let visibleNumbers = heldNumbers
     let visibleSigns = heldSigns
-    let phrase = spokenNumbers.phrase(for: fresh.numbers)
-    let signPhrase = spokenNumbers.phrase(forSign: fresh.streetSigns.first?.text)
+    // One sentence for the number and the sign. The overlay shows this same string.
+    let readout = CameraReadout.sentence(numbers: visibleNumbers, signs: visibleSigns)
+    // The repeat guard covers the "I see" line too, or it would be said on every frame.
+    let phrase = spokenNumbers.phrase(for: readout ?? CameraReadout.seen(detections))
     Task { @MainActor [self] in
       // Detections go to the hazard path, which speaks reviewed phrases through
-      // FeedbackKit — raw model labels are never spoken.
+      // FeedbackKit. The raw sentence is for the debug Camera screen, never a walk.
       if !detections.isEmpty {
         onDetections?(detections)
       }
@@ -225,9 +227,6 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
       }
       if announcesReads, let phrase {
         speaker.speak(phrase)
-      }
-      if announcesReads, let signPhrase {
-        speaker.speak(signPhrase)
       }
       if !fresh.isEmpty {
         onTextRead?(fresh)
@@ -272,34 +271,42 @@ nonisolated public final class PerceptionPipeline: FrameProviderDelegate, @unche
   }
 }
 
-/// Doesn't repeat the same building number on every check.
+/// The words on the camera screen and the words that are spoken. One sentence so a
+/// building number and a street sign are both shown and both said.
+nonisolated enum CameraReadout {
+  static func sentence(numbers: [RecognizedNumber], signs: [RecognizedStreetSign]) -> String? {
+    var parts: [String] = []
+    if !numbers.isEmpty {
+      parts.append("Number \(numbers.map(\.value).joined(separator: ", "))")
+    }
+    if !signs.isEmpty {
+      parts.append("Sign \(signs.map(\.text).joined(separator: ", "))")
+    }
+    guard !parts.isEmpty else { return nil }
+    return parts.joined(separator: ". ") + "."
+  }
+
+  static func seen(_ detections: [Detection]) -> String? {
+    let names = detections.map { $0.labels.first?.identifier ?? "something" }
+    guard !names.isEmpty else { return nil }
+    return "I see: \(names.joined(separator: ", "))"
+  }
+}
+
+/// Doesn't repeat the same camera sentence on every check.
 private nonisolated final class SpokenNumbers: @unchecked Sendable {
   private let lock = NSLock()
   private var lastValue: String?
   private var lastAt = Date.distantPast
 
-  func phrase(for numbers: [RecognizedNumber]) -> String? {
-    guard let top = numbers.first else { return nil }
+  func phrase(for sentence: String?) -> String? {
+    guard let sentence else { return nil }
     let now = Date()
     lock.lock()
     defer { lock.unlock() }
-    if lastValue == top.value, now.timeIntervalSince(lastAt) < 6 { return nil }
-    lastValue = top.value
+    if lastValue == sentence, now.timeIntervalSince(lastAt) < 6 { return nil }
+    lastValue = sentence
     lastAt = now
-    return "Number \(top.value)"
+    return sentence
   }
-
-  func phrase(forSign text: String?) -> String? {
-    guard let text else { return nil }
-    let now = Date()
-    lock.lock()
-    defer { lock.unlock() }
-    if lastSign == text, now.timeIntervalSince(lastSignAt) < 6 { return nil }
-    lastSign = text
-    lastSignAt = now
-    return "Sign \(text)"
-  }
-
-  private var lastSign: String?
-  private var lastSignAt = Date.distantPast
 }
