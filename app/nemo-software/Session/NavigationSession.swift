@@ -606,9 +606,11 @@ public final class NavigationSession: ObservableObject {
     guard state != .confirm, let offset = offsetDegrees, targetObstructed,
       let targetSlice
     else {
-      // Back to clear (or nothing to steer by): if we were steering, send the rider
-      // on course once and go quiet.
-      if steeringState != nil, let targetSlice, case .clear = targetSlice.status {
+      // Back to clear (or nothing to steer by): if we were steering, or had said
+      // stop, send the rider on course once and go quiet.
+      if let targetSlice, case .clear = targetSlice.status,
+        steeringState != nil || pathBlockedLastSaidAt != nil
+      {
         feedback.emit(.pathClear(offsetDegrees: offsetDegrees ?? targetSlice.offsetDegrees))
       }
       steeringState = nil
@@ -665,10 +667,19 @@ public final class NavigationSession: ObservableObject {
       } ?? true
     guard changed || due else { return }
     steeringState = (kind, clear.offsetDegrees, freeSpace.timestamp)
-    feedback.emit(
-      .steerAround(
-        kind, hazardOffsetDegrees: targetSlice.offsetDegrees,
-        clearOffsetDegrees: clear.offsetDegrees, meters: meters))
+    // Walk-arounds (person, cone, bike) get a nudge back onto the route; blockers
+    // (wall, worksite, parked vehicle) get an explicit "blocking the way" detour.
+    if kind.needsDetour {
+      feedback.emit(
+        .detourAround(
+          kind, hazardOffsetDegrees: targetSlice.offsetDegrees,
+          clearOffsetDegrees: clear.offsetDegrees, meters: meters))
+    } else {
+      feedback.emit(
+        .steerAround(
+          kind, hazardOffsetDegrees: targetSlice.offsetDegrees,
+          clearOffsetDegrees: clear.offsetDegrees, meters: meters))
+    }
   }
 
   private func arrive() {

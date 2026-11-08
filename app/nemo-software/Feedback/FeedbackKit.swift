@@ -42,6 +42,12 @@ nonisolated public enum FeedbackEvent: Sendable {
   case steerAround(
     HazardSighting.Kind, hazardOffsetDegrees: Double, clearOffsetDegrees: Double,
     meters: Double?)
+  /// The blocker can't just be stepped around (wall, worksite, parked vehicle): the
+  /// path itself is blocked and the cue is a detour around it. Distinct from
+  /// `steerAround` so the words can say "blocking the way" instead of a nudge.
+  case detourAround(
+    HazardSighting.Kind, hazardOffsetDegrees: Double, clearOffsetDegrees: Double,
+    meters: Double?)
   /// Every slice ahead is blocked or unreadable: the only useful instruction is stop.
   case pathBlocked
   /// The direction that was blocked reads clear again — said once, after steering.
@@ -320,6 +326,10 @@ public final class SpeechChannel: FeedbackChannel {
       return Phrases.steerAround(
         kind: kind, hazardOffsetDegrees: hazardOffset,
         clearOffsetDegrees: clearOffset, meters: meters, units: units)
+    case .detourAround(let kind, let hazardOffset, let clearOffset, let meters):
+      return Phrases.detourAround(
+        kind: kind, hazardOffsetDegrees: hazardOffset,
+        clearOffsetDegrees: clearOffset, meters: meters, units: units)
     case .pathBlocked:
       return Phrases.pathBlocked
     case .pathClear(let offset):
@@ -377,7 +387,7 @@ public final class HapticsChannel: FeedbackChannel {
             haptic(intensity: 0.4, sharpness: 0.3)
         case .arrival:
             haptic(intensity: 1.0, sharpness: 0.6, repeats: 3, spacing: 0.18)
-        case .warning, .lost, .hazardAhead, .pathBlocked:
+        case .warning, .lost, .hazardAhead, .pathBlocked, .detourAround:
             haptic(intensity: 1.0, sharpness: 0.1, repeats: 3, spacing: 0.15)
         default:
             break

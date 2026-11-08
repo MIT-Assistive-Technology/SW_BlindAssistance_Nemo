@@ -189,6 +189,31 @@ final class HazardTests: XCTestCase {
       speaker.spoken, ["Step down straight ahead, about 5 feet. Go slightly left."])
   }
 
+  func testAWallSaysTheWayIsBlockedNotJustASteer() {
+    startWalking()
+    // The detector names the wall; depth reports the blocked slice in the same spot.
+    session.observeHazard(
+      HazardSighting(
+        kind: .wall, offsetDegrees: 3, timestamp: base.addingTimeInterval(19)))
+    session.observeFreeSpace(scan(centre: .blocked(meters: 2)))
+    XCTAssertTrue(
+      speaker.spoken.contains(
+        "Wall straight ahead, about 5 feet, blocking the way. Go slightly left to get around it."),
+      "said: \(speaker.spoken)")
+  }
+
+  func testAWalkAroundStillGetsASteerCueNotADetour() {
+    startWalking()
+    session.observeHazard(
+      HazardSighting(
+        kind: .cone, offsetDegrees: 3, timestamp: base.addingTimeInterval(19)))
+    session.observeFreeSpace(scan(centre: .blocked(meters: 2)))
+    XCTAssertTrue(
+      speaker.spoken.contains("Cone straight ahead, about 5 feet. Go slightly left."),
+      "said: \(speaker.spoken)")
+    XCTAssertFalse(speaker.spoken.contains { $0.contains("blocking the way") })
+  }
+
   func testEverythingBlockedSaysStop() {
     startWalking()
     session.observeFreeSpace(

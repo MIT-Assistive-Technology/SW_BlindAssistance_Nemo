@@ -358,6 +358,19 @@ nonisolated public enum Phrases {
       "\(hazardName(kind)) \(turn(offsetDegrees: hazardOffsetDegrees))\(howFar). Go \(turn(offsetDegrees: clearOffsetDegrees))."
   }
 
+  /// The thing can't just be stepped around — a wall, a worksite, a parked vehicle —
+  /// so the words say the way is blocked and the direction is a detour, not a nudge.
+  /// Same rule as `steerAround`: the direction is the scan's nearest clear slice,
+  /// never a promise the detour is safe.
+  public static func detourAround(
+    kind: HazardSighting.Kind, hazardOffsetDegrees: Double, clearOffsetDegrees: Double,
+    meters: Double?, units: Units = .feet
+  ) -> String {
+    let howFar = meters.map { ", \(distance(meters: $0, units: units))" } ?? ""
+    return
+      "\(hazardName(kind)) \(turn(offsetDegrees: hazardOffsetDegrees))\(howFar), blocking the way. Go \(turn(offsetDegrees: clearOffsetDegrees)) to get around it."
+  }
+
   /// Every slice ahead is blocked or unreadable. The instruction is stop — never
   /// "keep going carefully", which would be a guess at safety the scan can't make.
   public static let pathBlocked = "Stop. The way ahead looks blocked."
@@ -556,6 +569,10 @@ nonisolated public enum Phrases {
         kind: .object, hazardOffsetDegrees: 0, clearOffsetDegrees: 14, meters: nil),
       steerAround(
         kind: .stepDown, hazardOffsetDegrees: -5, clearOffsetDegrees: 14, meters: 1.5),
+      detourAround(
+        kind: .wall, hazardOffsetDegrees: 5, clearOffsetDegrees: -14, meters: 2.4),
+      detourAround(
+        kind: .vehicle, hazardOffsetDegrees: 0, clearOffsetDegrees: 14, meters: nil),
       pathBlocked,
       pathClear(offsetDegrees: -12),
     ] + LookupFailure.allCases.map(lookupFailed)

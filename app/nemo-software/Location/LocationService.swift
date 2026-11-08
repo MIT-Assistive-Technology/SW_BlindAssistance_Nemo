@@ -79,6 +79,9 @@ public protocol LocationProvider: AnyObject {
       }
       guard !isUpdating else { return }
       isUpdating = true
+      // Standing still is part of the workflow (orient tells the rider to stand
+      // still), so iOS pausing updates then would silently freeze guidance.
+      locationManager.pausesLocationUpdatesAutomatically = false
       locationManager.startUpdatingLocation()
       if CLLocationManager.headingAvailable() {
         locationManager.startUpdatingHeading()
@@ -114,8 +117,10 @@ public protocol LocationProvider: AnyObject {
       rideSession?.invalidate()
       rideSession = nil
       locationManager.allowsBackgroundLocationUpdates = false
-      locationManager.pausesLocationUpdatesAutomatically = true
-      locationManager.activityType = .other
+      // The walk after the drop-off needs the feed unpaused too: the rider stands
+      // still to orient, which is exactly what auto-pause would punish.
+      locationManager.pausesLocationUpdatesAutomatically = !isUpdating
+      locationManager.activityType = .fitness
     }
 
     /// Forget the ride's courses (new trip, or the rider answered the side question).
@@ -237,10 +242,12 @@ public protocol LocationProvider: AnyObject {
   /// Non-iOS stub.
   public final class LocationService: ObservableObject, LocationProvider {
     public static let shared = LocationService()
-    public private(set) var currentSnapshot: LocationSnapshot = LocationSnapshot()
-    public private(set) var headingReadout: HeadingReadout?
-    public private(set) var isTrackingRide = false
-    public private(set) var carTrack = CarCourseTrack()
+    @Published public private(set) var currentSnapshot: LocationSnapshot =
+      LocationSnapshot()
+    @Published public private(set) var headingReadout: HeadingReadout?
+    @Published public private(set) var isTrackingRide = false
+    @Published public private(set) var carTrack = CarCourseTrack()
+    public var isHeadingAvailable: Bool { false }
     public func start() {}
     public func stop() {}
     public func startRideTracking() {}

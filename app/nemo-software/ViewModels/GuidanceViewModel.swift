@@ -44,6 +44,15 @@ public final class GuidanceViewModel: ObservableObject {
   private let feedback: FeedbackKit?
   private var cancellables = Set<AnyCancellable>()
 
+  /// Compass help during the walk. `.orient` holds forever on a nil heading and a
+  /// rough one steers wrong, so a missing or degraded compass is spoken, paced,
+  /// rather than left as a silent stall that looks like a broken app.
+  private var headingMissingSince: Date?
+  private var lastHeadingHelpAt: Date?
+  private var saidHeadingUnavailable = false
+  private static let headingMissingGraceSeconds: TimeInterval = 3
+  private static let headingHelpRepeatSeconds: TimeInterval = 15
+
   public init(session: NavigationSession, location: LocationService, feedback: FeedbackKit? = nil) {
     self.session = session
     self.location = location
@@ -114,6 +123,7 @@ public final class GuidanceViewModel: ObservableObject {
     saidWaitingForFix = false
     hasFix = true
     let heading = steeringHeading(snapshot)
+    watchHeading(heading.readout, at: snapshot.timestamp)
     updateDebug(snapshot, heading: heading)
     session.update(
       position: GuidancePosition(
@@ -122,6 +132,34 @@ public final class GuidanceViewModel: ObservableObject {
         horizontalAccuracyMeters: snapshot.horizontalAccuracy,
         timestamp: snapshot.timestamp),
       heading: heading.readout)
+  }
+
+  /// Speaks compass help while guiding: a nil heading stalls `.orient` silently,
+  /// and a degraded one steers wrong. Devices with no compass hear it once;
+  /// calibratable compasses get a paced figure-eight prompt.
+  private func watchHeading(_ readout: HeadingReadout?, at moment: Date) {
+    guard isGuiding else {
+      headingMissingSince = nil
+      return
+    }
+    if !location.isHeadingAvailable {
+      if !saidHeadingUnavailable {
+        saidHeadingUnavailable = true
+        feedback?.emit(.headingUnavailable)
+      }
+      return
+    }
+    if let readout, !readout.needsCalibration {
+      headingMissingSince = nil
+      return
+    }
+    if headingMissingSince == nil { headingMissingSince = moment }
+    guard moment.timeIntervalSince(headingMissingSince!) >= Self.headingMissingGraceSeconds,
+      lastHeadingHelpAt.map({ moment.timeIntervalSince($0) >= Self.headingHelpRepeatSeconds })
+        ?? true
+    else { return }
+    lastHeadingHelpAt = moment
+    feedback?.emit(.compassCalibration)
   }
 
   /// Direction of travel while walking, the compass otherwise.

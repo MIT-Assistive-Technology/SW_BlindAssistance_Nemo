@@ -64,6 +64,23 @@ nonisolated public struct HazardSighting: Equatable, Sendable {
         } else { return nil }
       }
     }
+
+    /// Can the rider just step around (or over) this, or does it block the way and
+    /// need a detour? Drives the steering phrase: passables get a nudge ("go
+    /// slightly left"), blockers get an explicit "blocking the way" so the turn
+    /// reads as a route change, not a nudge. A blocker with no clear direction
+    /// anywhere is the `.pathBlocked` stop, whatever the kind.
+    /// A step down is a curb or step the rider can take, so it steers like a
+    /// passable — the cane confirms it's shallow before their foot commits.
+    public var needsDetour: Bool {
+      switch self {
+      case .vehicle, .construction, .wall:
+        return true
+      case .person, .bike, .pole, .cone, .bench, .dog, .animal, .object,
+        .stepDown, .stepUp:
+        return false
+      }
+    }
   }
 
   public let kind: Kind

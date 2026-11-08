@@ -99,6 +99,11 @@ public final class AppServices: ObservableObject {
     }
     arGuide.onFreeSpace = { [weak self] freeSpace in self?.observeFreeSpace(freeSpace) }
     arGuide.onLowLight = { [weak self] in self?.session.cameraCheckUnavailable(.lowLight) }
+    // ARKit owns the camera for the whole walk; if tracking dies so do the door
+    // finder, the building check and hazards — say so rather than go silent.
+    arGuide.onTracking = { [weak self] ok in
+      if !ok { self?.session.cameraCheckUnavailable(.unavailable) }
+    }
     session.$state
       .sink { [weak self] state in self?.cameraFollow(state) }
       .store(in: &cancellables)

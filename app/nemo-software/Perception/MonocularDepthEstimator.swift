@@ -39,11 +39,17 @@ nonisolated final class MonocularDepthEstimator: DepthEstimator, @unchecked Send
 
   /// Nil when the model isn't in the bundle — estimation simply doesn't run.
   init?(modelName: String = "DepthAnythingV2Small") {
-    guard let url = Bundle.main.url(forResource: modelName, withExtension: "mlmodelc"),
-      let model = try? MLModel(contentsOf: url),
-      let visionModel = try? VNCoreMLModel(for: model)
-    else { return nil }
-    mlModel = visionModel
+    // Xcode compiles both .mlmodel sources and .mlpackage into .mlmodelc; the
+    // .mlpackage fallback covers a build that copies it through unchanged.
+    for ext in ["mlmodelc", "mlpackage"] {
+      guard let url = Bundle.main.url(forResource: modelName, withExtension: ext),
+        let model = try? MLModel(contentsOf: url),
+        let visionModel = try? VNCoreMLModel(for: model)
+      else { continue }
+      mlModel = visionModel
+      return
+    }
+    return nil
   }
 
   /// Explicit model for tests and off-bundle wiring.
